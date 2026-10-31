@@ -10,6 +10,7 @@ import lombok.Data;
 public class ClanData
 {
 	private int version;
+	private String error;
 	private String generatedAt;
 	private String iconBase;
 	private Clan clan;

@@ -25,6 +25,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.util.ColorUtil;
 
@@ -32,11 +33,13 @@ import net.runelite.client.util.ColorUtil;
 class PvKneePanel extends PluginPanel
 {
 	private static final int TEXT_WIDTH = 175;
+	private static final int SUPPORTED_VERSION = 1;
 
 	private final ClanDataClient client;
 	private final JComboBox<Page> pageSelect = new JComboBox<>();
 	private final JButton refreshButton = new JButton("Refresh");
 	private final JLabel statusLabel = new JLabel();
+	private final JLabel versionLabel = new JLabel(html("A newer plugin version is available"));
 	private final JPanel content = new JPanel();
 
 	private ClanData data;
@@ -75,11 +78,14 @@ class PvKneePanel extends PluginPanel
 		controls.add(refreshButton, BorderLayout.EAST);
 
 		statusLabel.setVisible(false);
+		versionLabel.setFont(FontManager.getRunescapeSmallFont());
+		versionLabel.setVisible(false);
 
 		JPanel top = new JPanel(new BorderLayout(0, 10));
 		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		top.add(controls, BorderLayout.NORTH);
 		top.add(statusLabel, BorderLayout.CENTER);
+		top.add(versionLabel, BorderLayout.SOUTH);
 
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -139,6 +145,10 @@ class PvKneePanel extends PluginPanel
 		loading = false;
 		refreshButton.setEnabled(true);
 		statusLabel.setVisible(false);
+
+		Theme theme = data.getTheme();
+		versionLabel.setForeground(themeColour(theme == null ? null : theme.getMuted(), Color.GRAY));
+		versionLabel.setVisible(data.getVersion() > SUPPORTED_VERSION);
 
 		Page selected = (Page) pageSelect.getSelectedItem();
 		String selectedId = selected == null ? null : selected.getId();

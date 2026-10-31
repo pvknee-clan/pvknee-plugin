@@ -78,6 +78,10 @@ public class ClanDataClient
 					{
 						throw new IOException("Empty response");
 					}
+					if (data.getError() != null)
+					{
+						throw new IOException("Endpoint error: " + data.getError());
+					}
 
 					onSuccess.accept(data);
 				}
