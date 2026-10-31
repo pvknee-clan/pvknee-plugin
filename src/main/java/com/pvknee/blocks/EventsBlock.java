@@ -11,8 +11,6 @@ import com.pvknee.ui.Section;
 import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
-import com.pvknee.ui.TimeBar;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +30,6 @@ import net.runelite.client.ui.FontManager;
  */
 class EventsBlock implements BlockRenderer
 {
-	private static final Duration SOON = Duration.ofHours(24);
 	private static final int ROW_WIDTH = Labels.CONTENT_WIDTH - 2 * Spacing.PADDING;
 	/** Line icons look the same size as pictures when drawn slightly smaller. */
 	private static final int GLYPH_SIZE = 18;
@@ -97,7 +94,7 @@ class EventsBlock implements BlockRenderer
 			header = new SectionHeader(title, colours);
 			if (shared)
 			{
-				header.withAside(first::timeText, colours);
+				header.withTimeAside(first::timeText, first::endingSoon, colours);
 				context.onUpdate(header::update);
 			}
 		}
@@ -124,9 +121,7 @@ class EventsBlock implements BlockRenderer
 			context.linkToPage(row, block, event.getKind());
 			if (timed.end != null)
 			{
-				TimeBar bar = new TimeBar(() -> Times.progress(timed.start, timed.end), null, showTime ? timed::timeText : null, colours);
-				context.onUpdate(bar::update);
-				row.setBar(bar);
+				row.setBar(context.runningBar(timed.start, timed.end, null, showTime));
 			}
 		}
 		return row;
@@ -182,19 +177,21 @@ class EventsBlock implements BlockRenderer
 		}
 
 		/**
-		 * e.g. "6d 4h left", "in 5h 12m" or "Fri 6 Nov, 17:00 UTC". Null for a running event without an end.
+		 * e.g. "6d 4h left", "Ends in 5h 12m", "Tomorrow, 17:00" or "Fri 6 Nov". Null for a running event without an
+		 * end.
 		 */
 		String timeText()
 		{
-			Instant now = Instant.now();
 			if (running)
 			{
-				return end == null ? null : Times.duration(Duration.between(now, end)) + " left";
+				return end == null ? null : Times.left(end);
 			}
+			return Times.date(start, event.isHasTime());
+		}
 
-			Duration until = Duration.between(now, start);
-			boolean hasTime = event.isHasTime();
-			return hasTime && until.compareTo(SOON) < 0 ? "in " + Times.duration(until) : Times.date(start, hasTime);
+		boolean endingSoon()
+		{
+			return running && end != null && Times.endingSoon(end);
 		}
 	}
 }

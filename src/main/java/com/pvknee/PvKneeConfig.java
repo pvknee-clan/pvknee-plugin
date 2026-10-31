@@ -10,6 +10,17 @@ public interface PvKneeConfig extends Config
 {
 	String GROUP = "pvknee-clan";
 
+	@ConfigItem(
+		keyName = "showTimesInUtc",
+		name = "Show times in UTC",
+		description = "Shows times in UTC instead of your local time zone",
+		position = 0
+	)
+	default boolean showTimesInUtc()
+	{
+		return false;
+	}
+
 	// Debug only: remove this section and hide its items before publishing
 	@ConfigSection(
 		name = "Debug",

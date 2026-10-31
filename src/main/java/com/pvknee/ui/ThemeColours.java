@@ -12,6 +12,9 @@ import net.runelite.client.util.ColorUtil;
 @Value
 public class ThemeColours
 {
+	/** Times in an item's final 24 hours. Fixed, like the medal colours, so it reads the same in every theme. */
+	public static final Color ENDING_SOON = new Color(0xFF9800);
+
 	Color header;
 	Color accent;
 	Color value;

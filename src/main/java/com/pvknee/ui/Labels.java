@@ -8,6 +8,7 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.plaf.basic.BasicHTML;
 import javax.swing.text.View;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 
 /**
@@ -30,6 +31,15 @@ public final class Labels
 		label.setHorizontalAlignment(centred ? SwingConstants.CENTER : SwingConstants.LEFT);
 		setText(label, text, width, centred);
 		return label;
+	}
+
+	/**
+	 * Styles a time caption: muted, or bold in the ending-soon colour in an item's final 24 hours.
+	 */
+	public static void styleTime(JLabel label, boolean endingSoon, ThemeColours colours)
+	{
+		label.setForeground(endingSoon ? ThemeColours.ENDING_SOON : colours.getMuted());
+		label.setFont(endingSoon ? Fonts.smallBold() : FontManager.getRunescapeSmallFont());
 	}
 
 	/**

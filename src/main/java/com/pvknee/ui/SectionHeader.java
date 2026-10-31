@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -24,6 +25,9 @@ public class SectionHeader extends JPanel
 	private final boolean centred;
 	private JLabel asideLabel;
 	private Supplier<String> asideText;
+	private BooleanSupplier asideEndingSoon;
+	private ThemeColours colours;
+	private boolean shownSoon;
 
 	public SectionHeader(String text, ThemeColours colours)
 	{
@@ -59,15 +63,24 @@ public class SectionHeader extends JPanel
 	}
 
 	/**
-	 * Adds a muted note on the right, e.g. a shared time or a column label; the title wraps in the space left of it.
-	 * The text can change, e.g. for a countdown: call {@link #update()} to refresh it.
+	 * Adds a muted note on the right, e.g. a column label; the title wraps in the space left of it.
 	 */
 	public SectionHeader withAside(Supplier<String> aside, ThemeColours colours)
 	{
+		return withTimeAside(aside, () -> false, colours);
+	}
+
+	/**
+	 * Adds a time on the right that can change, e.g. a countdown: call {@link #update()} to refresh it. It is muted,
+	 * or bold in the ending-soon colour while the item is ending soon.
+	 */
+	public SectionHeader withTimeAside(Supplier<String> aside, BooleanSupplier endingSoon, ThemeColours colours)
+	{
 		asideText = aside;
+		asideEndingSoon = endingSoon;
+		this.colours = colours;
 		asideLabel = new JLabel();
-		asideLabel.setForeground(colours.getMuted());
-		asideLabel.setFont(FontManager.getRunescapeSmallFont());
+		Labels.styleTime(asideLabel, false, colours);
 		asideLabel.setVerticalAlignment(SwingConstants.BOTTOM);
 		add(asideLabel, BorderLayout.EAST);
 		update();
@@ -85,9 +98,12 @@ public class SectionHeader extends JPanel
 		}
 
 		String next = Objects.toString(asideText.get(), "");
-		if (!next.equals(asideLabel.getText()))
+		boolean soon = asideEndingSoon.getAsBoolean();
+		if (!next.equals(asideLabel.getText()) || soon != shownSoon)
 		{
+			shownSoon = soon;
 			asideLabel.setText(next);
+			Labels.styleTime(asideLabel, soon, colours);
 			Labels.setText(title, text, width - asideLabel.getPreferredSize().width - Spacing.ITEM_GAP, centred);
 			revalidate();
 		}

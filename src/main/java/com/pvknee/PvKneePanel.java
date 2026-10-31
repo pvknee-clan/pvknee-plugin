@@ -271,6 +271,21 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	}
 
 	/**
+	 * Builds the current page again in place, e.g. after a setting that changes how it looks.
+	 */
+	void redraw()
+	{
+		if (data != null)
+		{
+			showPage(pagePicker.getSelected());
+			if (lastUpdatedLine.isVisible())
+			{
+				showLastUpdated();
+			}
+		}
+	}
+
+	/**
 	 * Updates the countdowns and standings on the current page without rebuilding it.
 	 */
 	private void updateLive()

@@ -20,4 +20,12 @@ public final class Fonts
 	{
 		return FontManager.getRunescapeFont();
 	}
+
+	/**
+	 * Small captions that need to stand out, e.g. a time that is ending soon.
+	 */
+	public static Font smallBold()
+	{
+		return FontManager.getRunescapeSmallFont().deriveFont(Font.BOLD);
+	}
 }

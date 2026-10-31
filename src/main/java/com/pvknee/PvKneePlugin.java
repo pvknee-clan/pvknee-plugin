@@ -2,12 +2,16 @@ package com.pvknee;
 
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.pvknee.blocks.Times;
 import com.pvknee.data.SavedCopy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import javax.swing.SwingUtilities;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -32,6 +36,9 @@ public class PvKneePlugin extends Plugin
 	@Inject
 	private SavedCopy savedCopy;
 
+	@Inject
+	private PvKneeConfig config;
+
 	private PvKneePanel panel;
 	private NavigationButton navButton;
 
@@ -47,6 +54,7 @@ public class PvKneePlugin extends Plugin
 			log.debug("No plugin folder, so the clan data will not be saved", e);
 		}
 
+		Times.setUtc(config.showTimesInUtc());
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "icon.png");
 		panel = injector.getInstance(PvKneePanel.class);
 
@@ -69,6 +77,22 @@ public class PvKneePlugin extends Plugin
 		navButton = null;
 		panel = null;
 		log.debug("PvKnee stopped");
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if (PvKneeConfig.GROUP.equals(event.getGroup()) && "showTimesInUtc".equals(event.getKey()))
+		{
+			Times.setUtc(config.showTimesInUtc());
+			SwingUtilities.invokeLater(() ->
+			{
+				if (panel != null)
+				{
+					panel.redraw();
+				}
+			});
+		}
 	}
 
 	@Provides

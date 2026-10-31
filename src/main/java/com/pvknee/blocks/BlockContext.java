@@ -3,11 +3,14 @@ package com.pvknee.blocks;
 import com.pvknee.data.Block;
 import com.pvknee.data.ClanData;
 import com.pvknee.ui.Card;
+import com.pvknee.ui.DayBar;
 import com.pvknee.ui.LiveLabel;
 import com.pvknee.ui.ThemeColours;
+import com.pvknee.ui.TimeBar;
 import com.pvknee.wom.WomClient;
 import java.awt.Color;
 import java.awt.Font;
+import java.time.Instant;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.swing.JLabel;
@@ -55,6 +58,18 @@ public class BlockContext
 		LiveLabel label = new LiveLabel(text, colour, font, width, centred);
 		onUpdate(label::update);
 		return label;
+	}
+
+	/**
+	 * A day bar for a running item's span, with the time left on the right (or no caption) and an optional fixed
+	 * caption on the left, kept up to date every minute.
+	 */
+	public TimeBar runningBar(Instant start, Instant end, String left, boolean timeLeft)
+	{
+		DayBar bar = new DayBar(Times.segments(start, end), () -> Times.progress(start, end), () -> Times.endingSoon(end), colours);
+		TimeBar timeBar = new TimeBar(bar, left, timeLeft ? () -> Times.left(end) : null, () -> Times.endingSoon(end), colours);
+		onUpdate(timeBar::update);
+		return timeBar;
 	}
 
 	/**
