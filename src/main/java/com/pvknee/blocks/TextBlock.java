@@ -1,6 +1,8 @@
 package com.pvknee.blocks;
 
 import com.pvknee.data.Block;
+import com.pvknee.ui.Labels;
+import com.pvknee.ui.ThemeColours;
 import java.awt.Color;
 import java.awt.Font;
 import javax.swing.JComponent;

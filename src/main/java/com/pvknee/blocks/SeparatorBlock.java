@@ -1,6 +1,8 @@
 package com.pvknee.blocks;
 
 import com.pvknee.data.Block;
+import com.pvknee.ui.Labels;
+import com.pvknee.ui.ThemeColours;
 import javax.swing.JComponent;
 import net.runelite.client.ui.FontManager;
 

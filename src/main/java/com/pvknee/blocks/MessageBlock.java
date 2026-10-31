@@ -1,17 +1,17 @@
 package com.pvknee.blocks;
 
 import com.pvknee.data.Block;
+import com.pvknee.ui.Card;
+import com.pvknee.ui.Labels;
+import com.pvknee.ui.SectionHeader;
+import com.pvknee.ui.Spacing;
+import com.pvknee.ui.ThemeColours;
 import java.awt.BorderLayout;
 import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
 class MessageBlock implements BlockRenderer
 {
-	private static final int PADDING = 8;
-
 	@Override
 	public JComponent render(Block block, BlockContext context)
 	{
@@ -22,18 +22,15 @@ class MessageBlock implements BlockRenderer
 		}
 
 		ThemeColours colours = context.getColours();
-		int width = Labels.CONTENT_WIDTH - 2 * PADDING;
+		int width = Labels.CONTENT_WIDTH - 2 * Spacing.PADDING;
 
-		JPanel box = new JPanel(new BorderLayout(0, 4));
-		box.setBackground(ColorScheme.DARKER_GRAY_HOVER_COLOR);
-		box.setBorder(new EmptyBorder(PADDING, PADDING, PADDING, PADDING));
-
+		Card card = new Card(new BorderLayout());
 		String title = block.setting("title", null);
 		if (title != null)
 		{
-			box.add(Labels.label(title, colours.getAccent(), FontManager.getRunescapeBoldFont(), width, true), BorderLayout.NORTH);
+			card.add(new SectionHeader(title, colours), BorderLayout.NORTH);
 		}
-		box.add(Labels.label(text, colours.getValue(), FontManager.getRunescapeFont(), width, true), BorderLayout.CENTER);
-		return box;
+		card.add(Labels.label(text, colours.getValue(), FontManager.getRunescapeFont(), width, true), BorderLayout.CENTER);
+		return card;
 	}
 }

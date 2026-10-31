@@ -1,4 +1,4 @@
-package com.pvknee.blocks;
+package com.pvknee.ui;
 
 import com.pvknee.data.Theme;
 import java.awt.Color;

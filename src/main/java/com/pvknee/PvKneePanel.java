@@ -3,12 +3,13 @@ package com.pvknee;
 import com.pvknee.blocks.BlockContext;
 import com.pvknee.blocks.BlockRegistry;
 import com.pvknee.blocks.ImageLoader;
-import com.pvknee.blocks.Labels;
-import com.pvknee.blocks.ThemeColours;
 import com.pvknee.data.Block;
 import com.pvknee.data.ClanData;
 import com.pvknee.data.ClanDataClient;
 import com.pvknee.data.Page;
+import com.pvknee.ui.Labels;
+import com.pvknee.ui.Spacing;
+import com.pvknee.ui.ThemeColours;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -92,7 +93,7 @@ class PvKneePanel extends PluginPanel
 		top.add(statusLabel, BorderLayout.CENTER);
 		top.add(versionLabel, BorderLayout.SOUTH);
 
-		content.setLayout(new DynamicGridLayout(0, 1, 0, 8));
+		content.setLayout(new DynamicGridLayout(0, 1, 0, Spacing.BLOCK_GAP));
 		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		JPanel contentWrapper = new JPanel(new BorderLayout());
