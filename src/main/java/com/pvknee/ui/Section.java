@@ -19,4 +19,12 @@ public class Section extends JPanel
 		}
 		add(content, BorderLayout.CENTER);
 	}
+
+	/**
+	 * The content under a plain section title, e.g. a block's "title" setting; just the content if the title is null.
+	 */
+	public static Section titled(String title, JComponent content, ThemeColours colours)
+	{
+		return new Section(title == null ? null : new SectionHeader(title, colours), content);
+	}
 }

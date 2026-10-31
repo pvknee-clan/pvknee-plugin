@@ -8,7 +8,6 @@ import com.pvknee.ui.Glyphs;
 import com.pvknee.ui.IconCaption;
 import com.pvknee.ui.Labels;
 import com.pvknee.ui.Section;
-import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import java.awt.BorderLayout;
@@ -56,8 +55,7 @@ class LinksBlock implements BlockRenderer
 			return null;
 		}
 
-		String title = block.setting("title", null);
-		return new Section(title == null ? null : new SectionHeader(title, context.getColours()), grid);
+		return Section.titled(block.setting("title", null), grid, context.getColours());
 	}
 
 	private static Card linkButton(Link link, BlockContext context)

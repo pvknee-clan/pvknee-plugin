@@ -3,7 +3,6 @@ package com.pvknee.ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Supplier;
 import javax.swing.JLabel;
@@ -57,14 +56,6 @@ public class SectionHeader extends JPanel
 	public static SectionHeader pageTitle(String text, Color colour, float size)
 	{
 		return new SectionHeader(text, colour, bold(size), Labels.CONTENT_WIDTH, true);
-	}
-
-	/**
-	 * The small capitals title inside a card that is one thing, e.g. "CLAN MESSAGE".
-	 */
-	public static SectionHeader cardLabel(String text, ThemeColours colours, int width)
-	{
-		return new SectionHeader(text.toUpperCase(Locale.ENGLISH), colours.getAccent(), FontManager.getRunescapeSmallFont(), width, false);
 	}
 
 	/**

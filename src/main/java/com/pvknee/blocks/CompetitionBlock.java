@@ -7,7 +7,7 @@ import com.pvknee.ui.Card;
 import com.pvknee.ui.Fonts;
 import com.pvknee.ui.IconCaption;
 import com.pvknee.ui.Labels;
-import com.pvknee.ui.SectionHeader;
+import com.pvknee.ui.Section;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import com.pvknee.ui.TimeBar;
@@ -55,14 +55,15 @@ class CompetitionBlock implements BlockRenderer
 			return null;
 		}
 
-		return block.setting("layout", "side").equalsIgnoreCase("hero")
+		Card card = block.setting("layout", "side").equalsIgnoreCase("hero")
 			? hero(matching.get(0), upcoming, block, context)
 			: side(matching, upcoming, block, context);
+		return Section.titled(block.setting("title", null), card, context.getColours());
 	}
 
 	/**
-	 * A "NOW RUNNING" (or "STARTING") label over one column per competition. When they all share their times, one
-	 * time bar runs across the bottom of the card; otherwise each column has its own at its bottom.
+	 * One column per competition. When they all share their times, one time bar runs across the bottom of the card;
+	 * otherwise each column has its own at its bottom.
 	 */
 	private static Card side(List<Competition> competitions, boolean upcoming, Block block, BlockContext context)
 	{
@@ -97,7 +98,6 @@ class CompetitionBlock implements BlockRenderer
 		}
 
 		Card card = new Card(new BorderLayout(0, Spacing.TITLE_GAP));
-		card.add(SectionHeader.cardLabel(upcoming ? "Starting" : "Now running", colours, INNER_WIDTH), BorderLayout.NORTH);
 		card.add(columns, BorderLayout.CENTER);
 		if (shared)
 		{
