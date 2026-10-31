@@ -1,21 +1,22 @@
 package com.pvknee;
 
+import com.pvknee.blocks.BlockContext;
+import com.pvknee.blocks.BlockRegistry;
+import com.pvknee.blocks.Labels;
+import com.pvknee.blocks.ThemeColours;
 import com.pvknee.data.Block;
 import com.pvknee.data.ClanData;
 import com.pvknee.data.ClanDataClient;
 import com.pvknee.data.Page;
-import com.pvknee.data.Theme;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -25,17 +26,17 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
-import net.runelite.client.util.ColorUtil;
 
 @Slf4j
 class PvKneePanel extends PluginPanel
 {
-	private static final int TEXT_WIDTH = 175;
 	private static final int SUPPORTED_VERSION = 1;
 
 	private final ClanDataClient client;
+	private final BlockRegistry blocks;
 	private final JComboBox<Page> pageSelect = new JComboBox<>();
 	private final JButton refreshButton = new JButton("Refresh");
 	private final JLabel statusLabel = new JLabel();
@@ -46,10 +47,11 @@ class PvKneePanel extends PluginPanel
 	private boolean loading;
 
 	@Inject
-	PvKneePanel(ClanDataClient client)
+	PvKneePanel(ClanDataClient client, BlockRegistry blocks)
 	{
 		super(false);
 		this.client = client;
+		this.blocks = blocks;
 
 		setLayout(new BorderLayout(0, 10));
 		setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -87,7 +89,7 @@ class PvKneePanel extends PluginPanel
 		top.add(statusLabel, BorderLayout.CENTER);
 		top.add(versionLabel, BorderLayout.SOUTH);
 
-		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+		content.setLayout(new DynamicGridLayout(0, 1, 0, 8));
 		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		JPanel contentWrapper = new JPanel(new BorderLayout());
@@ -146,8 +148,7 @@ class PvKneePanel extends PluginPanel
 		refreshButton.setEnabled(true);
 		statusLabel.setVisible(false);
 
-		Theme theme = data.getTheme();
-		versionLabel.setForeground(themeColour(theme == null ? null : theme.getMuted(), Color.GRAY));
+		versionLabel.setForeground(ThemeColours.from(data.getTheme()).getMuted());
 		versionLabel.setVisible(data.getVersion() > SUPPORTED_VERSION);
 
 		Page selected = (Page) pageSelect.getSelectedItem();
@@ -179,18 +180,16 @@ class PvKneePanel extends PluginPanel
 			return;
 		}
 
-		Theme theme = data.getTheme();
-		Color accent = themeColour(theme == null ? null : theme.getAccent(), ColorScheme.BRAND_ORANGE);
-		Color value = themeColour(theme == null ? null : theme.getValue(), Color.WHITE);
-		Color muted = themeColour(theme == null ? null : theme.getMuted(), Color.GRAY);
+		BlockContext context = new BlockContext(data, ThemeColours.from(data.getTheme()));
 
 		content.removeAll();
 		for (Block block : page.getBlocks())
 		{
-			Color colour = "heading".equals(block.getType()) ? accent
-				: "separator".equals(block.getType()) ? muted
-				: value;
-			content.add(line(describe(block), colour));
+			JComponent component = blocks.render(block, context);
+			if (component != null)
+			{
+				content.add(component);
+			}
 		}
 		content.revalidate();
 		content.repaint();
@@ -199,47 +198,13 @@ class PvKneePanel extends PluginPanel
 	private void showMessage(String message)
 	{
 		content.removeAll();
-		content.add(line(message, Color.WHITE));
+		content.add(Labels.label(message, Color.WHITE, FontManager.getRunescapeFont(), Labels.CONTENT_WIDTH, false));
 		content.revalidate();
 		content.repaint();
 	}
 
-	private static String describe(Block block)
-	{
-		Map<String, String> settings = block.getSettings();
-		if (settings == null || settings.isEmpty())
-		{
-			return block.getType();
-		}
-
-		String text = settings.get("text");
-		if (text != null && !text.isEmpty())
-		{
-			return block.getType() + ": " + text;
-		}
-
-		return block.getType() + " (" + settings.entrySet().stream()
-			.map(e -> e.getKey() + "=" + e.getValue())
-			.collect(Collectors.joining(", ")) + ")";
-	}
-
-	private static JLabel line(String text, Color colour)
-	{
-		JLabel label = new JLabel(html(text));
-		label.setForeground(colour);
-		label.setBorder(new EmptyBorder(0, 0, 4, 0));
-		return label;
-	}
-
 	private static String html(String text)
 	{
-		String escaped = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-		return "<html><body style='width:" + TEXT_WIDTH + "px'>" + escaped + "</body></html>";
-	}
-
-	private static Color themeColour(String hex, Color fallback)
-	{
-		Color colour = hex == null ? null : ColorUtil.fromHex(hex);
-		return colour == null ? fallback : colour;
+		return Labels.html(text, Labels.CONTENT_WIDTH, false);
 	}
 }
