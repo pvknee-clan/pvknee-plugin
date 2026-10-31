@@ -2,6 +2,7 @@ package com.pvknee.data;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+import com.pvknee.PvKneeConfig;
 import java.io.IOException;
 import java.util.function.Consumer;
 import javax.inject.Inject;
@@ -9,6 +10,7 @@ import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -25,18 +27,32 @@ public class ClanDataClient
 
 	private final OkHttpClient okHttpClient;
 	private final Gson gson;
+	private final PvKneeConfig config;
 
 	@Inject
-	ClanDataClient(OkHttpClient okHttpClient, Gson gson)
+	ClanDataClient(OkHttpClient okHttpClient, Gson gson, PvKneeConfig config)
 	{
 		this.okHttpClient = okHttpClient;
 		this.gson = gson;
+		this.config = config;
 	}
 
 	public void fetch(Consumer<ClanData> onSuccess, Consumer<Exception> onFailure)
 	{
+		String override = config.endpointOverride().trim();
+		HttpUrl url = HttpUrl.parse(override.isEmpty() ? ENDPOINT : override);
+		if (url == null)
+		{
+			onFailure.accept(new IOException("Invalid endpoint override: " + override));
+			return;
+		}
+		if (!override.isEmpty())
+		{
+			log.debug("Using endpoint override {}", url);
+		}
+
 		Request request = new Request.Builder()
-			.url(ENDPOINT)
+			.url(url)
 			.build();
 
 		okHttpClient.newCall(request).enqueue(new Callback()

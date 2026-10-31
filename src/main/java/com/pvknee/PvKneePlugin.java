@@ -1,9 +1,11 @@
 package com.pvknee;
 
 import com.google.inject.Injector;
+import com.google.inject.Provides;
 import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.client.config.ConfigManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -49,5 +51,11 @@ public class PvKneePlugin extends Plugin
 		clientToolbar.removeNavigation(navButton);
 		navButton = null;
 		log.debug("PvKnee stopped");
+	}
+
+	@Provides
+	PvKneeConfig provideConfig(ConfigManager configManager)
+	{
+		return configManager.getConfig(PvKneeConfig.class);
 	}
 }
