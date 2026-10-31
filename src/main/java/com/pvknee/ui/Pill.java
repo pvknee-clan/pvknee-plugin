@@ -5,20 +5,22 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.FontManager;
 
 /**
- * A short piece of text in a small rounded outline, e.g. "Home world 509".
+ * A short piece of text in a small rounded outline, optionally after an icon, e.g. "Home world 509".
  */
 public class Pill extends JPanel
 {
 	private static final int PADDING_X = 9;
 	private static final int PADDING_Y = 3;
+	private static final int ICON_GAP = 5;
 
-	public Pill(String text, Color colour)
+	public Pill(String text, Color colour, Icon icon)
 	{
 		super(new BorderLayout());
 		setOpaque(false);
@@ -27,6 +29,8 @@ public class Pill extends JPanel
 		JLabel label = new JLabel(text);
 		label.setForeground(colour);
 		label.setFont(FontManager.getRunescapeSmallFont());
+		label.setIcon(icon);
+		label.setIconTextGap(ICON_GAP);
 		add(label, BorderLayout.CENTER);
 	}
 

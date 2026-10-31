@@ -10,7 +10,7 @@ import net.runelite.api.Skill;
 import net.runelite.client.game.SkillIconManager;
 
 /**
- * Icons for blocks: skills come from the game client, everything else is downloaded.
+ * Icons for Wise Old Man metrics: skills come from the game client, bosses are downloaded.
  */
 @Singleton
 public class Icons
@@ -39,15 +39,7 @@ public class Icons
 				k -> ImageLoader.scaled(skillIcons.getSkillImage(skill), size));
 			return new JLabel(icon);
 		}
-		return url(iconBase == null || metric == null ? null : iconBase + metric + ".png", size);
-	}
-
-	/**
-	 * A downloaded icon, shown once it has loaded. Call on the Swing thread.
-	 */
-	public JLabel url(String url, int size)
-	{
-		return images.icon(url, size);
+		return images.icon(iconBase == null || metric == null ? null : iconBase + metric + ".png", size);
 	}
 
 	private static Skill skill(String metric)

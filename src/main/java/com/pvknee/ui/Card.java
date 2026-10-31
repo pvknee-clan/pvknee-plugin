@@ -17,13 +17,16 @@ import javax.swing.border.EmptyBorder;
  */
 public class Card extends JPanel
 {
-	private static final Color BACKGROUND = new Color(48, 48, 48);
-	private static final Color HOVER = new Color(58, 58, 58);
+	/** Also the background of other kit pieces, e.g. {@link PagePicker}. */
+	static final Color BACKGROUND = new Color(48, 48, 48);
+	/** Also the hover tint of other kit pieces, e.g. {@link PagePicker}. */
+	static final Color HOVER = new Color(58, 58, 58);
 	/** Also the outline of other kit pieces, e.g. {@link Pill}. */
 	static final Color BORDER = new Color(64, 64, 64);
 
 	private final boolean bordered;
 	private Color outline = BORDER;
+	private int arc = Spacing.ARC;
 
 	public Card(LayoutManager layout)
 	{
@@ -49,6 +52,15 @@ public class Card extends JPanel
 	public void setOutline(Color colour)
 	{
 		outline = colour == null ? BORDER : colour;
+		repaint();
+	}
+
+	/**
+	 * Rounds the corners by this arc diameter instead of the card default, e.g. {@link Spacing#CONTROL_ARC}.
+	 */
+	public void setArc(int arc)
+	{
+		this.arc = arc;
 		repaint();
 	}
 
@@ -104,11 +116,11 @@ public class Card extends JPanel
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setColor(getBackground());
-		g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, Spacing.ARC, Spacing.ARC);
+		g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
 		if (bordered)
 		{
 			g2.setColor(outline);
-			g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, Spacing.ARC, Spacing.ARC);
+			g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
 		}
 		g2.dispose();
 	}

@@ -26,7 +26,8 @@ import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
 
 /**
- * A competition's standings as one ranked table, or an invitation to take part while nobody has gained yet.
+ * A competition's standings as one ranked table with an optional button under it that opens the full standings on
+ * Wise Old Man, or an invitation to take part while nobody has gained yet.
  */
 @Slf4j
 class LeaderboardBlock implements BlockRenderer
@@ -104,15 +105,13 @@ class LeaderboardBlock implements BlockRenderer
 
 	private static JComponent standingsView(List<Standing> standings, Target target, Block block, ThemeColours colours)
 	{
-		String url = WomClient.competitionPage(target.getWomId());
 		List<Standing> gainers = standings.stream()
 			.filter(s -> s.getGained() > 0)
 			.limit(Math.max(0, block.intSetting("rows", 20)))
 			.collect(Collectors.toList());
 		if (gainers.isEmpty())
 		{
-			LinkButton button = new LinkButton(block.setting("button", "Open on Wise Old Man"), url, colours);
-			return new EmptyState(Glyphs.TROPHY, target.isBoss() ? "No kills yet" : "No gains yet", emptyText(target, block), button, colours);
+			return new EmptyState(Glyphs.TROPHY, target.isBoss() ? "No kills yet" : "No gains yet", emptyText(target, block), colours);
 		}
 
 		String prefix = block.setting("prefix", "");
@@ -124,13 +123,15 @@ class LeaderboardBlock implements BlockRenderer
 			table.addRow(i + 1, standing.getName(), prefix + format(standing.getGained()), i < medals);
 		}
 
+		String button = block.setting("button", null);
+		if (button == null)
+		{
+			return table;
+		}
+
 		JPanel view = column();
 		view.add(table);
-		String button = block.setting("button", null);
-		if (button != null)
-		{
-			view.add(new LinkButton(button, url, colours));
-		}
+		view.add(new LinkButton(button, WomClient.competitionPage(target.getWomId()), colours));
 		return view;
 	}
 

@@ -13,12 +13,12 @@ import com.pvknee.ui.Glyphs;
 import com.pvknee.ui.IconButton;
 import com.pvknee.ui.Labels;
 import com.pvknee.ui.Notice;
+import com.pvknee.ui.PagePicker;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import com.pvknee.wom.WomClient;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.time.Duration;
@@ -26,11 +26,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
@@ -55,8 +53,8 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final BlockRegistry blocks;
 	private final Icons icons;
 	private final WomClient wom;
-	private final JComboBox<Page> pageSelect = new JComboBox<>();
-	private final IconButton homeButton = new IconButton(Glyphs.HOUSE, "Home", this::openHome);
+	private final PagePicker pagePicker = new PagePicker(this::showPage);
+	private final IconButton homeButton = new IconButton(Glyphs.HOME, "Home", this::openHome);
 	private final IconButton refreshButton = new IconButton(Glyphs.REFRESH, "Refresh", () -> refresh(false));
 	private final Notice notice = new Notice();
 	private final Notice.Line errorLine = notice.addLine();
@@ -73,8 +71,6 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	/** When the data on screen was fetched, from the endpoint or the saved copy. */
 	private Instant updatedAt;
 	private boolean loading;
-	/** True while the page dropdown is being refilled, so its selection events don't redraw the page. */
-	private boolean fillingPages;
 	/** The page on screen, so a redraw of the same page keeps its scroll position. */
 	private String shownPageId;
 	/** Countdowns and standings on the current page, updated in place every minute. */
@@ -93,31 +89,10 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		setBorder(new EmptyBorder(10, 10, 10, 10));
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		pageSelect.setRenderer(new DefaultListCellRenderer()
-		{
-			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
-			{
-				super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-				if (value instanceof Page)
-				{
-					setText(((Page) value).getTitle());
-				}
-				return this;
-			}
-		});
-		pageSelect.addActionListener(e ->
-		{
-			if (!fillingPages)
-			{
-				showPage((Page) pageSelect.getSelectedItem());
-			}
-		});
-
 		JPanel controls = new JPanel(new BorderLayout(Spacing.ITEM_GAP, 0));
 		controls.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		controls.add(homeButton, BorderLayout.WEST);
-		controls.add(pageSelect, BorderLayout.CENTER);
+		controls.add(pagePicker, BorderLayout.CENTER);
 		controls.add(refreshButton, BorderLayout.EAST);
 
 		JPanel top = new JPanel(new BorderLayout(0, 10));
@@ -216,7 +191,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	 */
 	private void setLoading(boolean loading)
 	{
-		refreshButton.setSpinning(loading);
+		refreshButton.setSpinning(loading ? ThemeColours.from(data == null ? null : data.getTheme()).getAccent() : null);
 		refreshButton.setEnabled(!loading);
 	}
 
@@ -274,31 +249,24 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			versionLine.clear();
 		}
 
-		Page selected = (Page) pageSelect.getSelectedItem();
-		String selectedId = selected == null ? null : selected.getId();
+		Page previous = pagePicker.getSelected();
+		String previousId = previous == null ? null : previous.getId();
+		List<Page> pages = data.getPages().stream()
+			.filter(PvKneePanel::isVisible)
+			.collect(Collectors.toList());
+		Page selected = pages.stream()
+			.filter(page -> Objects.equals(page.getId(), previousId))
+			.findFirst()
+			.orElse(pages.isEmpty() ? null : pages.get(0));
+		pagePicker.setPages(pages, selected, ThemeColours.from(data.getTheme()));
 
-		fillingPages = true;
-		pageSelect.removeAllItems();
-		for (Page page : data.getPages())
-		{
-			if (isVisible(page))
-			{
-				pageSelect.addItem(page);
-				if (Objects.equals(page.getId(), selectedId))
-				{
-					pageSelect.setSelectedItem(page);
-				}
-			}
-		}
-		fillingPages = false;
-
-		if (pageSelect.getItemCount() == 0)
+		if (selected == null)
 		{
 			showMessage("No pages to show");
 		}
 		else
 		{
-			showPage((Page) pageSelect.getSelectedItem());
+			showPage(selected);
 		}
 	}
 
@@ -321,7 +289,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		}
 
 		ThemeColours colours = ThemeColours.from(data.getTheme());
-		homeButton.setHighlight(page == pageSelect.getItemAt(0) ? colours.getAccent() : null);
+		homeButton.setHighlight(page == pagePicker.getPages().get(0) ? colours.getAccent() : null);
 
 		liveUpdates = new ArrayList<>();
 		BlockContext context = new BlockContext(data, colours, icons, this, wom, liveUpdates);
@@ -350,9 +318,9 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	 */
 	private void openHome()
 	{
-		if (pageSelect.getItemCount() > 0)
+		if (!pagePicker.getPages().isEmpty())
 		{
-			pageSelect.setSelectedIndex(0);
+			pagePicker.select(pagePicker.getPages().get(0));
 		}
 	}
 
@@ -368,7 +336,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		Page page = findPage(pageId);
 		if (page != null)
 		{
-			pageSelect.setSelectedItem(page);
+			pagePicker.select(page);
 		}
 	}
 

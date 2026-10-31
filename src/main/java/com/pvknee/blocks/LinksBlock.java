@@ -3,6 +3,8 @@ package com.pvknee.blocks;
 import com.pvknee.data.Block;
 import com.pvknee.data.Link;
 import com.pvknee.ui.Card;
+import com.pvknee.ui.GlyphIcon;
+import com.pvknee.ui.Glyphs;
 import com.pvknee.ui.IconCaption;
 import com.pvknee.ui.Labels;
 import com.pvknee.ui.Section;
@@ -10,16 +12,21 @@ import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import java.awt.BorderLayout;
+import java.awt.Shape;
 import java.awt.GridLayout;
 import java.util.List;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.util.LinkBrowser;
 
 /**
- * Links as a two-column grid of compact buttons, each with its icon above the label.
+ * Links as a two-column grid of compact buttons, each with its icon above the label. The icon is a {@link Glyphs}
+ * name, optionally with a colour, e.g. "chat:#8C9EFF".
  */
+@Slf4j
 class LinksBlock implements BlockRenderer
 {
 	private static final int COLUMNS = 2;
@@ -60,9 +67,28 @@ class LinksBlock implements BlockRenderer
 		card.setToolTipText(link.getUrl());
 		card.onClick(() -> LinkBrowser.browse(link.getUrl()));
 
-		JComponent icon = link.getIcon() == null || link.getIcon().isEmpty() ? null : context.getIcons().url(link.getIcon(), ICON_SIZE);
 		String label = link.getLabel() == null ? link.getUrl() : link.getLabel();
-		card.add(new IconCaption(null, icon, label, colours.getValue(), FontManager.getRunescapeFont(), LABEL_WIDTH, colours), BorderLayout.CENTER);
+		card.add(new IconCaption(null, icon(link.getIcon(), colours), label, colours.getValue(), FontManager.getRunescapeFont(), LABEL_WIDTH, colours), BorderLayout.CENTER);
 		return card;
+	}
+
+	/**
+	 * The glyph for a link's icon setting, e.g. "chat" or "chat:#8C9EFF". Null if there is none or it is unknown.
+	 */
+	private static JComponent icon(String setting, ThemeColours colours)
+	{
+		if (setting == null || setting.trim().isEmpty())
+		{
+			return null;
+		}
+
+		String[] parts = setting.split(":", 2);
+		Shape glyph = Glyphs.named(parts[0]);
+		if (glyph == null)
+		{
+			log.debug("Unknown link icon {}", setting);
+			return null;
+		}
+		return new JLabel(new GlyphIcon(glyph, colours.resolve(parts.length > 1 ? parts[1] : null, colours.getValue()), ICON_SIZE));
 	}
 }

@@ -13,8 +13,10 @@ public final class Spacing
 	public static final int ITEM_GAP = 4;
 	/** Inside a card. */
 	public static final int PADDING = 10;
-	/** Corner rounding of cards and bars. */
-	public static final int ARC = 8;
+	/** Corner rounding of cards, as the arc diameter (an 8 px radius). */
+	public static final int ARC = 16;
+	/** Corner rounding of small controls such as {@link IconButton}, as the arc diameter (a 6 px radius). */
+	public static final int CONTROL_ARC = 12;
 
 	private Spacing()
 	{

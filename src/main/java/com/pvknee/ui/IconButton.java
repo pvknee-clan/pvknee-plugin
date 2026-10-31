@@ -21,12 +21,14 @@ public class IconButton extends Card
 	private final Shape glyph;
 	private final Timer spinner = new Timer(SPIN_INTERVAL_MS, e -> spin());
 	private Color iconColour = ICON;
+	private Color spinColour;
 	private double angle;
 
 	public IconButton(Shape glyph, String name, Runnable action)
 	{
 		super(new FlowLayout());
 		this.glyph = glyph;
+		setArc(Spacing.CONTROL_ARC);
 		setPreferredSize(new Dimension(SIZE, SIZE));
 		setToolTipText(name);
 		getAccessibleContext().setAccessibleName(name);
@@ -44,20 +46,22 @@ public class IconButton extends Card
 	}
 
 	/**
-	 * Turns the icon continuously, e.g. while loading.
+	 * Turns the icon continuously in this colour, e.g. the accent while loading. Null stops it and restores the icon.
 	 */
-	public void setSpinning(boolean spinning)
+	public void setSpinning(Color colour)
 	{
-		if (spinning)
+		if (colour != null)
 		{
+			spinColour = colour;
 			spinner.start();
 		}
 		else
 		{
+			spinColour = null;
 			spinner.stop();
 			angle = 0;
-			repaint();
 		}
+		repaint();
 	}
 
 	private void spin()
@@ -70,6 +74,6 @@ public class IconButton extends Card
 	protected void paintComponent(Graphics g)
 	{
 		super.paintComponent(g);
-		Glyphs.draw(g, glyph, iconColour, ICON_SIZE, getWidth() / 2.0, getHeight() / 2.0, angle);
+		Glyphs.draw(g, glyph, spinColour == null ? iconColour : spinColour, ICON_SIZE, getWidth() / 2.0, getHeight() / 2.0, angle);
 	}
 }
