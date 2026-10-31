@@ -26,6 +26,7 @@ public class BlockRegistry
 		renderers.put("message", new MessageBlock());
 		renderers.put("links", new LinksBlock());
 		renderers.put("events", new EventsBlock());
+		renderers.put("competition", new CompetitionBlock());
 	}
 
 	public JComponent render(Block block, BlockContext context)
