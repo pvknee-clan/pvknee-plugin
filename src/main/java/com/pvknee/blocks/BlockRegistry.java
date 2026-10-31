@@ -25,6 +25,7 @@ public class BlockRegistry
 		renderers.put("separator", new SeparatorBlock());
 		renderers.put("message", new MessageBlock());
 		renderers.put("links", new LinksBlock());
+		renderers.put("events", new EventsBlock());
 	}
 
 	public JComponent render(Block block, BlockContext context)
