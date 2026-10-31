@@ -54,8 +54,25 @@ public class ImageLoader
 		label.setMinimumSize(dimension);
 		label.setMaximumSize(dimension);
 
-		load(url, image -> label.setIcon(icon(url, image, size)));
+		load(url, size, label::setIcon);
 		return label;
+	}
+
+	/**
+	 * Calls back on the Swing thread with the image at the given size, once it has loaded. Never called if it fails.
+	 * Call on the Swing thread.
+	 */
+	public void load(String url, int size, Consumer<ImageIcon> onLoad)
+	{
+		load(url, image -> onLoad.accept(icon(url, image, size)));
+	}
+
+	/**
+	 * An empty icon to hold the space while an image loads.
+	 */
+	public static ImageIcon placeholder(int size)
+	{
+		return new ImageIcon(new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB));
 	}
 
 	private ImageIcon icon(String url, BufferedImage image, int size)

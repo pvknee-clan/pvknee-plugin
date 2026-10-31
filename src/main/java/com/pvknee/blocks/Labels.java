@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
+import net.runelite.client.ui.FontManager;
 
 /**
  * Wrapped text labels for the panel.
@@ -23,6 +24,14 @@ public final class Labels
 		label.setFont(font);
 		label.setHorizontalAlignment(centred ? SwingConstants.CENTER : SwingConstants.LEFT);
 		return label;
+	}
+
+	/**
+	 * The optional heading some blocks draw above themselves.
+	 */
+	public static JLabel title(String text, ThemeColours colours)
+	{
+		return label(text, colours.getAccent(), FontManager.getRunescapeBoldFont(), CONTENT_WIDTH, true);
 	}
 
 	public static String html(String text, int width, boolean centred)
