@@ -81,16 +81,20 @@ class EventsBlock implements BlockRenderer
 		}
 		for (TimedEvent event : shown)
 		{
-			panel.add(eventCard(event, now, context));
+			panel.add(eventCard(event, now, block, context));
 		}
 		return panel;
 	}
 
-	private static Card eventCard(TimedEvent timed, Instant now, BlockContext context)
+	private static Card eventCard(TimedEvent timed, Instant now, Block block, BlockContext context)
 	{
 		ClanEvent event = timed.event;
 		ThemeColours colours = context.getColours();
 		Card card = new Card(new BorderLayout(Spacing.PADDING, 0));
+		if (timed.isRunning(now))
+		{
+			context.linkToPage(card, block, event.getKind());
+		}
 
 		if (event.getMetric() != null && !event.getMetric().isEmpty())
 		{

@@ -5,10 +5,7 @@ import com.pvknee.data.Link;
 import com.pvknee.ui.Card;
 import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
-import java.awt.Cursor;
 import java.awt.FlowLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -52,8 +49,8 @@ class LinksBlock implements BlockRenderer
 	private static Card linkCard(Link link, BlockContext context)
 	{
 		Card card = new Card(new FlowLayout(FlowLayout.CENTER, Spacing.PADDING, 0));
-		card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		card.setToolTipText(link.getUrl());
+		card.onClick(() -> LinkBrowser.browse(link.getUrl()));
 
 		if (link.getIcon() != null && !link.getIcon().isEmpty())
 		{
@@ -64,27 +61,6 @@ class LinksBlock implements BlockRenderer
 		label.setFont(FontManager.getRunescapeFont());
 		label.setForeground(context.getColours().getValue());
 		card.add(label);
-
-		card.addMouseListener(new MouseAdapter()
-		{
-			@Override
-			public void mouseClicked(MouseEvent e)
-			{
-				LinkBrowser.browse(link.getUrl());
-			}
-
-			@Override
-			public void mouseEntered(MouseEvent e)
-			{
-				card.setBackground(Card.HOVER);
-			}
-
-			@Override
-			public void mouseExited(MouseEvent e)
-			{
-				card.setBackground(Card.BACKGROUND);
-			}
-		});
 		return card;
 	}
 }

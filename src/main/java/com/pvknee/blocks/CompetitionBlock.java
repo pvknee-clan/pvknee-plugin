@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.FontManager;
 
 class CompetitionBlock implements BlockRenderer
@@ -51,15 +52,15 @@ class CompetitionBlock implements BlockRenderer
 		}
 
 		return block.setting("layout", "side").equalsIgnoreCase("hero")
-			? hero(matching.get(0), upcoming, context)
-			: side(matching, upcoming, context);
+			? hero(matching.get(0), upcoming, block, context)
+			: side(matching, upcoming, block, context);
 	}
 
-	private static Card side(List<Competition> competitions, boolean upcoming, BlockContext context)
+	private static Card side(List<Competition> competitions, boolean upcoming, Block block, BlockContext context)
 	{
 		ThemeColours colours = context.getColours();
 		int count = competitions.size();
-		int columnWidth = (INNER_WIDTH - Spacing.PADDING * (count - 1)) / count;
+		int columnWidth = (INNER_WIDTH - Spacing.PADDING * (count - 1)) / count - 2 * Spacing.ITEM_GAP;
 		boolean sharedTime = competitions.stream()
 			.map(c -> upcoming ? c.getStartsAt() : c.getEndsAt())
 			.distinct()
@@ -69,8 +70,9 @@ class CompetitionBlock implements BlockRenderer
 		columns.setOpaque(false);
 		for (Competition competition : competitions)
 		{
-			JPanel column = new JPanel(new BorderLayout(0, Spacing.ITEM_GAP));
-			column.setOpaque(false);
+			Card column = new Card(new BorderLayout(0, Spacing.ITEM_GAP), false);
+			column.setBorder(new EmptyBorder(Spacing.ITEM_GAP, Spacing.ITEM_GAP, Spacing.ITEM_GAP, Spacing.ITEM_GAP));
+			context.linkToPage(column, block, competition.getType());
 			column.add(new IconCaption(
 				kind(competition),
 				context.metricIcon(competition.getMetric(), SIDE_ICON_SIZE),
@@ -94,10 +96,11 @@ class CompetitionBlock implements BlockRenderer
 		return card;
 	}
 
-	private static Card hero(Competition competition, boolean upcoming, BlockContext context)
+	private static Card hero(Competition competition, boolean upcoming, Block block, BlockContext context)
 	{
 		ThemeColours colours = context.getColours();
 		Card card = new Card(new BorderLayout(0, Spacing.ITEM_GAP));
+		context.linkToPage(card, block, competition.getType());
 		card.add(new IconCaption(
 			null,
 			context.metricIcon(competition.getMetric(), HERO_ICON_SIZE),

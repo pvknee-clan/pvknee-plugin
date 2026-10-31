@@ -3,6 +3,7 @@ package com.pvknee;
 import com.pvknee.blocks.BlockContext;
 import com.pvknee.blocks.BlockRegistry;
 import com.pvknee.blocks.Icons;
+import com.pvknee.blocks.PageNavigator;
 import com.pvknee.data.Block;
 import com.pvknee.data.ClanData;
 import com.pvknee.data.ClanDataClient;
@@ -36,7 +37,7 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 
 @Slf4j
-class PvKneePanel extends PluginPanel
+class PvKneePanel extends PluginPanel implements PageNavigator
 {
 	private static final int SUPPORTED_VERSION = 1;
 
@@ -163,7 +164,7 @@ class PvKneePanel extends PluginPanel
 		pageSelect.removeAllItems();
 		for (Page page : data.getPages())
 		{
-			if (page.isShow())
+			if (isVisible(page))
 			{
 				pageSelect.addItem(page);
 				if (Objects.equals(page.getId(), selectedId))
@@ -186,7 +187,7 @@ class PvKneePanel extends PluginPanel
 			return;
 		}
 
-		BlockContext context = new BlockContext(data, ThemeColours.from(data.getTheme()), icons);
+		BlockContext context = new BlockContext(data, ThemeColours.from(data.getTheme()), icons, this);
 
 		content.removeAll();
 		for (Block block : page.getBlocks())
@@ -199,6 +200,39 @@ class PvKneePanel extends PluginPanel
 		}
 		content.revalidate();
 		content.repaint();
+	}
+
+	@Override
+	public boolean canOpen(String pageId)
+	{
+		return findPage(pageId) != null;
+	}
+
+	@Override
+	public void open(String pageId)
+	{
+		Page page = findPage(pageId);
+		if (page != null)
+		{
+			pageSelect.setSelectedItem(page);
+		}
+	}
+
+	private Page findPage(String pageId)
+	{
+		if (data == null || pageId == null)
+		{
+			return null;
+		}
+		return data.getPages().stream()
+			.filter(page -> pageId.equals(page.getId()) && isVisible(page))
+			.findFirst()
+			.orElse(null);
+	}
+
+	private static boolean isVisible(Page page)
+	{
+		return page.isShow();
 	}
 
 	private void showMessage(String message)
