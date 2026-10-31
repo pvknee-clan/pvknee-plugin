@@ -22,6 +22,7 @@ public class Card extends JPanel
 	private static final Color BORDER = new Color(64, 64, 64);
 
 	private final boolean bordered;
+	private Color outline = BORDER;
 
 	public Card(LayoutManager layout)
 	{
@@ -41,8 +42,19 @@ public class Card extends JPanel
 	}
 
 	/**
+	 * Draws the border in this colour instead of the default, e.g. the accent to mark the active choice.
+	 * Null restores the default.
+	 */
+	public void setOutline(Color colour)
+	{
+		outline = colour == null ? BORDER : colour;
+		repaint();
+	}
+
+	/**
 	 * Makes the whole card clickable, with a hand cursor and a hover highlight.
 	 * Acts when the left button is released over the card, even if the mouse moved while pressed.
+	 * A disabled card ignores clicks and hover.
 	 */
 	public void onClick(Runnable action)
 	{
@@ -52,7 +64,7 @@ public class Card extends JPanel
 			@Override
 			public void mouseReleased(MouseEvent e)
 			{
-				if (SwingUtilities.isLeftMouseButton(e) && contains(e.getPoint()))
+				if (isEnabled() && SwingUtilities.isLeftMouseButton(e) && contains(e.getPoint()))
 				{
 					action.run();
 				}
@@ -61,7 +73,10 @@ public class Card extends JPanel
 			@Override
 			public void mouseEntered(MouseEvent e)
 			{
-				setBackground(HOVER);
+				if (isEnabled())
+				{
+					setBackground(HOVER);
+				}
 			}
 
 			@Override
@@ -73,6 +88,16 @@ public class Card extends JPanel
 	}
 
 	@Override
+	public void setEnabled(boolean enabled)
+	{
+		super.setEnabled(enabled);
+		if (!enabled)
+		{
+			setBackground(BACKGROUND);
+		}
+	}
+
+	@Override
 	protected void paintComponent(Graphics g)
 	{
 		Graphics2D g2 = (Graphics2D) g.create();
@@ -81,7 +106,7 @@ public class Card extends JPanel
 		g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, Spacing.ARC, Spacing.ARC);
 		if (bordered)
 		{
-			g2.setColor(BORDER);
+			g2.setColor(outline);
 			g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, Spacing.ARC, Spacing.ARC);
 		}
 		g2.dispose();

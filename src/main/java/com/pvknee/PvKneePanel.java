@@ -9,7 +9,10 @@ import com.pvknee.data.Block;
 import com.pvknee.data.ClanData;
 import com.pvknee.data.ClanDataClient;
 import com.pvknee.data.Page;
+import com.pvknee.ui.Glyphs;
+import com.pvknee.ui.IconButton;
 import com.pvknee.ui.Labels;
+import com.pvknee.ui.Notice;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import com.pvknee.wom.WomClient;
@@ -24,12 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.inject.Inject;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -56,10 +56,12 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final Icons icons;
 	private final WomClient wom;
 	private final JComboBox<Page> pageSelect = new JComboBox<>();
-	private final JButton refreshButton = new JButton("Refresh");
-	private final JLabel statusLabel = new JLabel();
-	private final JLabel lastUpdatedLabel = Labels.label("", Color.GRAY, FontManager.getRunescapeSmallFont(), Labels.CONTENT_WIDTH, false);
-	private final JLabel versionLabel = Labels.label("A newer plugin version is available", Color.GRAY, FontManager.getRunescapeSmallFont(), Labels.CONTENT_WIDTH, false);
+	private final IconButton homeButton = new IconButton(Glyphs.HOUSE, "Home", this::openHome);
+	private final IconButton refreshButton = new IconButton(Glyphs.REFRESH, "Refresh", () -> refresh(false));
+	private final Notice notice = new Notice();
+	private final Notice.Line errorLine = notice.addLine();
+	private final Notice.Line lastUpdatedLine = notice.addLine();
+	private final Notice.Line versionLine = notice.addLine();
 	private final JPanel content = new JPanel();
 	private final JScrollPane scrollPane;
 	private final Timer countdownTimer = new Timer((int) COUNTDOWN_INTERVAL.toMillis(), e -> updateLive());
@@ -112,27 +114,16 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			}
 		});
 
-		refreshButton.addActionListener(e -> refresh(false));
-
-		JPanel controls = new JPanel(new BorderLayout(5, 0));
+		JPanel controls = new JPanel(new BorderLayout(Spacing.ITEM_GAP, 0));
 		controls.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		controls.add(homeButton, BorderLayout.WEST);
 		controls.add(pageSelect, BorderLayout.CENTER);
 		controls.add(refreshButton, BorderLayout.EAST);
-
-		JPanel notices = new JPanel();
-		notices.setLayout(new BoxLayout(notices, BoxLayout.Y_AXIS));
-		notices.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		for (JLabel notice : new JLabel[]{statusLabel, lastUpdatedLabel, versionLabel})
-		{
-			notice.setVisible(false);
-			notice.setAlignmentX(LEFT_ALIGNMENT);
-			notices.add(notice);
-		}
 
 		JPanel top = new JPanel(new BorderLayout(0, 10));
 		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		top.add(controls, BorderLayout.NORTH);
-		top.add(notices, BorderLayout.CENTER);
+		top.add(notice, BorderLayout.CENTER);
 
 		content.setLayout(new DynamicGridLayout(0, 1, 0, Spacing.BLOCK_GAP));
 		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -199,8 +190,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		loading = true;
 		if (!quiet)
 		{
-			refreshButton.setEnabled(false);
-			showStatus("Loading...", Color.WHITE);
+			setLoading(true);
 		}
 
 		client.fetch(
@@ -211,21 +201,23 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 				SwingUtilities.invokeLater(() ->
 				{
 					loading = false;
-					refreshButton.setEnabled(true);
+					setLoading(false);
 					if (!quiet)
 					{
-						showStatus("ERROR: Couldn't load the clan panel. Press Refresh to try again.", ColorScheme.PROGRESS_ERROR_COLOR);
+						errorLine.setMessage("Couldn't load the clan panel. Press the refresh button to try again.", ColorScheme.PROGRESS_ERROR_COLOR);
 					}
 					showLastUpdated();
 				});
 			});
 	}
 
-	private void showStatus(String text, Color colour)
+	/**
+	 * Spins and disables the refresh button while a load the member is waiting on runs.
+	 */
+	private void setLoading(boolean loading)
 	{
-		Labels.setText(statusLabel, text, Labels.CONTENT_WIDTH, false);
-		statusLabel.setForeground(colour);
-		statusLabel.setVisible(true);
+		refreshButton.setSpinning(loading);
+		refreshButton.setEnabled(!loading);
 	}
 
 	private void show(ClanData data)
@@ -234,14 +226,15 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		loadedAt = Instant.now();
 		updatedAt = loadedAt;
 		loading = false;
-		refreshButton.setEnabled(true);
-		statusLabel.setVisible(false);
-		lastUpdatedLabel.setVisible(false);
+		setLoading(false);
+		errorLine.clear();
+		lastUpdatedLine.clear();
 		display(data);
 	}
 
 	/**
-	 * Shows the saved copy, unless fresh data has already arrived.
+	 * Shows the saved copy, unless fresh data has already arrived. While a load is still running, the "Last updated"
+	 * line waits until it fails, so the page doesn't jump when the fresh data replaces the saved copy.
 	 */
 	private void showSaved(ClanData data, Instant savedAt)
 	{
@@ -253,7 +246,10 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		log.debug("Showing saved clan data from {}", savedAt);
 		updatedAt = savedAt;
 		display(data);
-		showLastUpdated();
+		if (!loading)
+		{
+			showLastUpdated();
+		}
 	}
 
 	private void showLastUpdated()
@@ -263,16 +259,20 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			return;
 		}
 
-		Labels.setText(lastUpdatedLabel, "Last updated " + Times.time(updatedAt), Labels.CONTENT_WIDTH, false);
-		lastUpdatedLabel.setForeground(ThemeColours.from(data.getTheme()).getMuted());
-		lastUpdatedLabel.setVisible(true);
+		lastUpdatedLine.setMessage("Last updated " + Times.time(updatedAt), ThemeColours.from(data.getTheme()).getMuted());
 	}
 
 	private void display(ClanData data)
 	{
 		this.data = data;
-		versionLabel.setForeground(ThemeColours.from(data.getTheme()).getMuted());
-		versionLabel.setVisible(data.getVersion() > SUPPORTED_VERSION);
+		if (data.getVersion() > SUPPORTED_VERSION)
+		{
+			versionLine.setMessage("A newer plugin version is available", ThemeColours.from(data.getTheme()).getMuted());
+		}
+		else
+		{
+			versionLine.clear();
+		}
 
 		Page selected = (Page) pageSelect.getSelectedItem();
 		String selectedId = selected == null ? null : selected.getId();
@@ -320,8 +320,11 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			return;
 		}
 
+		ThemeColours colours = ThemeColours.from(data.getTheme());
+		homeButton.setHighlight(page == pageSelect.getItemAt(0) ? colours.getAccent() : null);
+
 		liveUpdates = new ArrayList<>();
-		BlockContext context = new BlockContext(data, ThemeColours.from(data.getTheme()), icons, this, wom, liveUpdates);
+		BlockContext context = new BlockContext(data, colours, icons, this, wom, liveUpdates);
 
 		content.removeAll();
 		for (Block block : page.getBlocks())
@@ -339,6 +342,17 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		{
 			shownPageId = page.getId();
 			scrollPane.getVerticalScrollBar().setValue(0);
+		}
+	}
+
+	/**
+	 * Opens the first page, which is Home when the sheet has it.
+	 */
+	private void openHome()
+	{
+		if (pageSelect.getItemCount() > 0)
+		{
+			pageSelect.setSelectedIndex(0);
 		}
 	}
 
@@ -382,6 +396,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	{
 		liveUpdates = new ArrayList<>();
 		shownPageId = null;
+		homeButton.setHighlight(null);
 		content.removeAll();
 		content.add(Labels.label(message, Color.WHITE, FontManager.getRunescapeFont(), Labels.CONTENT_WIDTH, false));
 		content.revalidate();
