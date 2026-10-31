@@ -11,4 +11,5 @@ public class BlockContext
 {
 	ClanData data;
 	ThemeColours colours;
+	ImageLoader images;
 }

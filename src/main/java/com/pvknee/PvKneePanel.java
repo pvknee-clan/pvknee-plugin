@@ -2,6 +2,7 @@ package com.pvknee;
 
 import com.pvknee.blocks.BlockContext;
 import com.pvknee.blocks.BlockRegistry;
+import com.pvknee.blocks.ImageLoader;
 import com.pvknee.blocks.Labels;
 import com.pvknee.blocks.ThemeColours;
 import com.pvknee.data.Block;
@@ -37,6 +38,7 @@ class PvKneePanel extends PluginPanel
 
 	private final ClanDataClient client;
 	private final BlockRegistry blocks;
+	private final ImageLoader images;
 	private final JComboBox<Page> pageSelect = new JComboBox<>();
 	private final JButton refreshButton = new JButton("Refresh");
 	private final JLabel statusLabel = new JLabel();
@@ -47,11 +49,12 @@ class PvKneePanel extends PluginPanel
 	private boolean loading;
 
 	@Inject
-	PvKneePanel(ClanDataClient client, BlockRegistry blocks)
+	PvKneePanel(ClanDataClient client, BlockRegistry blocks, ImageLoader images)
 	{
 		super(false);
 		this.client = client;
 		this.blocks = blocks;
+		this.images = images;
 
 		setLayout(new BorderLayout(0, 10));
 		setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -180,7 +183,7 @@ class PvKneePanel extends PluginPanel
 			return;
 		}
 
-		BlockContext context = new BlockContext(data, ThemeColours.from(data.getTheme()));
+		BlockContext context = new BlockContext(data, ThemeColours.from(data.getTheme()), images);
 
 		content.removeAll();
 		for (Block block : page.getBlocks())
