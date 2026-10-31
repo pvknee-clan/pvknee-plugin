@@ -2,6 +2,7 @@ package com.pvknee.blocks;
 
 import com.pvknee.data.ClanData;
 import com.pvknee.ui.ThemeColours;
+import javax.swing.JLabel;
 import lombok.Value;
 
 /**
@@ -12,5 +13,13 @@ public class BlockContext
 {
 	ClanData data;
 	ThemeColours colours;
-	ImageLoader images;
+	Icons icons;
+
+	/**
+	 * The icon for a Wise Old Man metric, e.g. woodcutting or cerberus.
+	 */
+	public JLabel metricIcon(String metric, int size)
+	{
+		return icons.metric(metric, data.getIconBase(), size);
+	}
 }

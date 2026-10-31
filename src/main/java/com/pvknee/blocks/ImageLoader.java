@@ -60,8 +60,15 @@ public class ImageLoader
 
 	private ImageIcon icon(String url, BufferedImage image, int size)
 	{
-		return icons.computeIfAbsent(url + "@" + size, k ->
-			new ImageIcon(ImageUtil.resizeCanvas(ImageUtil.resizeImage(image, size, size, true), size, size)));
+		return icons.computeIfAbsent(url + "@" + size, k -> scaled(image, size));
+	}
+
+	/**
+	 * The image fitted inside a square of the given size, keeping its proportions.
+	 */
+	static ImageIcon scaled(BufferedImage image, int size)
+	{
+		return new ImageIcon(ImageUtil.resizeCanvas(ImageUtil.resizeImage(image, size, size, true), size, size));
 	}
 
 	private void load(String url, Consumer<BufferedImage> onLoad)

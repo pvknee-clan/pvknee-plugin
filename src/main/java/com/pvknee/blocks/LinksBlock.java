@@ -57,7 +57,7 @@ class LinksBlock implements BlockRenderer
 
 		if (link.getIcon() != null && !link.getIcon().isEmpty())
 		{
-			card.add(context.getImages().icon(link.getIcon(), ICON_SIZE));
+			card.add(context.getIcons().url(link.getIcon(), ICON_SIZE));
 		}
 
 		JLabel label = new JLabel(link.getLabel() == null ? link.getUrl() : link.getLabel());
