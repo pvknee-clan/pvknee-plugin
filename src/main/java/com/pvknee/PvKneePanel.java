@@ -13,6 +13,8 @@ import com.pvknee.ui.ThemeColours;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.util.Objects;
 import javax.inject.Inject;
 import javax.swing.DefaultListCellRenderer;
@@ -23,6 +25,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.Scrollable;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
@@ -43,7 +46,7 @@ class PvKneePanel extends PluginPanel
 	private final JComboBox<Page> pageSelect = new JComboBox<>();
 	private final JButton refreshButton = new JButton("Refresh");
 	private final JLabel statusLabel = new JLabel();
-	private final JLabel versionLabel = new JLabel(html("A newer plugin version is available"));
+	private final JLabel versionLabel = Labels.label("A newer plugin version is available", Color.GRAY, FontManager.getRunescapeSmallFont(), Labels.CONTENT_WIDTH, false);
 	private final JPanel content = new JPanel();
 
 	private ClanData data;
@@ -84,7 +87,6 @@ class PvKneePanel extends PluginPanel
 		controls.add(refreshButton, BorderLayout.EAST);
 
 		statusLabel.setVisible(false);
-		versionLabel.setFont(FontManager.getRunescapeSmallFont());
 		versionLabel.setVisible(false);
 
 		JPanel top = new JPanel(new BorderLayout(0, 10));
@@ -96,7 +98,7 @@ class PvKneePanel extends PluginPanel
 		content.setLayout(new DynamicGridLayout(0, 1, 0, Spacing.BLOCK_GAP));
 		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		JPanel contentWrapper = new JPanel(new BorderLayout());
+		JPanel contentWrapper = new WidthTrackingPanel();
 		contentWrapper.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		contentWrapper.add(content, BorderLayout.NORTH);
 
@@ -139,7 +141,7 @@ class PvKneePanel extends PluginPanel
 
 	private void showStatus(String text, Color colour)
 	{
-		statusLabel.setText(html(text));
+		Labels.setText(statusLabel, text, Labels.CONTENT_WIDTH, false);
 		statusLabel.setForeground(colour);
 		statusLabel.setVisible(true);
 	}
@@ -207,8 +209,44 @@ class PvKneePanel extends PluginPanel
 		content.repaint();
 	}
 
-	private static String html(String text)
+	/**
+	 * Scroll pane content that always matches the visible width, so nothing is cut off on the right.
+	 */
+	private static class WidthTrackingPanel extends JPanel implements Scrollable
 	{
-		return Labels.html(text, Labels.CONTENT_WIDTH, false);
+		WidthTrackingPanel()
+		{
+			super(new BorderLayout());
+		}
+
+		@Override
+		public Dimension getPreferredScrollableViewportSize()
+		{
+			return getPreferredSize();
+		}
+
+		@Override
+		public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction)
+		{
+			return 16;
+		}
+
+		@Override
+		public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction)
+		{
+			return visibleRect.height;
+		}
+
+		@Override
+		public boolean getScrollableTracksViewportWidth()
+		{
+			return true;
+		}
+
+		@Override
+		public boolean getScrollableTracksViewportHeight()
+		{
+			return false;
+		}
 	}
 }

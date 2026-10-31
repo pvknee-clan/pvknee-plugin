@@ -20,10 +20,10 @@ public class SectionHeader extends JLabel
 
 	public SectionHeader(String text, Color colour, float size)
 	{
-		super(Labels.html(text, Labels.CONTENT_WIDTH, true));
 		setForeground(colour);
 		setFont(FontManager.getRunescapeBoldFont().deriveFont(size));
 		setHorizontalAlignment(SwingConstants.CENTER);
 		setBorder(new EmptyBorder(0, 0, Spacing.ITEM_GAP, 0));
+		Labels.setText(this, text, Labels.CONTENT_WIDTH, true);
 	}
 }
