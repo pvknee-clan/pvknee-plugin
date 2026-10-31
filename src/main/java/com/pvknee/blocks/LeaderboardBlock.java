@@ -1,20 +1,18 @@
 package com.pvknee.blocks;
 
 import com.pvknee.data.Block;
-import com.pvknee.data.Competition;
 import com.pvknee.data.Competitions;
-import com.pvknee.ui.Card;
+import com.pvknee.ui.EmptyState;
+import com.pvknee.ui.Glyphs;
 import com.pvknee.ui.Labels;
-import com.pvknee.ui.MedalRow;
+import com.pvknee.ui.LinkButton;
+import com.pvknee.ui.RankTable;
+import com.pvknee.ui.Section;
+import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import com.pvknee.wom.Standing;
 import com.pvknee.wom.WomClient;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
@@ -22,38 +20,33 @@ import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
-import net.runelite.client.util.LinkBrowser;
 
+/**
+ * A competition's standings as one ranked table, or an invitation to take part while nobody has gained yet.
+ */
 @Slf4j
 class LeaderboardBlock implements BlockRenderer
 {
-	private static final int RANK_WIDTH = 24;
-
 	@Override
 	public JComponent render(Block block, BlockContext context)
 	{
-		Long competitionId = competitionId(block.setting("competition", "current_skill"), context);
-		if (competitionId == null)
+		Target target = target(block.setting("competition", "current_skill"), context);
+		if (target == null)
 		{
 			log.debug("No competition for leaderboard {}", block.getSettings());
 			return null;
 		}
 
 		ThemeColours colours = context.getColours();
+		String label = block.setting("label", target.isBoss() ? "Kills" : target.isSkill() ? "XP gained" : "Gained");
+		SectionHeader header = new SectionHeader(block.setting("title", "Standings"), colours).withAside(() -> label, colours);
+
 		JPanel standings = column();
 		standings.add(muted("Loading standings...", colours));
-
-		JPanel panel = column();
-		panel.add(standings);
-		String button = block.setting("button", null);
-		if (button != null)
-		{
-			panel.add(button(button, WomClient.competitionPage(competitionId), colours));
-		}
 
 		// Asked again every minute; WOM answers from its cache, so the table is only redrawn when new standings arrive.
 		Consumer<List<Standing>> onStandings = new Consumer<>()
@@ -66,21 +59,21 @@ class LeaderboardBlock implements BlockRenderer
 				if (result != shown)
 				{
 					shown = result;
-					show(standings, standingsView(result, block, colours));
+					show(standings, standingsView(result, target, block, colours));
 				}
 			}
 		};
-		Runnable load = () -> context.getWom().standings(competitionId, onStandings,
+		Runnable load = () -> context.getWom().standings(target.getWomId(), onStandings,
 			error -> show(standings, muted("Couldn't load standings", colours)));
 		load.run();
 		context.onUpdate(load);
-		return panel;
+		return new Section(header, standings);
 	}
 
 	/**
 	 * current_skill and current_boss pick from the current competitions; anything else is a WOM id.
 	 */
-	private static Long competitionId(String setting, BlockContext context)
+	private static Target target(String setting, BlockContext context)
 	{
 		String type = setting.equalsIgnoreCase("current_skill") ? "skill"
 			: setting.equalsIgnoreCase("current_boss") ? "boss"
@@ -89,7 +82,7 @@ class LeaderboardBlock implements BlockRenderer
 		{
 			try
 			{
-				return Long.parseLong(setting);
+				return new Target(Long.parseLong(setting), null, null);
 			}
 			catch (NumberFormatException e)
 			{
@@ -104,73 +97,53 @@ class LeaderboardBlock implements BlockRenderer
 		}
 		return competitions.getCurrent().stream()
 			.filter(c -> type.equalsIgnoreCase(c.getType()) && c.getWomId() > 0)
-			.map(Competition::getWomId)
 			.findFirst()
+			.map(c -> new Target(c.getWomId(), type, c.getName()))
 			.orElse(null);
 	}
 
-	private static JComponent standingsView(List<Standing> standings, Block block, ThemeColours colours)
+	private static JComponent standingsView(List<Standing> standings, Target target, Block block, ThemeColours colours)
 	{
+		String url = WomClient.competitionPage(target.getWomId());
 		List<Standing> gainers = standings.stream()
 			.filter(s -> s.getGained() > 0)
 			.limit(Math.max(0, block.intSetting("rows", 20)))
 			.collect(Collectors.toList());
 		if (gainers.isEmpty())
 		{
-			return muted("No gains yet", colours);
+			LinkButton button = new LinkButton(block.setting("button", "Open on Wise Old Man"), url, colours);
+			return new EmptyState(Glyphs.TROPHY, target.isBoss() ? "No kills yet" : "No gains yet", emptyText(target, block), button, colours);
 		}
 
 		String prefix = block.setting("prefix", "");
-		int podium = Math.min(gainers.size(), Math.max(0, block.intSetting("podium", 3)));
-		JPanel view = column();
-
-		if (podium > 0)
+		int medals = Math.min(RankTable.medalPlaces(), Math.max(0, block.intSetting("podium", 3)));
+		RankTable table = new RankTable(colours);
+		for (int i = 0; i < gainers.size(); i++)
 		{
-			Card podiumCard = new Card(new DynamicGridLayout(0, 1, 0, Spacing.ITEM_GAP));
-			for (int i = 0; i < podium; i++)
-			{
-				Standing standing = gainers.get(i);
-				podiumCard.add(new MedalRow(i + 1, standing.getName(), prefix + format(standing.getGained()), colours));
-			}
-			view.add(podiumCard);
+			Standing standing = gainers.get(i);
+			table.addRow(i + 1, standing.getName(), prefix + format(standing.getGained()), i < medals);
 		}
 
-		if (gainers.size() > podium)
+		JPanel view = column();
+		view.add(table);
+		String button = block.setting("button", null);
+		if (button != null)
 		{
-			Card table = new Card(new DynamicGridLayout(0, 1, 0, 2));
-			Font headerFont = FontManager.getRunescapeSmallFont();
-			table.add(row("#", "Player", block.setting("label", "Gained"), colours.getMuted(), colours.getMuted(), headerFont));
-			for (int i = podium; i < gainers.size(); i++)
-			{
-				Standing standing = gainers.get(i);
-				table.add(row(String.valueOf(i + 1), standing.getName(), prefix + format(standing.getGained()),
-					colours.getMuted(), colours.getValue(), FontManager.getRunescapeFont()));
-			}
-			view.add(table);
+			view.add(new LinkButton(button, url, colours));
 		}
 		return view;
 	}
 
-	private static JPanel row(String rank, String name, String value, Color rankColour, Color colour, Font font)
+	/**
+	 * The empty setting, or a default inviting people to take part, with {name} replaced by the competition's name.
+	 */
+	private static String emptyText(Target target, Block block)
 	{
-		JPanel row = new JPanel(new BorderLayout(Spacing.ITEM_GAP, 0));
-		row.setOpaque(false);
-
-		JLabel rankLabel = text(rank, rankColour, font, SwingConstants.LEFT);
-		rankLabel.setPreferredSize(new Dimension(RANK_WIDTH, rankLabel.getPreferredSize().height));
-		row.add(rankLabel, BorderLayout.WEST);
-		row.add(text(name, colour, font, SwingConstants.LEFT), BorderLayout.CENTER);
-		row.add(text(value, colour, font, SwingConstants.RIGHT), BorderLayout.EAST);
-		return row;
-	}
-
-	private static Card button(String text, String url, ThemeColours colours)
-	{
-		Card card = new Card(new FlowLayout(FlowLayout.CENTER, 0, 0));
-		card.setToolTipText(url);
-		card.onClick(() -> LinkBrowser.browse(url));
-		card.add(text(text, colours.getValue(), FontManager.getRunescapeFont(), SwingConstants.CENTER));
-		return card;
+		String fallback = target.isBoss() ? "Kill {name} this week to get on the board."
+			: target.isSkill() ? "Train {name} this week to get on the board."
+			: "Take part this week to get on the board.";
+		String name = target.getName() == null ? "the competition" : target.getName();
+		return block.setting("empty", fallback).replace("{name}", name);
 	}
 
 	private static void show(JPanel container, JComponent content)
@@ -193,17 +166,29 @@ class LeaderboardBlock implements BlockRenderer
 		return Labels.label(text, colours.getMuted(), FontManager.getRunescapeSmallFont(), Labels.CONTENT_WIDTH, true);
 	}
 
-	private static JLabel text(String text, Color colour, Font font, int alignment)
-	{
-		JLabel label = new JLabel(text);
-		label.setForeground(colour);
-		label.setFont(font);
-		label.setHorizontalAlignment(alignment);
-		return label;
-	}
-
 	private static String format(long value)
 	{
 		return String.format(Locale.ENGLISH, "%,d", value);
+	}
+
+	/**
+	 * The WOM competition to show, with its type and name when it is one of the current competitions.
+	 */
+	@Value
+	private static class Target
+	{
+		long womId;
+		String type;
+		String name;
+
+		boolean isSkill()
+		{
+			return "skill".equals(type);
+		}
+
+		boolean isBoss()
+		{
+			return "boss".equals(type);
+		}
 	}
 }

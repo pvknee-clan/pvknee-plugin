@@ -22,6 +22,7 @@ public final class Glyphs
 	public static final Shape HOUSE = house();
 	public static final Shape REFRESH = refresh();
 	public static final Shape CALENDAR = calendar();
+	public static final Shape TROPHY = trophy();
 
 	private Glyphs()
 	{
@@ -78,6 +79,34 @@ public final class Glyphs
 		path.lineTo(9, 7);
 		path.moveTo(15, 3);
 		path.lineTo(15, 7);
+		return path;
+	}
+
+	private static Shape trophy()
+	{
+		Path2D path = new Path2D.Float();
+		// Cup
+		path.moveTo(7, 4);
+		path.lineTo(17, 4);
+		path.lineTo(17, 9);
+		path.append(new Arc2D.Float(7, 4, 10, 10, 0, -180, Arc2D.OPEN), true);
+		path.closePath();
+		// Handles
+		path.moveTo(7, 6);
+		path.lineTo(4, 6);
+		path.quadTo(4, 10, 7, 10);
+		path.moveTo(17, 6);
+		path.lineTo(20, 6);
+		path.quadTo(20, 10, 17, 10);
+		// Stem and base
+		path.moveTo(12, 14);
+		path.lineTo(12, 17);
+		path.moveTo(8, 20);
+		path.lineTo(16, 20);
+		path.moveTo(9, 20);
+		path.lineTo(10, 17);
+		path.lineTo(14, 17);
+		path.lineTo(15, 20);
 		return path;
 	}
 
