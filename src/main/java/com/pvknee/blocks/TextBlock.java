@@ -1,6 +1,7 @@
 package com.pvknee.blocks;
 
 import com.pvknee.data.Block;
+import com.pvknee.ui.Fonts;
 import com.pvknee.ui.Labels;
 import com.pvknee.ui.Pill;
 import com.pvknee.ui.ThemeColours;
@@ -30,7 +31,7 @@ class TextBlock implements BlockRenderer
 
 		Font font = signoff ? FontManager.getRunescapeSmallFont()
 			: style.contains("bold") ? FontManager.getRunescapeBoldFont()
-			: FontManager.getRunescapeFont();
+			: Fonts.body();
 		if (italic)
 		{
 			font = font.deriveFont(font.getStyle() | Font.ITALIC);

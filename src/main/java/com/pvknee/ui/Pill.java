@@ -9,7 +9,6 @@ import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import net.runelite.client.ui.FontManager;
 
 /**
  * A short piece of text in a small rounded outline, optionally after an icon, e.g. "Home world 509".
@@ -17,7 +16,7 @@ import net.runelite.client.ui.FontManager;
 public class Pill extends JPanel
 {
 	/** The size of the glyph before the text. */
-	public static final int ICON_SIZE = 11;
+	public static final int ICON_SIZE = 13;
 	private static final int PADDING_X = 9;
 	private static final int PADDING_Y = 3;
 	private static final int ICON_GAP = 5;
@@ -30,7 +29,7 @@ public class Pill extends JPanel
 
 		JLabel label = new JLabel(text);
 		label.setForeground(colour);
-		label.setFont(FontManager.getRunescapeSmallFont());
+		label.setFont(Fonts.body());
 		label.setIcon(icon);
 		label.setIconTextGap(ICON_GAP);
 		add(label, BorderLayout.CENTER);

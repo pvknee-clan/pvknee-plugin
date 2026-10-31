@@ -139,7 +139,7 @@ class CompetitionBlock implements BlockRenderer
 			context.metricIcon(competition.getMetric(), HERO_ICON_SIZE),
 			competition.getName(),
 			colours.resolve(competition.getColour(), colours.getValue()),
-			Fonts.name().deriveFont(HERO_NAME_SIZE),
+			Fonts.boldName().deriveFont(HERO_NAME_SIZE),
 			INNER_WIDTH,
 			colours), BorderLayout.NORTH);
 

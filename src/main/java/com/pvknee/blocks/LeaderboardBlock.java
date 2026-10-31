@@ -43,7 +43,7 @@ class LeaderboardBlock implements BlockRenderer
 		String label = block.setting("label", target.isBoss() ? "Kills" : target.isSkill() ? "XP gained" : "Gained");
 		SectionHeader header = new SectionHeader(block.setting("title", "Standings"), colours).withAside(() -> label, colours);
 
-		JPanel standings = column();
+		JPanel standings = column(Spacing.ITEM_GAP);
 		standings.add(EmptyState.quiet(Glyphs.TROPHY, "Loading standings...", colours));
 
 		// Asked again every minute; WOM answers from its cache, so the table is only redrawn when new standings arrive.
@@ -115,7 +115,7 @@ class LeaderboardBlock implements BlockRenderer
 			return table;
 		}
 
-		JPanel view = column();
+		JPanel view = column(Spacing.BLOCK_GAP);
 		view.add(table);
 		view.add(new LinkButton(button, WomClient.competitionPage(target.getWomId()), colours));
 		return view;
@@ -141,9 +141,9 @@ class LeaderboardBlock implements BlockRenderer
 		container.repaint();
 	}
 
-	private static JPanel column()
+	private static JPanel column(int gap)
 	{
-		JPanel panel = new JPanel(new DynamicGridLayout(0, 1, 0, Spacing.ITEM_GAP));
+		JPanel panel = new JPanel(new DynamicGridLayout(0, 1, 0, gap));
 		panel.setOpaque(false);
 		return panel;
 	}
