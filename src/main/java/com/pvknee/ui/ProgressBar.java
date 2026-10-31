@@ -13,8 +13,6 @@ import javax.swing.JComponent;
 public class ProgressBar extends JComponent
 {
 	private static final int HEIGHT = 4;
-	private static final Color TRACK = new Color(30, 30, 30);
-
 	private final Color colour;
 	private double fraction;
 
@@ -36,7 +34,7 @@ public class ProgressBar extends JComponent
 	{
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g2.setColor(TRACK);
+		g2.setColor(Card.BORDER);
 		g2.fillRoundRect(0, 0, getWidth(), HEIGHT, HEIGHT, HEIGHT);
 
 		int filled = (int) Math.round(getWidth() * fraction);

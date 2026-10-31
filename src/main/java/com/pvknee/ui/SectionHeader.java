@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.function.Supplier;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
@@ -21,6 +23,8 @@ public class SectionHeader extends JPanel
 	private final String text;
 	private final int width;
 	private final boolean centred;
+	private JLabel asideLabel;
+	private Supplier<String> asideText;
 
 	public SectionHeader(String text, ThemeColours colours)
 	{
@@ -64,17 +68,38 @@ public class SectionHeader extends JPanel
 	}
 
 	/**
-	 * Adds a muted note on the right; the title wraps in the space left of it.
+	 * Adds a muted note on the right, e.g. a shared time or a column label; the title wraps in the space left of it.
+	 * The text can change, e.g. for a countdown: call {@link #update()} to refresh it.
 	 */
-	public SectionHeader withAside(String aside, ThemeColours colours)
+	public SectionHeader withAside(Supplier<String> aside, ThemeColours colours)
 	{
-		JLabel label = new JLabel(aside);
-		label.setForeground(colours.getMuted());
-		label.setFont(FontManager.getRunescapeSmallFont());
-		label.setVerticalAlignment(SwingConstants.BOTTOM);
-		add(label, BorderLayout.EAST);
-		Labels.setText(title, text, width - label.getPreferredSize().width - Spacing.ITEM_GAP, centred);
+		asideText = aside;
+		asideLabel = new JLabel();
+		asideLabel.setForeground(colours.getMuted());
+		asideLabel.setFont(FontManager.getRunescapeSmallFont());
+		asideLabel.setVerticalAlignment(SwingConstants.BOTTOM);
+		add(asideLabel, BorderLayout.EAST);
+		update();
 		return this;
+	}
+
+	/**
+	 * Asks for the aside's text again, e.g. every minute.
+	 */
+	public void update()
+	{
+		if (asideLabel == null)
+		{
+			return;
+		}
+
+		String next = Objects.toString(asideText.get(), "");
+		if (!next.equals(asideLabel.getText()))
+		{
+			asideLabel.setText(next);
+			Labels.setText(title, text, width - asideLabel.getPreferredSize().width - Spacing.ITEM_GAP, centred);
+			revalidate();
+		}
 	}
 
 	private static Font bold(float size)

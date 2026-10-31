@@ -60,6 +60,15 @@ public final class Times
 	}
 
 	/**
+	 * How far now is through the span from start to end, between 0 and 1.
+	 */
+	public static double progress(Instant start, Instant end)
+	{
+		long total = Duration.between(start, end).toMillis();
+		return total <= 0 ? 1 : (double) Duration.between(start, Instant.now()).toMillis() / total;
+	}
+
+	/**
 	 * e.g. "6d 4h", "5h 12m" or "12m".
 	 */
 	public static String duration(Duration duration)

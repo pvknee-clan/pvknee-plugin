@@ -73,7 +73,7 @@ class LeaderboardBlock implements BlockRenderer
 		Runnable load = () -> context.getWom().standings(competitionId, onStandings,
 			error -> show(standings, muted("Couldn't load standings", colours)));
 		load.run();
-		context.getLiveUpdates().add(load);
+		context.onUpdate(load);
 		return panel;
 	}
 

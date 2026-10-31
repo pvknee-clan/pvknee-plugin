@@ -53,7 +53,15 @@ public class BlockContext
 	public LiveLabel liveLabel(Supplier<String> text, Color colour, Font font, int width, boolean centred)
 	{
 		LiveLabel label = new LiveLabel(text, colour, font, width, centred);
-		liveUpdates.add(label::update);
+		onUpdate(label::update);
 		return label;
+	}
+
+	/**
+	 * Runs the update every minute while the page is shown, e.g. to move a progress bar.
+	 */
+	public void onUpdate(Runnable update)
+	{
+		liveUpdates.add(update);
 	}
 }

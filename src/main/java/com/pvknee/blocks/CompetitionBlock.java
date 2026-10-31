@@ -7,20 +7,23 @@ import com.pvknee.ui.Card;
 import com.pvknee.ui.Fonts;
 import com.pvknee.ui.IconCaption;
 import com.pvknee.ui.Labels;
+import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
+import com.pvknee.ui.TimeBar;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import net.runelite.client.ui.FontManager;
 
 class CompetitionBlock implements BlockRenderer
 {
@@ -57,17 +60,29 @@ class CompetitionBlock implements BlockRenderer
 			: side(matching, upcoming, block, context);
 	}
 
+	/**
+	 * A "NOW RUNNING" (or "STARTING") label over one column per competition. When they all share their times, the
+	 * time sits beside the label with one bar under the columns; otherwise each column shows its own.
+	 */
 	private static Card side(List<Competition> competitions, boolean upcoming, Block block, BlockContext context)
 	{
 		ThemeColours colours = context.getColours();
 		int count = competitions.size();
-		int columnWidth = (INNER_WIDTH - Spacing.PADDING * (count - 1)) / count - 2 * Spacing.ITEM_GAP;
-		boolean sharedTime = competitions.stream()
-			.map(c -> upcoming ? c.getStartsAt() : c.getEndsAt())
+		int columnWidth = (INNER_WIDTH - Spacing.TITLE_GAP * (count - 1)) / count - 2 * Spacing.ITEM_GAP;
+		Competition first = competitions.get(0);
+		boolean shared = competitions.stream()
+			.map(c -> Arrays.asList(c.getStartsAt(), upcoming ? null : c.getEndsAt()))
 			.distinct()
 			.count() == 1;
 
-		JPanel columns = new JPanel(new GridLayout(1, count, Spacing.PADDING, 0));
+		SectionHeader header = SectionHeader.cardLabel(upcoming ? "Starting" : "Now running", colours, INNER_WIDTH);
+		if (shared && timeText(first, upcoming) != null)
+		{
+			header.withAside(() -> timeText(first, upcoming), colours);
+			context.onUpdate(header::update);
+		}
+
+		JPanel columns = new JPanel(new GridLayout(1, count, Spacing.TITLE_GAP, 0));
 		columns.setOpaque(false);
 		for (Competition competition : competitions)
 		{
@@ -81,26 +96,32 @@ class CompetitionBlock implements BlockRenderer
 				colours.resolve(competition.getColour(), colours.getValue()),
 				columnWidth,
 				colours), BorderLayout.NORTH);
-			if (!sharedTime)
+			if (!shared)
 			{
-				addTime(column, () -> relativeTime(competition, upcoming), columnWidth, context);
+				Supplier<String> time = timeText(competition, upcoming) == null ? null : () -> timeText(competition, upcoming);
+				addTimeBar(column, fraction(competition, upcoming), time, null, context);
 			}
 			columns.add(column);
 		}
 
-		Card card = new Card(new BorderLayout(0, Spacing.ITEM_GAP));
+		Card card = new Card(new BorderLayout(0, Spacing.TITLE_GAP));
+		card.add(header, BorderLayout.NORTH);
 		card.add(columns, BorderLayout.CENTER);
-		if (sharedTime)
+		if (shared)
 		{
-			addTime(card, () -> relativeTime(competitions.get(0), upcoming), INNER_WIDTH, context);
+			addTimeBar(card, fraction(first, upcoming), null, null, context);
 		}
 		return card;
 	}
 
+	/**
+	 * One big competition: icon, name, then a bar with the time left and the end date (or for an upcoming one, the
+	 * time until it starts and the start date, without a bar).
+	 */
 	private static Card hero(Competition competition, boolean upcoming, Block block, BlockContext context)
 	{
 		ThemeColours colours = context.getColours();
-		Card card = new Card(new BorderLayout(0, Spacing.ITEM_GAP));
+		Card card = new Card(new BorderLayout(0, Spacing.TITLE_GAP));
 		context.linkToPage(card, block, competition.getType());
 		card.add(new IconCaption(
 			null,
@@ -114,22 +135,51 @@ class CompetitionBlock implements BlockRenderer
 		Instant time = Times.parse(upcoming ? competition.getStartsAt() : competition.getEndsAt());
 		if (time != null)
 		{
-			String text = (upcoming ? "Starts " : "Ends ") + Times.date(time, true);
-			card.add(Labels.label(text, colours.getMuted(), FontManager.getRunescapeSmallFont(), INNER_WIDTH, true), BorderLayout.SOUTH);
+			Supplier<String> left = upcoming
+				? () -> "Starts in " + Times.duration(Duration.between(Instant.now(), time))
+				: () -> timeText(competition, false);
+			addTimeBar(card, fraction(competition, upcoming), left, Times.date(time, true), context);
 		}
 		return card;
 	}
 
 	/**
-	 * e.g. "Ends in 6d 4h", "Starts in 5h 12m" or "Starts Fri 6 Nov, 17:00 UTC". Null if the time is unknown.
+	 * Adds a bar and captions at the bottom of the panel, kept up to date every minute. Adds nothing if all parts
+	 * are missing.
 	 */
-	private static String relativeTime(Competition competition, boolean upcoming)
+	private static void addTimeBar(JPanel panel, DoubleSupplier fraction, Supplier<String> left, String right, BlockContext context)
+	{
+		if (fraction == null && left == null && right == null)
+		{
+			return;
+		}
+
+		TimeBar bar = new TimeBar(fraction, left, right, context.getColours());
+		context.onUpdate(bar::update);
+		panel.add(bar, BorderLayout.SOUTH);
+	}
+
+	/**
+	 * How far a running competition is through its own start-to-end span. Null for upcoming competitions and when
+	 * either time is unknown, as those get no bar.
+	 */
+	private static DoubleSupplier fraction(Competition competition, boolean upcoming)
+	{
+		Instant start = Times.parse(competition.getStartsAt());
+		Instant end = Times.parse(competition.getEndsAt());
+		return upcoming || start == null || end == null ? null : () -> Times.progress(start, end);
+	}
+
+	/**
+	 * e.g. "5d 22h left", "in 5h 12m" or "Fri 6 Nov, 17:00 UTC". Null if the time is unknown.
+	 */
+	private static String timeText(Competition competition, boolean upcoming)
 	{
 		Instant now = Instant.now();
 		if (!upcoming)
 		{
 			Instant end = Times.parse(competition.getEndsAt());
-			return end == null ? null : "Ends in " + Times.duration(Duration.between(now, end));
+			return end == null ? null : Times.duration(Duration.between(now, end)) + " left";
 		}
 
 		Instant start = Times.parse(competition.getStartsAt());
@@ -138,12 +188,7 @@ class CompetitionBlock implements BlockRenderer
 			return null;
 		}
 		Duration until = Duration.between(now, start);
-		return until.compareTo(SOON) < 0 ? "Starts in " + Times.duration(until) : "Starts " + Times.date(start, true);
-	}
-
-	private static void addTime(JPanel panel, Supplier<String> text, int width, BlockContext context)
-	{
-		panel.add(context.liveLabel(text, context.getColours().getMuted(), FontManager.getRunescapeSmallFont(), width, true), BorderLayout.SOUTH);
+		return until.compareTo(SOON) < 0 ? "in " + Times.duration(until) : Times.date(start, true);
 	}
 
 	private static String kind(Competition competition)
