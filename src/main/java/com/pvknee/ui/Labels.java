@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
+import java.util.Collections;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.plaf.basic.BasicHTML;
@@ -18,6 +19,8 @@ public final class Labels
 {
 	/** Text width on a page: the panel minus its side borders and room for the scrollbar. */
 	public static final int CONTENT_WIDTH = PluginPanel.PANEL_WIDTH - 20;
+	/** Names wrap to at most this many lines. */
+	public static final int NAME_LINES = 2;
 
 	private Labels()
 	{
@@ -31,6 +34,45 @@ public final class Labels
 		label.setHorizontalAlignment(centred ? SwingConstants.CENTER : SwingConstants.LEFT);
 		setText(label, text, width, centred);
 		return label;
+	}
+
+	/**
+	 * A wrapped label of at most this many lines; longer text is cut short and ends with "...".
+	 */
+	public static JLabel clamped(String text, Color colour, Font font, int width, boolean centred, int maxLines)
+	{
+		JLabel label = label(String.join("\n", Collections.nCopies(maxLines, "X")), colour, font, width, centred);
+		int maxHeight = label.getPreferredSize().height;
+		setText(label, text, width, centred);
+		if (label.getPreferredSize().height <= maxHeight)
+		{
+			return label;
+		}
+
+		// The longest start of the text that still fits with "..." after it.
+		int low = 0;
+		int high = text.length();
+		while (low < high)
+		{
+			int mid = (low + high + 1) / 2;
+			setText(label, shortened(text, mid), width, centred);
+			if (label.getPreferredSize().height <= maxHeight)
+			{
+				low = mid;
+			}
+			else
+			{
+				high = mid - 1;
+			}
+		}
+		setText(label, shortened(text, low), width, centred);
+		label.setToolTipText(text);
+		return label;
+	}
+
+	private static String shortened(String text, int length)
+	{
+		return text.substring(0, length).trim() + "...";
 	}
 
 	/**

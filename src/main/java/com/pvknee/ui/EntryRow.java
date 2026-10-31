@@ -40,7 +40,7 @@ public class EntryRow extends Card
 		}
 
 		lines.setOpaque(false);
-		lines.add(Labels.label(name, nameColour, Fonts.name(), textWidth, false));
+		lines.add(Labels.clamped(name, nameColour, Fonts.name(), textWidth, false, Labels.NAME_LINES));
 
 		JPanel top = new JPanel(new BorderLayout(Spacing.PADDING, 0));
 		top.setOpaque(false);
