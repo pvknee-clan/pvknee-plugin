@@ -1,5 +1,6 @@
 package com.pvknee;
 
+import com.google.inject.Injector;
 import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,9 @@ import net.runelite.client.util.ImageUtil;
 public class PvKneePlugin extends Plugin
 {
 	@Inject
+	private Injector injector;
+
+	@Inject
 	private ClientToolbar clientToolbar;
 
 	private NavigationButton navButton;
@@ -26,15 +30,17 @@ public class PvKneePlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "icon.png");
+		final PvKneePanel panel = injector.getInstance(PvKneePanel.class);
 
 		navButton = NavigationButton.builder()
 			.tooltip("PvKnee")
 			.icon(icon)
 			.priority(5)
-			.panel(new PvKneePanel())
+			.panel(panel)
 			.build();
 
 		clientToolbar.addNavigation(navButton);
+		panel.refresh();
 		log.debug("PvKnee started");
 	}
 
