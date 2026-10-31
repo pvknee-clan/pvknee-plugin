@@ -1,7 +1,6 @@
 package com.pvknee.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.util.Objects;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -11,22 +10,22 @@ import javax.swing.SwingConstants;
 import net.runelite.client.ui.FontManager;
 
 /**
- * A progress bar with muted captions under it, e.g. "5d 22h left" on the left and the end date on the right.
- * Any part can be left out: without a fraction there is no bar, and a caption on its own is centred.
+ * A progress bar with muted captions under it: the time left on the right, e.g. "5d 22h left", and optionally a
+ * fixed caption such as the end date on the left. Any part can be left out: without a fraction there is no bar.
  */
 public class TimeBar extends JPanel
 {
 	private final DoubleSupplier fraction;
-	private final Supplier<String> left;
+	private final Supplier<String> right;
 	private final ProgressBar bar;
-	private final JLabel leftLabel;
+	private final JLabel rightLabel;
 
-	public TimeBar(DoubleSupplier fraction, Supplier<String> left, String right, ThemeColours colours)
+	public TimeBar(DoubleSupplier fraction, String left, Supplier<String> right, ThemeColours colours)
 	{
 		super(new BorderLayout(0, Spacing.ITEM_GAP));
 		setOpaque(false);
 		this.fraction = fraction;
-		this.left = left;
+		this.right = right;
 
 		bar = fraction == null ? null : new ProgressBar(colours.getAccent(), fraction.getAsDouble());
 		if (bar != null)
@@ -34,25 +33,25 @@ public class TimeBar extends JPanel
 			add(bar, BorderLayout.NORTH);
 		}
 
-		leftLabel = left == null ? null : caption(left.get(), right == null ? SwingConstants.CENTER : SwingConstants.LEFT, colours);
-		if (leftLabel != null || right != null)
+		rightLabel = right == null ? null : caption(right.get(), SwingConstants.RIGHT, colours);
+		if (left != null || rightLabel != null)
 		{
 			JPanel captions = new JPanel(new BorderLayout(Spacing.ITEM_GAP, 0));
 			captions.setOpaque(false);
-			if (leftLabel != null)
+			if (left != null)
 			{
-				captions.add(leftLabel, BorderLayout.CENTER);
+				captions.add(caption(left, SwingConstants.LEFT, colours), BorderLayout.WEST);
 			}
-			if (right != null)
+			if (rightLabel != null)
 			{
-				captions.add(caption(right, SwingConstants.RIGHT, colours), BorderLayout.EAST);
+				captions.add(rightLabel, BorderLayout.CENTER);
 			}
 			add(captions, BorderLayout.CENTER);
 		}
 	}
 
 	/**
-	 * Moves the bar and asks for the left caption again, e.g. every minute.
+	 * Moves the bar and asks for the right caption again, e.g. every minute.
 	 */
 	public void update()
 	{
@@ -60,12 +59,12 @@ public class TimeBar extends JPanel
 		{
 			bar.setFraction(fraction.getAsDouble());
 		}
-		if (leftLabel != null)
+		if (rightLabel != null)
 		{
-			String next = Objects.toString(left.get(), "");
-			if (!next.equals(leftLabel.getText()))
+			String next = Objects.toString(right.get(), "");
+			if (!next.equals(rightLabel.getText()))
 			{
-				leftLabel.setText(next);
+				rightLabel.setText(next);
 				revalidate();
 			}
 		}

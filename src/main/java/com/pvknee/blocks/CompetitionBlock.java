@@ -91,8 +91,7 @@ class CompetitionBlock implements BlockRenderer
 				colours), BorderLayout.NORTH);
 			if (!shared)
 			{
-				Supplier<String> time = timeText(competition, upcoming) == null ? null : () -> timeText(competition, upcoming);
-				addTimeBar(column, fraction(competition, upcoming), time, null, context);
+				addTimeBar(column, fraction(competition, upcoming), null, time(competition, upcoming), context);
 			}
 			columns.add(column);
 		}
@@ -102,14 +101,14 @@ class CompetitionBlock implements BlockRenderer
 		card.add(columns, BorderLayout.CENTER);
 		if (shared)
 		{
-			addFullTimeBar(card, first, upcoming, context);
+			addTimeBar(card, fraction(first, upcoming), null, time(first, upcoming), context);
 		}
 		return card;
 	}
 
 	/**
-	 * One big competition: icon, name, then a bar with the time left and the end date (or for an upcoming one, the
-	 * time until it starts and the start date, without a bar).
+	 * One big competition: icon, name, then a bar with the end date on the left and the time left on the right (or
+	 * for an upcoming one, the start date and the time until it starts, without a bar).
 	 */
 	private static Card hero(Competition competition, boolean upcoming, Block block, BlockContext context)
 	{
@@ -124,31 +123,22 @@ class CompetitionBlock implements BlockRenderer
 			Fonts.name().deriveFont(HERO_NAME_SIZE),
 			INNER_WIDTH,
 			colours), BorderLayout.NORTH);
-		addFullTimeBar(card, competition, upcoming, context);
-		return card;
-	}
-
-	/**
-	 * A bar with the time left and the end date under it (or for an upcoming competition, the time until it starts
-	 * and the start date, without a bar). Adds nothing if the time is unknown.
-	 */
-	private static void addFullTimeBar(JPanel panel, Competition competition, boolean upcoming, BlockContext context)
-	{
 		Instant time = Times.parse(upcoming ? competition.getStartsAt() : competition.getEndsAt());
 		if (time != null)
 		{
-			Supplier<String> left = upcoming
+			Supplier<String> right = upcoming
 				? () -> "Starts in " + Times.duration(Duration.between(Instant.now(), time))
 				: () -> timeText(competition, false);
-			addTimeBar(panel, fraction(competition, upcoming), left, Times.date(time, true), context);
+			addTimeBar(card, fraction(competition, upcoming), Times.date(time, true), right, context);
 		}
+		return card;
 	}
 
 	/**
 	 * Adds a bar and captions at the bottom of the panel, kept up to date every minute. Adds nothing if all parts
 	 * are missing.
 	 */
-	private static void addTimeBar(JPanel panel, DoubleSupplier fraction, Supplier<String> left, String right, BlockContext context)
+	private static void addTimeBar(JPanel panel, DoubleSupplier fraction, String left, Supplier<String> right, BlockContext context)
 	{
 		if (fraction == null && left == null && right == null)
 		{
@@ -169,6 +159,14 @@ class CompetitionBlock implements BlockRenderer
 		Instant start = Times.parse(competition.getStartsAt());
 		Instant end = Times.parse(competition.getEndsAt());
 		return upcoming || start == null || end == null ? null : () -> Times.progress(start, end);
+	}
+
+	/**
+	 * The competition's time as a live caption, or null if the time is unknown.
+	 */
+	private static Supplier<String> time(Competition competition, boolean upcoming)
+	{
+		return timeText(competition, upcoming) == null ? null : () -> timeText(competition, upcoming);
 	}
 
 	/**

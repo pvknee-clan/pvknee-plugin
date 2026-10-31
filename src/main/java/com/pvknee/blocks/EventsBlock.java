@@ -114,7 +114,7 @@ class EventsBlock implements BlockRenderer
 
 		EntryRow row = new EntryRow(icon, event.getName(), colours.resolve(event.getColour(), colours.getValue()), ROW_WIDTH);
 		row.addCaption(caption(event), colours);
-		if (showTime && timed.timeText() != null)
+		if (showTime && !timed.running)
 		{
 			row.addLine(context.liveLabel(timed::timeText, colours.getMuted(), FontManager.getRunescapeSmallFont(), row.getTextWidth(), false));
 		}
@@ -124,7 +124,7 @@ class EventsBlock implements BlockRenderer
 			context.linkToPage(row, block, event.getKind());
 			if (timed.end != null)
 			{
-				TimeBar bar = new TimeBar(() -> Times.progress(timed.start, timed.end), null, null, colours);
+				TimeBar bar = new TimeBar(() -> Times.progress(timed.start, timed.end), null, showTime ? timed::timeText : null, colours);
 				context.onUpdate(bar::update);
 				row.setBar(bar);
 			}
@@ -182,14 +182,14 @@ class EventsBlock implements BlockRenderer
 		}
 
 		/**
-		 * e.g. "Ends in 6d 4h", "in 5h 12m" or "Fri 6 Nov, 17:00 UTC". Null for a running event without an end.
+		 * e.g. "6d 4h left", "in 5h 12m" or "Fri 6 Nov, 17:00 UTC". Null for a running event without an end.
 		 */
 		String timeText()
 		{
 			Instant now = Instant.now();
 			if (running)
 			{
-				return end == null ? null : "Ends in " + Times.duration(Duration.between(now, end));
+				return end == null ? null : Times.duration(Duration.between(now, end)) + " left";
 			}
 
 			Duration until = Duration.between(now, start);
