@@ -71,6 +71,15 @@ public final class Times
 	}
 
 	/**
+	 * The days from start to end, e.g. "Fri 30 Oct – Fri 6 Nov", always as dates rather than "Today" or "Tomorrow".
+	 */
+	public static String range(Instant start, Instant end)
+	{
+		ZoneId zone = zone();
+		return DAY.format(start.atZone(zone)) + " – " + DAY.format(end.atZone(zone));
+	}
+
+	/**
 	 * e.g. "17:05", or "17:05 UTC" when times are shown in UTC.
 	 */
 	public static String time(Instant instant)

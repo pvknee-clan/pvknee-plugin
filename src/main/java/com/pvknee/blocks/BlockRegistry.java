@@ -20,6 +20,7 @@ public class BlockRegistry
 	@Inject
 	BlockRegistry()
 	{
+		renderers.put("header", new HeaderBlock());
 		renderers.put("heading", new HeadingBlock());
 		renderers.put("text", new TextBlock());
 		renderers.put("separator", new SeparatorBlock());

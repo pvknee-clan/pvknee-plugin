@@ -1,7 +1,7 @@
 package com.pvknee.blocks;
 
 import com.pvknee.data.Block;
-import com.pvknee.data.Competitions;
+import com.pvknee.data.Competition;
 import com.pvknee.ui.EmptyState;
 import com.pvknee.ui.Glyphs;
 import com.pvknee.ui.LinkButton;
@@ -73,31 +73,20 @@ class LeaderboardBlock implements BlockRenderer
 	 */
 	private static Target target(String setting, BlockContext context)
 	{
-		String type = setting.equalsIgnoreCase("current_skill") ? "skill"
-			: setting.equalsIgnoreCase("current_boss") ? "boss"
-			: null;
-		if (type == null)
+		Competition current = context.currentCompetition(setting);
+		if (current != null)
 		{
-			try
-			{
-				return new Target(Long.parseLong(setting), null, null);
-			}
-			catch (NumberFormatException e)
-			{
-				return null;
-			}
+			return current.getWomId() > 0 ? new Target(current.getWomId(), current.getType().toLowerCase(), current.getName()) : null;
 		}
 
-		Competitions competitions = context.getData().getCompetitions();
-		if (competitions == null || competitions.getCurrent() == null)
+		try
+		{
+			return new Target(Long.parseLong(setting), null, null);
+		}
+		catch (NumberFormatException e)
 		{
 			return null;
 		}
-		return competitions.getCurrent().stream()
-			.filter(c -> type.equalsIgnoreCase(c.getType()) && c.getWomId() > 0)
-			.findFirst()
-			.map(c -> new Target(c.getWomId(), type, c.getName()))
-			.orElse(null);
 	}
 
 	private static JComponent standingsView(List<Standing> standings, Target target, Block block, ThemeColours colours)

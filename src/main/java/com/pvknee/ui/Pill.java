@@ -16,6 +16,8 @@ import net.runelite.client.ui.FontManager;
  */
 public class Pill extends JPanel
 {
+	/** The size of the glyph before the text. */
+	public static final int ICON_SIZE = 11;
 	private static final int PADDING_X = 9;
 	private static final int PADDING_Y = 3;
 	private static final int ICON_GAP = 5;

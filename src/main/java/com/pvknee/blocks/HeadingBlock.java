@@ -18,8 +18,15 @@ class HeadingBlock implements BlockRenderer
 			return null;
 		}
 
-		int size = Math.max(1, Math.min(3, block.intSetting("size", 2)));
 		ThemeColours colours = context.getColours();
-		return SectionHeader.pageTitle(text, colours.resolve(block.setting("colour", null), colours.getAccent()), SIZES[size - 1]);
+		return SectionHeader.pageTitle(text, colours.resolve(block.setting("colour", null), colours.getAccent()), size(block));
+	}
+
+	/**
+	 * The font size for a block's "size" setting, 1 to 3.
+	 */
+	static float size(Block block)
+	{
+		return SIZES[Math.max(1, Math.min(3, block.intSetting("size", 2))) - 1];
 	}
 }
