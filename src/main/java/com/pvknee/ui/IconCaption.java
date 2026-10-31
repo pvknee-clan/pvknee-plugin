@@ -9,7 +9,8 @@ import javax.swing.JPanel;
 import net.runelite.client.ui.FontManager;
 
 /**
- * An icon with a muted caption above it and a bold name below it, all centred.
+ * An icon with an optional muted caption above it and a name below it, all centred. Without an icon it is just the
+ * caption and the name.
  */
 public class IconCaption extends JPanel
 {
@@ -23,10 +24,13 @@ public class IconCaption extends JPanel
 			add(Labels.label(caption, colours.getMuted(), FontManager.getRunescapeSmallFont(), width, true), BorderLayout.NORTH);
 		}
 
-		JPanel iconRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-		iconRow.setOpaque(false);
-		iconRow.add(icon);
-		add(iconRow, BorderLayout.CENTER);
+		if (icon != null)
+		{
+			JPanel iconRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+			iconRow.setOpaque(false);
+			iconRow.add(icon);
+			add(iconRow, BorderLayout.CENTER);
+		}
 
 		add(Labels.label(name, nameColour, nameFont, width, true), BorderLayout.SOUTH);
 	}
