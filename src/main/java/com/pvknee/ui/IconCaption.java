@@ -33,6 +33,6 @@ public class IconCaption extends JPanel
 
 	public IconCaption(String caption, JComponent icon, String name, Color nameColour, int width, ThemeColours colours)
 	{
-		this(caption, icon, name, nameColour, FontManager.getRunescapeBoldFont(), width, colours);
+		this(caption, icon, name, nameColour, Fonts.name(), width, colours);
 	}
 }

@@ -19,7 +19,8 @@ public class Card extends JPanel
 {
 	private static final Color BACKGROUND = new Color(48, 48, 48);
 	private static final Color HOVER = new Color(58, 58, 58);
-	private static final Color BORDER = new Color(64, 64, 64);
+	/** Also the outline of other kit pieces, e.g. {@link Pill}. */
+	static final Color BORDER = new Color(64, 64, 64);
 
 	private final boolean bordered;
 	private Color outline = BORDER;

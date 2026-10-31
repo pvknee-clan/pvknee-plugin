@@ -3,7 +3,9 @@ package com.pvknee.blocks;
 import com.pvknee.data.Block;
 import com.pvknee.data.ClanEvent;
 import com.pvknee.ui.Card;
+import com.pvknee.ui.Fonts;
 import com.pvknee.ui.Labels;
+import com.pvknee.ui.Section;
 import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
@@ -69,10 +71,6 @@ class EventsBlock implements BlockRenderer
 		ThemeColours colours = context.getColours();
 		JPanel panel = new JPanel(new DynamicGridLayout(0, 1, 0, Spacing.ITEM_GAP));
 		panel.setOpaque(false);
-		if (title != null)
-		{
-			panel.add(new SectionHeader(title, colours));
-		}
 
 		if (shown.isEmpty())
 		{
@@ -83,7 +81,7 @@ class EventsBlock implements BlockRenderer
 		{
 			panel.add(eventCard(event, now, block, context));
 		}
-		return panel;
+		return new Section(title == null ? null : new SectionHeader(title, colours), panel);
 	}
 
 	private static Card eventCard(TimedEvent timed, Instant now, Block block, BlockContext context)
@@ -104,7 +102,7 @@ class EventsBlock implements BlockRenderer
 		Color nameColour = colours.resolve(event.getColour(), colours.getValue());
 		JPanel text = new JPanel(new BorderLayout());
 		text.setOpaque(false);
-		text.add(Labels.label(event.getName(), nameColour, FontManager.getRunescapeBoldFont(), TEXT_WIDTH, false), BorderLayout.NORTH);
+		text.add(Labels.label(event.getName(), nameColour, Fonts.name(), TEXT_WIDTH, false), BorderLayout.NORTH);
 		text.add(context.liveLabel(() -> details(timed, Instant.now()), colours.getMuted(), FontManager.getRunescapeSmallFont(), TEXT_WIDTH, false), BorderLayout.CENTER);
 		card.add(text, BorderLayout.CENTER);
 		return card;

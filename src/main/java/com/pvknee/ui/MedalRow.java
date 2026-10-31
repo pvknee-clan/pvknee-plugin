@@ -28,11 +28,11 @@ public class MedalRow extends JPanel
 		add(line(value, colours.getMuted(), false), BorderLayout.CENTER);
 	}
 
-	private static JLabel line(String text, Color colour, boolean bold)
+	private static JLabel line(String text, Color colour, boolean name)
 	{
 		JLabel label = new JLabel(text);
 		label.setForeground(colour);
-		label.setFont(bold ? FontManager.getRunescapeBoldFont() : FontManager.getRunescapeSmallFont());
+		label.setFont(name ? Fonts.name() : FontManager.getRunescapeSmallFont());
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		return label;
 	}

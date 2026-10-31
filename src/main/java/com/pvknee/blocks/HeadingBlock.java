@@ -20,6 +20,6 @@ class HeadingBlock implements BlockRenderer
 
 		int size = Math.max(1, Math.min(3, block.intSetting("size", 2)));
 		ThemeColours colours = context.getColours();
-		return new SectionHeader(text, colours.resolve(block.setting("colour", null), colours.getAccent()), SIZES[size - 1]);
+		return SectionHeader.pageTitle(text, colours.resolve(block.setting("colour", null), colours.getAccent()), SIZES[size - 1]);
 	}
 }

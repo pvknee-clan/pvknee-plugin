@@ -4,6 +4,7 @@ import com.pvknee.data.Block;
 import com.pvknee.data.Competition;
 import com.pvknee.data.Competitions;
 import com.pvknee.ui.Card;
+import com.pvknee.ui.Fonts;
 import com.pvknee.ui.IconCaption;
 import com.pvknee.ui.Labels;
 import com.pvknee.ui.Spacing;
@@ -106,7 +107,7 @@ class CompetitionBlock implements BlockRenderer
 			context.metricIcon(competition.getMetric(), HERO_ICON_SIZE),
 			competition.getName(),
 			colours.resolve(competition.getColour(), colours.getValue()),
-			FontManager.getRunescapeBoldFont().deriveFont(HERO_NAME_SIZE),
+			Fonts.name().deriveFont(HERO_NAME_SIZE),
 			INNER_WIDTH,
 			colours), BorderLayout.NORTH);
 

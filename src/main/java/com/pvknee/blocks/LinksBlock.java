@@ -3,6 +3,7 @@ package com.pvknee.blocks;
 import com.pvknee.data.Block;
 import com.pvknee.data.Link;
 import com.pvknee.ui.Card;
+import com.pvknee.ui.Section;
 import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import java.awt.FlowLayout;
@@ -30,12 +31,6 @@ class LinksBlock implements BlockRenderer
 		JPanel panel = new JPanel(new DynamicGridLayout(0, 1, 0, Spacing.ITEM_GAP));
 		panel.setOpaque(false);
 
-		String title = block.setting("title", null);
-		if (title != null)
-		{
-			panel.add(new SectionHeader(title, context.getColours()));
-		}
-
 		for (Link link : links)
 		{
 			if (link.getUrl() != null && !link.getUrl().isEmpty())
@@ -43,7 +38,9 @@ class LinksBlock implements BlockRenderer
 				panel.add(linkCard(link, context));
 			}
 		}
-		return panel;
+
+		String title = block.setting("title", null);
+		return new Section(title == null ? null : new SectionHeader(title, context.getColours()), panel);
 	}
 
 	private static Card linkCard(Link link, BlockContext context)

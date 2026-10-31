@@ -24,13 +24,13 @@ class MessageBlock implements BlockRenderer
 		ThemeColours colours = context.getColours();
 		int width = Labels.CONTENT_WIDTH - 2 * Spacing.PADDING;
 
-		Card card = new Card(new BorderLayout());
+		Card card = new Card(new BorderLayout(0, Spacing.ITEM_GAP));
 		String title = block.setting("title", null);
 		if (title != null)
 		{
-			card.add(new SectionHeader(title, colours), BorderLayout.NORTH);
+			card.add(SectionHeader.cardLabel(title, colours, width), BorderLayout.NORTH);
 		}
-		card.add(Labels.label(text, colours.getValue(), FontManager.getRunescapeFont(), width, true), BorderLayout.CENTER);
+		card.add(Labels.label(text, colours.getValue(), FontManager.getRunescapeFont(), width, false), BorderLayout.CENTER);
 		return card;
 	}
 }

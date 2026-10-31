@@ -10,5 +10,4 @@ public class Theme
 	private String accent;
 	private String value;
 	private String muted;
-	private String separator;
 }

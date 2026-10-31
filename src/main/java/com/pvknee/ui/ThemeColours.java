@@ -12,13 +12,10 @@ import net.runelite.client.util.ColorUtil;
 @Value
 public class ThemeColours
 {
-	private static final String DEFAULT_SEPARATOR = "- - - -";
-
 	Color header;
 	Color accent;
 	Color value;
 	Color muted;
-	String separator;
 
 	public static ThemeColours from(Theme theme)
 	{
@@ -27,13 +24,11 @@ public class ThemeColours
 			theme = new Theme();
 		}
 
-		String separator = theme.getSeparator();
 		return new ThemeColours(
 			parse(theme.getHeader(), ColorScheme.BRAND_ORANGE),
 			parse(theme.getAccent(), ColorScheme.BRAND_ORANGE),
 			parse(theme.getValue(), Color.WHITE),
-			parse(theme.getMuted(), Color.GRAY),
-			separator == null || separator.isEmpty() ? DEFAULT_SEPARATOR : separator);
+			parse(theme.getMuted(), Color.GRAY));
 	}
 
 	/**

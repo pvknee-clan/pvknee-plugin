@@ -2,10 +2,13 @@ package com.pvknee.blocks;
 
 import com.pvknee.data.Block;
 import com.pvknee.ui.Labels;
+import com.pvknee.ui.Pill;
 import com.pvknee.ui.ThemeColours;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
 import net.runelite.client.ui.FontManager;
 
 class TextBlock implements BlockRenderer
@@ -35,6 +38,13 @@ class TextBlock implements BlockRenderer
 
 		ThemeColours colours = context.getColours();
 		Color colour = muted ? colours.getMuted() : colours.getValue();
+		if (style.contains("pill"))
+		{
+			JPanel row = new JPanel(new FlowLayout(centred ? FlowLayout.CENTER : FlowLayout.LEFT, 0, 0));
+			row.setOpaque(false);
+			row.add(new Pill(text, colour));
+			return row;
+		}
 		return Labels.label(text, colour, font, Labels.CONTENT_WIDTH, centred);
 	}
 }
