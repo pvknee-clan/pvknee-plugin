@@ -40,6 +40,7 @@ class PvKneePanel extends PluginPanel
 	private final JPanel content = new JPanel();
 
 	private ClanData data;
+	private boolean loading;
 
 	@Inject
 	PvKneePanel(ClanDataClient client)
@@ -95,8 +96,18 @@ class PvKneePanel extends PluginPanel
 		add(scrollPane, BorderLayout.CENTER);
 	}
 
-	void refresh()
+	@Override
+	public void onActivate()
 	{
+		if (data == null && !loading)
+		{
+			refresh();
+		}
+	}
+
+	private void refresh()
+	{
+		loading = true;
 		refreshButton.setEnabled(false);
 		showStatus("Loading...", Color.WHITE);
 
@@ -107,6 +118,7 @@ class PvKneePanel extends PluginPanel
 				log.debug("Failed to load clan panel", e);
 				SwingUtilities.invokeLater(() ->
 				{
+					loading = false;
 					refreshButton.setEnabled(true);
 					showStatus("ERROR: Couldn't load the clan panel. Press Refresh to try again.", ColorScheme.PROGRESS_ERROR_COLOR);
 				});
@@ -124,6 +136,7 @@ class PvKneePanel extends PluginPanel
 	{
 		log.debug("Loaded clan panel: {} pages", data.getPages().size());
 		this.data = data;
+		loading = false;
 		refreshButton.setEnabled(true);
 		statusLabel.setVisible(false);
 

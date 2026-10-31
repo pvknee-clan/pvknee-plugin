@@ -40,7 +40,6 @@ public class PvKneePlugin extends Plugin
 			.build();
 
 		clientToolbar.addNavigation(navButton);
-		panel.refresh();
 		log.debug("PvKnee started");
 	}
 
