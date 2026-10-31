@@ -14,9 +14,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.FontManager;
@@ -82,7 +82,7 @@ class CompetitionBlock implements BlockRenderer
 				colours), BorderLayout.NORTH);
 			if (!sharedTime)
 			{
-				addTime(column, relativeTime(competition, upcoming), columnWidth, colours);
+				addTime(column, () -> relativeTime(competition, upcoming), columnWidth, context);
 			}
 			columns.add(column);
 		}
@@ -91,7 +91,7 @@ class CompetitionBlock implements BlockRenderer
 		card.add(columns, BorderLayout.CENTER);
 		if (sharedTime)
 		{
-			addTime(card, relativeTime(competitions.get(0), upcoming), INNER_WIDTH, colours);
+			addTime(card, () -> relativeTime(competitions.get(0), upcoming), INNER_WIDTH, context);
 		}
 		return card;
 	}
@@ -113,7 +113,8 @@ class CompetitionBlock implements BlockRenderer
 		Instant time = Times.parse(upcoming ? competition.getStartsAt() : competition.getEndsAt());
 		if (time != null)
 		{
-			addTime(card, (upcoming ? "Starts " : "Ends ") + Times.date(time, true), INNER_WIDTH, colours);
+			String text = (upcoming ? "Starts " : "Ends ") + Times.date(time, true);
+			card.add(Labels.label(text, colours.getMuted(), FontManager.getRunescapeSmallFont(), INNER_WIDTH, true), BorderLayout.SOUTH);
 		}
 		return card;
 	}
@@ -139,13 +140,9 @@ class CompetitionBlock implements BlockRenderer
 		return until.compareTo(SOON) < 0 ? "Starts in " + Times.duration(until) : "Starts " + Times.date(start, true);
 	}
 
-	private static void addTime(JPanel panel, String text, int width, ThemeColours colours)
+	private static void addTime(JPanel panel, Supplier<String> text, int width, BlockContext context)
 	{
-		if (text != null)
-		{
-			JLabel label = Labels.label(text, colours.getMuted(), FontManager.getRunescapeSmallFont(), width, true);
-			panel.add(label, BorderLayout.SOUTH);
-		}
+		panel.add(context.liveLabel(text, context.getColours().getMuted(), FontManager.getRunescapeSmallFont(), width, true), BorderLayout.SOUTH);
 	}
 
 	private static String kind(Competition competition)

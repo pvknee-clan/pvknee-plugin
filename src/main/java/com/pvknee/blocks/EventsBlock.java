@@ -105,7 +105,7 @@ class EventsBlock implements BlockRenderer
 		JPanel text = new JPanel(new BorderLayout());
 		text.setOpaque(false);
 		text.add(Labels.label(event.getName(), nameColour, FontManager.getRunescapeBoldFont(), TEXT_WIDTH, false), BorderLayout.NORTH);
-		text.add(Labels.label(details(timed, now), colours.getMuted(), FontManager.getRunescapeSmallFont(), TEXT_WIDTH, false), BorderLayout.CENTER);
+		text.add(context.liveLabel(() -> details(timed, Instant.now()), colours.getMuted(), FontManager.getRunescapeSmallFont(), TEXT_WIDTH, false), BorderLayout.CENTER);
 		card.add(text, BorderLayout.CENTER);
 		return card;
 	}

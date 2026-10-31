@@ -17,6 +17,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -54,9 +55,25 @@ class LeaderboardBlock implements BlockRenderer
 			panel.add(button(button, WomClient.competitionPage(competitionId), colours));
 		}
 
-		context.getWom().standings(competitionId,
-			result -> show(standings, standingsView(result, block, colours)),
+		// Asked again every minute; WOM answers from its cache, so the table is only redrawn when new standings arrive.
+		Consumer<List<Standing>> onStandings = new Consumer<>()
+		{
+			private List<Standing> shown;
+
+			@Override
+			public void accept(List<Standing> result)
+			{
+				if (result != shown)
+				{
+					shown = result;
+					show(standings, standingsView(result, block, colours));
+				}
+			}
+		};
+		Runnable load = () -> context.getWom().standings(competitionId, onStandings,
 			error -> show(standings, muted("Couldn't load standings", colours)));
+		load.run();
+		context.getLiveUpdates().add(load);
 		return panel;
 	}
 
