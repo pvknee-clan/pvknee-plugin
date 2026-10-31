@@ -2,30 +2,40 @@ package com.pvknee.blocks;
 
 import com.pvknee.data.Block;
 import com.pvknee.data.ClanEvent;
-import com.pvknee.ui.Card;
-import com.pvknee.ui.Fonts;
+import com.pvknee.ui.EntryRow;
+import com.pvknee.ui.GlyphIcon;
+import com.pvknee.ui.Glyphs;
 import com.pvknee.ui.Labels;
+import com.pvknee.ui.ListCard;
 import com.pvknee.ui.Section;
 import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
-import java.awt.BorderLayout;
-import java.awt.Color;
+import com.pvknee.ui.TimeBar;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.swing.JComponent;
-import javax.swing.JPanel;
-import net.runelite.client.ui.DynamicGridLayout;
+import javax.swing.JLabel;
 import net.runelite.client.ui.FontManager;
 
+/**
+ * Running and upcoming events in one list card. A time every entry shares shows once beside the title; otherwise
+ * each entry shows its own. A block with nothing to show draws nothing.
+ */
 class EventsBlock implements BlockRenderer
 {
-	private static final int ICON_SIZE = 16;
 	private static final Duration SOON = Duration.ofHours(24);
-	private static final int TEXT_WIDTH = Labels.CONTENT_WIDTH - 3 * Spacing.PADDING - ICON_SIZE;
+	private static final int ROW_WIDTH = Labels.CONTENT_WIDTH - 2 * Spacing.PADDING;
+	/** Line icons look the same size as pictures when drawn slightly smaller. */
+	private static final int GLYPH_SIZE = 18;
 
 	@Override
 	public JComponent render(Block block, BlockContext context)
@@ -34,6 +44,7 @@ class EventsBlock implements BlockRenderer
 		boolean both = when.equals("both");
 		boolean showRunning = both || when.equals("running");
 		boolean showUpcoming = both || !showRunning;
+		Set<String> kinds = kinds(block.setting("kind", "all"));
 
 		Instant now = Instant.now();
 		List<TimedEvent> running = new ArrayList<>();
@@ -41,12 +52,12 @@ class EventsBlock implements BlockRenderer
 		List<ClanEvent> events = context.getData().getEvents();
 		for (ClanEvent event : events == null ? List.<ClanEvent>of() : events)
 		{
-			TimedEvent timed = new TimedEvent(event);
-			if (timed.start == null || event.getName() == null)
+			TimedEvent timed = new TimedEvent(event, now);
+			if (timed.start == null || event.getName() == null || (kinds != null && !kinds.contains(kind(event))))
 			{
 				continue;
 			}
-			if (showRunning && timed.isRunning(now))
+			if (showRunning && timed.running)
 			{
 				running.add(timed);
 			}
@@ -61,80 +72,98 @@ class EventsBlock implements BlockRenderer
 		List<TimedEvent> shown = new ArrayList<>(running);
 		shown.addAll(upcoming);
 		shown = shown.subList(0, Math.min(shown.size(), Math.max(0, block.intSetting("limit", 4))));
-
-		String title = block.setting("title", null);
-		if (shown.isEmpty() && title == null)
+		if (shown.isEmpty())
 		{
 			return null;
 		}
 
 		ThemeColours colours = context.getColours();
-		JPanel panel = new JPanel(new DynamicGridLayout(0, 1, 0, Spacing.ITEM_GAP));
-		panel.setOpaque(false);
+		String title = block.setting("title", null);
+		TimedEvent first = shown.get(0);
+		boolean shared = title != null && first.timeText() != null && shown.stream()
+			.map(e -> Arrays.asList(e.running, e.running ? e.end : e.start, e.event.isHasTime()))
+			.distinct()
+			.count() == 1;
 
-		if (shown.isEmpty())
-		{
-			String empty = showRunning && !showUpcoming ? "Nothing happening right now" : "Nothing coming up";
-			panel.add(Labels.label(empty, colours.getMuted(), FontManager.getRunescapeSmallFont(), Labels.CONTENT_WIDTH, true));
-		}
+		ListCard card = new ListCard(colours);
 		for (TimedEvent event : shown)
 		{
-			panel.add(eventCard(event, now, block, context));
+			card.addEntry(entry(event, !shared, block, context));
 		}
-		return new Section(title == null ? null : new SectionHeader(title, colours), panel);
+
+		SectionHeader header = null;
+		if (title != null)
+		{
+			header = new SectionHeader(title, colours);
+			if (shared)
+			{
+				header.withAside(first::timeText, colours);
+				context.onUpdate(header::update);
+			}
+		}
+		return new Section(header, card);
 	}
 
-	private static Card eventCard(TimedEvent timed, Instant now, Block block, BlockContext context)
+	private static EntryRow entry(TimedEvent timed, boolean showTime, Block block, BlockContext context)
 	{
 		ClanEvent event = timed.event;
 		ThemeColours colours = context.getColours();
-		Card card = new Card(new BorderLayout(Spacing.PADDING, 0));
-		if (timed.isRunning(now))
+		JComponent icon = event.getMetric() == null || event.getMetric().isEmpty()
+			? new JLabel(new GlyphIcon(Glyphs.CALENDAR, colours.getMuted(), GLYPH_SIZE))
+			: context.metricIcon(event.getMetric(), EntryRow.ICON_SIZE);
+
+		EntryRow row = new EntryRow(icon, event.getName(), colours.resolve(event.getColour(), colours.getValue()), ROW_WIDTH);
+		row.addCaption(caption(event), colours);
+		if (showTime && timed.timeText() != null)
 		{
-			context.linkToPage(card, block, event.getKind());
+			row.addLine(context.liveLabel(timed::timeText, colours.getMuted(), FontManager.getRunescapeSmallFont(), row.getTextWidth(), false));
 		}
 
-		if (event.getMetric() != null && !event.getMetric().isEmpty())
+		if (timed.running)
 		{
-			card.add(context.metricIcon(event.getMetric(), ICON_SIZE), BorderLayout.WEST);
+			context.linkToPage(row, block, event.getKind());
+			if (timed.end != null)
+			{
+				TimeBar bar = new TimeBar(() -> Times.progress(timed.start, timed.end), null, null, colours);
+				context.onUpdate(bar::update);
+				row.setBar(bar);
+			}
 		}
-
-		Color nameColour = colours.resolve(event.getColour(), colours.getValue());
-		JPanel text = new JPanel(new BorderLayout());
-		text.setOpaque(false);
-		text.add(Labels.label(event.getName(), nameColour, Fonts.name(), TEXT_WIDTH, false), BorderLayout.NORTH);
-		text.add(context.liveLabel(() -> details(timed, Instant.now()), colours.getMuted(), FontManager.getRunescapeSmallFont(), TEXT_WIDTH, false), BorderLayout.CENTER);
-		card.add(text, BorderLayout.CENTER);
-		return card;
+		return row;
 	}
 
 	/**
-	 * e.g. "Skill · Ends in 6d 4h" or "Boss · in 5h 12m".
+	 * The kinds to show from a comma list, e.g. "event" or "skill, boss"; null for all.
 	 */
-	private static String details(TimedEvent timed, Instant now)
+	private static Set<String> kinds(String setting)
 	{
-		String time;
-		if (timed.isRunning(now))
-		{
-			time = timed.end == null ? "Happening now" : "Ends in " + Times.duration(Duration.between(now, timed.end));
-		}
-		else
-		{
-			Duration until = Duration.between(now, timed.start);
-			boolean hasTime = timed.event.isHasTime();
-			time = hasTime && until.compareTo(SOON) < 0 ? "in " + Times.duration(until) : Times.date(timed.start, hasTime);
-		}
+		Set<String> kinds = Arrays.stream(setting.split(","))
+			.map(k -> k.trim().toLowerCase(Locale.ENGLISH))
+			.filter(k -> !k.isEmpty())
+			.collect(Collectors.toSet());
+		return kinds.isEmpty() || kinds.contains("all") ? null : kinds;
+	}
 
-		String kind = timed.event.getKind();
-		if ("skill".equalsIgnoreCase(kind))
+	/**
+	 * The event's kind in lower case; events without one count as "event".
+	 */
+	private static String kind(ClanEvent event)
+	{
+		String kind = Objects.toString(event.getKind(), "").trim().toLowerCase(Locale.ENGLISH);
+		return kind.isEmpty() ? "event" : kind;
+	}
+
+	private static String caption(ClanEvent event)
+	{
+		switch (kind(event))
 		{
-			return "Skill · " + time;
+			case "skill":
+				return "Skill of the Week";
+			case "boss":
+				return "Boss of the Week";
+			default:
+				return "Event";
 		}
-		if ("boss".equalsIgnoreCase(kind))
-		{
-			return "Boss · " + time;
-		}
-		return time;
 	}
 
 	private static class TimedEvent
@@ -142,17 +171,30 @@ class EventsBlock implements BlockRenderer
 		final ClanEvent event;
 		final Instant start;
 		final Instant end;
+		final boolean running;
 
-		TimedEvent(ClanEvent event)
+		TimedEvent(ClanEvent event, Instant now)
 		{
 			this.event = event;
 			this.start = Times.parse(event.getStartsAt());
 			this.end = Times.parse(event.getEndsAt());
+			this.running = start != null && !now.isBefore(start) && (end == null || now.isBefore(end));
 		}
 
-		boolean isRunning(Instant now)
+		/**
+		 * e.g. "Ends in 6d 4h", "in 5h 12m" or "Fri 6 Nov, 17:00 UTC". Null for a running event without an end.
+		 */
+		String timeText()
 		{
-			return !now.isBefore(start) && (end == null || now.isBefore(end));
+			Instant now = Instant.now();
+			if (running)
+			{
+				return end == null ? null : "Ends in " + Times.duration(Duration.between(now, end));
+			}
+
+			Duration until = Duration.between(now, start);
+			boolean hasTime = event.isHasTime();
+			return hasTime && until.compareTo(SOON) < 0 ? "in " + Times.duration(until) : Times.date(start, hasTime);
 		}
 	}
 }
