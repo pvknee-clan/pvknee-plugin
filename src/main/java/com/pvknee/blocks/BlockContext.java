@@ -4,6 +4,7 @@ import com.pvknee.data.Block;
 import com.pvknee.data.ClanData;
 import com.pvknee.ui.Card;
 import com.pvknee.ui.ThemeColours;
+import com.pvknee.wom.WomClient;
 import javax.swing.JLabel;
 import lombok.Value;
 
@@ -17,6 +18,7 @@ public class BlockContext
 	ThemeColours colours;
 	Icons icons;
 	PageNavigator pages;
+	WomClient wom;
 
 	/**
 	 * The icon for a Wise Old Man metric, e.g. woodcutting or cerberus.

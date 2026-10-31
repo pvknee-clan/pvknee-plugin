@@ -11,6 +11,7 @@ import com.pvknee.data.Page;
 import com.pvknee.ui.Labels;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
+import com.pvknee.wom.WomClient;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -44,6 +45,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final ClanDataClient client;
 	private final BlockRegistry blocks;
 	private final Icons icons;
+	private final WomClient wom;
 	private final JComboBox<Page> pageSelect = new JComboBox<>();
 	private final JButton refreshButton = new JButton("Refresh");
 	private final JLabel statusLabel = new JLabel();
@@ -54,12 +56,13 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private boolean loading;
 
 	@Inject
-	PvKneePanel(ClanDataClient client, BlockRegistry blocks, Icons icons)
+	PvKneePanel(ClanDataClient client, BlockRegistry blocks, Icons icons, WomClient wom)
 	{
 		super(false);
 		this.client = client;
 		this.blocks = blocks;
 		this.icons = icons;
+		this.wom = wom;
 
 		setLayout(new BorderLayout(0, 10));
 		setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -187,7 +190,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			return;
 		}
 
-		BlockContext context = new BlockContext(data, ThemeColours.from(data.getTheme()), icons, this);
+		BlockContext context = new BlockContext(data, ThemeColours.from(data.getTheme()), icons, this, wom);
 
 		content.removeAll();
 		for (Block block : page.getBlocks())
