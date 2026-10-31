@@ -342,9 +342,12 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			.orElse(null);
 	}
 
+	/**
+	 * Pages with a rank stay hidden until rank checks exist.
+	 */
 	private static boolean isVisible(Page page)
 	{
-		return page.isShow();
+		return page.isShow() && (page.getRank() == null || page.getRank().trim().isEmpty());
 	}
 
 	private void showMessage(String message)
