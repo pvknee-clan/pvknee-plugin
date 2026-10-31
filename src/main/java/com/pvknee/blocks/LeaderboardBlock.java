@@ -4,7 +4,6 @@ import com.pvknee.data.Block;
 import com.pvknee.data.Competitions;
 import com.pvknee.ui.EmptyState;
 import com.pvknee.ui.Glyphs;
-import com.pvknee.ui.Labels;
 import com.pvknee.ui.LinkButton;
 import com.pvknee.ui.RankTable;
 import com.pvknee.ui.Section;
@@ -18,12 +17,10 @@ import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.DynamicGridLayout;
-import net.runelite.client.ui.FontManager;
 
 /**
  * A competition's standings as one ranked table with an optional button under it that opens the full standings on
@@ -47,7 +44,7 @@ class LeaderboardBlock implements BlockRenderer
 		SectionHeader header = new SectionHeader(block.setting("title", "Standings"), colours).withAside(() -> label, colours);
 
 		JPanel standings = column();
-		standings.add(muted("Loading standings...", colours));
+		standings.add(EmptyState.quiet(Glyphs.TROPHY, "Loading standings...", colours));
 
 		// Asked again every minute; WOM answers from its cache, so the table is only redrawn when new standings arrive.
 		Consumer<List<Standing>> onStandings = new Consumer<>()
@@ -65,7 +62,7 @@ class LeaderboardBlock implements BlockRenderer
 			}
 		};
 		Runnable load = () -> context.getWom().standings(target.getWomId(), onStandings,
-			error -> show(standings, muted("Couldn't load standings", colours)));
+			error -> show(standings, EmptyState.quiet(Glyphs.TROPHY, "Couldn't load standings", colours)));
 		load.run();
 		context.onUpdate(load);
 		return new Section(header, standings);
@@ -160,11 +157,6 @@ class LeaderboardBlock implements BlockRenderer
 		JPanel panel = new JPanel(new DynamicGridLayout(0, 1, 0, Spacing.ITEM_GAP));
 		panel.setOpaque(false);
 		return panel;
-	}
-
-	private static JLabel muted(String text, ThemeColours colours)
-	{
-		return Labels.label(text, colours.getMuted(), FontManager.getRunescapeSmallFont(), Labels.CONTENT_WIDTH, true);
 	}
 
 	private static String format(long value)
