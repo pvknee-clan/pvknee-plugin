@@ -61,8 +61,8 @@ class CompetitionBlock implements BlockRenderer
 	}
 
 	/**
-	 * A "NOW RUNNING" (or "STARTING") label over one column per competition. When they all share their times, the
-	 * time sits beside the label with one bar under the columns; otherwise each column shows its own.
+	 * A "NOW RUNNING" (or "STARTING") label over one column per competition. When they all share their times, one
+	 * time bar runs across the bottom of the card; otherwise each column has its own at its bottom.
 	 */
 	private static Card side(List<Competition> competitions, boolean upcoming, Block block, BlockContext context)
 	{
@@ -74,13 +74,6 @@ class CompetitionBlock implements BlockRenderer
 			.map(c -> Arrays.asList(c.getStartsAt(), upcoming ? null : c.getEndsAt()))
 			.distinct()
 			.count() == 1;
-
-		SectionHeader header = SectionHeader.cardLabel(upcoming ? "Starting" : "Now running", colours, INNER_WIDTH);
-		if (shared && timeText(first, upcoming) != null)
-		{
-			header.withAside(() -> timeText(first, upcoming), colours);
-			context.onUpdate(header::update);
-		}
 
 		JPanel columns = new JPanel(new GridLayout(1, count, Spacing.TITLE_GAP, 0));
 		columns.setOpaque(false);
@@ -105,11 +98,11 @@ class CompetitionBlock implements BlockRenderer
 		}
 
 		Card card = new Card(new BorderLayout(0, Spacing.TITLE_GAP));
-		card.add(header, BorderLayout.NORTH);
+		card.add(SectionHeader.cardLabel(upcoming ? "Starting" : "Now running", colours, INNER_WIDTH), BorderLayout.NORTH);
 		card.add(columns, BorderLayout.CENTER);
 		if (shared)
 		{
-			addTimeBar(card, fraction(first, upcoming), null, null, context);
+			addFullTimeBar(card, first, upcoming, context);
 		}
 		return card;
 	}
@@ -131,16 +124,24 @@ class CompetitionBlock implements BlockRenderer
 			Fonts.name().deriveFont(HERO_NAME_SIZE),
 			INNER_WIDTH,
 			colours), BorderLayout.NORTH);
+		addFullTimeBar(card, competition, upcoming, context);
+		return card;
+	}
 
+	/**
+	 * A bar with the time left and the end date under it (or for an upcoming competition, the time until it starts
+	 * and the start date, without a bar). Adds nothing if the time is unknown.
+	 */
+	private static void addFullTimeBar(JPanel panel, Competition competition, boolean upcoming, BlockContext context)
+	{
 		Instant time = Times.parse(upcoming ? competition.getStartsAt() : competition.getEndsAt());
 		if (time != null)
 		{
 			Supplier<String> left = upcoming
 				? () -> "Starts in " + Times.duration(Duration.between(Instant.now(), time))
 				: () -> timeText(competition, false);
-			addTimeBar(card, fraction(competition, upcoming), left, Times.date(time, true), context);
+			addTimeBar(panel, fraction(competition, upcoming), left, Times.date(time, true), context);
 		}
-		return card;
 	}
 
 	/**
