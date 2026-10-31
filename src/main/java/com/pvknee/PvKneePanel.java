@@ -35,6 +35,8 @@ class PvKneePanel extends PluginPanel
 
 	private final ClanDataClient client;
 	private final JComboBox<Page> pageSelect = new JComboBox<>();
+	private final JButton refreshButton = new JButton("Refresh");
+	private final JLabel statusLabel = new JLabel();
 	private final JPanel content = new JPanel();
 
 	private ClanData data;
@@ -64,13 +66,19 @@ class PvKneePanel extends PluginPanel
 		});
 		pageSelect.addActionListener(e -> showPage((Page) pageSelect.getSelectedItem()));
 
-		JButton refreshButton = new JButton("Refresh");
 		refreshButton.addActionListener(e -> refresh());
 
-		JPanel top = new JPanel(new BorderLayout(5, 0));
+		JPanel controls = new JPanel(new BorderLayout(5, 0));
+		controls.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		controls.add(pageSelect, BorderLayout.CENTER);
+		controls.add(refreshButton, BorderLayout.EAST);
+
+		statusLabel.setVisible(false);
+
+		JPanel top = new JPanel(new BorderLayout(0, 10));
 		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		top.add(pageSelect, BorderLayout.CENTER);
-		top.add(refreshButton, BorderLayout.EAST);
+		top.add(controls, BorderLayout.NORTH);
+		top.add(statusLabel, BorderLayout.CENTER);
 
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
 		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -89,19 +97,35 @@ class PvKneePanel extends PluginPanel
 
 	void refresh()
 	{
+		refreshButton.setEnabled(false);
+		showStatus("Loading...", Color.WHITE);
+
 		client.fetch(
 			data -> SwingUtilities.invokeLater(() -> show(data)),
 			e ->
 			{
 				log.debug("Failed to load clan panel", e);
-				SwingUtilities.invokeLater(() -> showMessage("Couldn't load the clan panel"));
+				SwingUtilities.invokeLater(() ->
+				{
+					refreshButton.setEnabled(true);
+					showStatus("ERROR: Couldn't load the clan panel. Press Refresh to try again.", ColorScheme.PROGRESS_ERROR_COLOR);
+				});
 			});
+	}
+
+	private void showStatus(String text, Color colour)
+	{
+		statusLabel.setText(html(text));
+		statusLabel.setForeground(colour);
+		statusLabel.setVisible(true);
 	}
 
 	private void show(ClanData data)
 	{
 		log.debug("Loaded clan panel: {} pages", data.getPages().size());
 		this.data = data;
+		refreshButton.setEnabled(true);
+		statusLabel.setVisible(false);
 
 		Page selected = (Page) pageSelect.getSelectedItem();
 		String selectedId = selected == null ? null : selected.getId();
@@ -178,11 +202,16 @@ class PvKneePanel extends PluginPanel
 
 	private static JLabel line(String text, Color colour)
 	{
-		String escaped = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-		JLabel label = new JLabel("<html><body style='width:" + TEXT_WIDTH + "px'>" + escaped + "</body></html>");
+		JLabel label = new JLabel(html(text));
 		label.setForeground(colour);
 		label.setBorder(new EmptyBorder(0, 0, 4, 0));
 		return label;
+	}
+
+	private static String html(String text)
+	{
+		String escaped = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+		return "<html><body style='width:" + TEXT_WIDTH + "px'>" + escaped + "</body></html>";
 	}
 
 	private static Color themeColour(String hex, Color fallback)
