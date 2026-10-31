@@ -26,13 +26,14 @@ public class PvKneePlugin extends Plugin
 	@Inject
 	private ClientToolbar clientToolbar;
 
+	private PvKneePanel panel;
 	private NavigationButton navButton;
 
 	@Override
 	protected void startUp() throws Exception
 	{
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "icon.png");
-		final PvKneePanel panel = injector.getInstance(PvKneePanel.class);
+		panel = injector.getInstance(PvKneePanel.class);
 
 		navButton = NavigationButton.builder()
 			.tooltip("PvKnee")
@@ -49,7 +50,9 @@ public class PvKneePlugin extends Plugin
 	protected void shutDown() throws Exception
 	{
 		clientToolbar.removeNavigation(navButton);
+		panel.stopUpdates();
 		navButton = null;
+		panel = null;
 		log.debug("PvKnee stopped");
 	}
 

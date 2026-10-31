@@ -53,15 +53,20 @@ public class WomClient
 	}
 
 	/**
-	 * Standings sorted by gain, highest first. Answers at once from the cache while it is fresh.
+	 * Standings sorted by gain, highest first. Answers at once from the cache while it is fresh. Once it is older,
+	 * answers with the old standings first, then again when the new ones arrive; a failed refetch keeps the old ones.
 	 */
 	public void standings(long competitionId, Consumer<List<Standing>> onSuccess, Consumer<Exception> onFailure)
 	{
 		Cached cached = cache.get(competitionId);
-		if (cached != null && cached.isFresh())
+		if (cached != null)
 		{
 			onSuccess.accept(cached.standings);
-			return;
+			if (cached.isFresh())
+			{
+				return;
+			}
+			onFailure = error -> {};
 		}
 
 		Listener listener = new Listener(onSuccess, onFailure);

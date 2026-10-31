@@ -17,6 +17,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Objects;
 import javax.inject.Inject;
 import javax.swing.DefaultListCellRenderer;
@@ -30,6 +32,7 @@ import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
@@ -41,6 +44,8 @@ import net.runelite.client.ui.PluginPanel;
 class PvKneePanel extends PluginPanel implements PageNavigator
 {
 	private static final int SUPPORTED_VERSION = 1;
+	private static final Duration COUNTDOWN_INTERVAL = Duration.ofMinutes(1);
+	private static final Duration REFRESH_INTERVAL = Duration.ofMinutes(10);
 
 	private final ClanDataClient client;
 	private final BlockRegistry blocks;
@@ -51,8 +56,11 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final JLabel statusLabel = new JLabel();
 	private final JLabel versionLabel = Labels.label("A newer plugin version is available", Color.GRAY, FontManager.getRunescapeSmallFont(), Labels.CONTENT_WIDTH, false);
 	private final JPanel content = new JPanel();
+	private final Timer countdownTimer = new Timer((int) COUNTDOWN_INTERVAL.toMillis(), e -> redraw());
+	private final Timer refreshTimer = new Timer((int) REFRESH_INTERVAL.toMillis(), e -> refresh(true));
 
 	private ClanData data;
+	private Instant loadedAt;
 	private boolean loading;
 
 	@Inject
@@ -83,7 +91,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		});
 		pageSelect.addActionListener(e -> showPage((Page) pageSelect.getSelectedItem()));
 
-		refreshButton.addActionListener(e -> refresh());
+		refreshButton.addActionListener(e -> refresh(false));
 
 		JPanel controls = new JPanel(new BorderLayout(5, 0));
 		controls.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -117,17 +125,54 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	@Override
 	public void onActivate()
 	{
-		if (data == null && !loading)
+		if (data == null)
 		{
-			refresh();
+			refresh(false);
 		}
+		else if (Instant.now().isAfter(loadedAt.plus(REFRESH_INTERVAL)))
+		{
+			refresh(true);
+		}
+		else
+		{
+			redraw();
+		}
+
+		countdownTimer.restart();
+		refreshTimer.restart();
 	}
 
-	private void refresh()
+	@Override
+	public void onDeactivate()
 	{
+		stopUpdates();
+	}
+
+	/**
+	 * Stops the countdown and refresh timers until the panel is shown again.
+	 */
+	void stopUpdates()
+	{
+		countdownTimer.stop();
+		refreshTimer.stop();
+	}
+
+	/**
+	 * Reloads the clan data. A quiet refresh keeps the page as it is while loading.
+	 */
+	private void refresh(boolean quiet)
+	{
+		if (loading)
+		{
+			return;
+		}
+
 		loading = true;
-		refreshButton.setEnabled(false);
-		showStatus("Loading...", Color.WHITE);
+		if (!quiet)
+		{
+			refreshButton.setEnabled(false);
+			showStatus("Loading...", Color.WHITE);
+		}
 
 		client.fetch(
 			data -> SwingUtilities.invokeLater(() -> show(data)),
@@ -154,6 +199,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	{
 		log.debug("Loaded clan panel: {} pages", data.getPages().size());
 		this.data = data;
+		loadedAt = Instant.now();
 		loading = false;
 		refreshButton.setEnabled(true);
 		statusLabel.setVisible(false);
@@ -180,6 +226,17 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		if (pageSelect.getItemCount() == 0)
 		{
 			showMessage("No pages to show");
+		}
+	}
+
+	/**
+	 * Draws the current page again, so countdowns and standings catch up.
+	 */
+	private void redraw()
+	{
+		if (data != null)
+		{
+			showPage((Page) pageSelect.getSelectedItem());
 		}
 	}
 
