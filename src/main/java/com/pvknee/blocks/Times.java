@@ -16,6 +16,8 @@ public final class Times
 		.withZone(ZoneOffset.UTC);
 	private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH)
 		.withZone(ZoneOffset.UTC);
+	private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm 'UTC'", Locale.ENGLISH)
+		.withZone(ZoneOffset.UTC);
 
 	private Times()
 	{
@@ -47,6 +49,14 @@ public final class Times
 	public static String date(Instant instant, boolean withTime)
 	{
 		return (withTime ? DATE_TIME : DATE).format(instant);
+	}
+
+	/**
+	 * e.g. "17:05 UTC".
+	 */
+	public static String time(Instant instant)
+	{
+		return TIME.format(instant);
 	}
 
 	/**

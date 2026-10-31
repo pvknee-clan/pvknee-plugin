@@ -4,6 +4,7 @@ import com.pvknee.blocks.BlockContext;
 import com.pvknee.blocks.BlockRegistry;
 import com.pvknee.blocks.Icons;
 import com.pvknee.blocks.PageNavigator;
+import com.pvknee.blocks.Times;
 import com.pvknee.data.Block;
 import com.pvknee.data.ClanData;
 import com.pvknee.data.ClanDataClient;
@@ -21,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import javax.inject.Inject;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -54,13 +56,17 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final JComboBox<Page> pageSelect = new JComboBox<>();
 	private final JButton refreshButton = new JButton("Refresh");
 	private final JLabel statusLabel = new JLabel();
+	private final JLabel lastUpdatedLabel = Labels.label("", Color.GRAY, FontManager.getRunescapeSmallFont(), Labels.CONTENT_WIDTH, false);
 	private final JLabel versionLabel = Labels.label("A newer plugin version is available", Color.GRAY, FontManager.getRunescapeSmallFont(), Labels.CONTENT_WIDTH, false);
 	private final JPanel content = new JPanel();
 	private final Timer countdownTimer = new Timer((int) COUNTDOWN_INTERVAL.toMillis(), e -> redraw());
 	private final Timer refreshTimer = new Timer((int) REFRESH_INTERVAL.toMillis(), e -> refresh(true));
 
 	private ClanData data;
+	/** When the data was last loaded from the endpoint; null while only the saved copy is shown. */
 	private Instant loadedAt;
+	/** When the data on screen was fetched, from the endpoint or the saved copy. */
+	private Instant updatedAt;
 	private boolean loading;
 
 	@Inject
@@ -98,14 +104,20 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		controls.add(pageSelect, BorderLayout.CENTER);
 		controls.add(refreshButton, BorderLayout.EAST);
 
-		statusLabel.setVisible(false);
-		versionLabel.setVisible(false);
+		JPanel notices = new JPanel();
+		notices.setLayout(new BoxLayout(notices, BoxLayout.Y_AXIS));
+		notices.setBackground(ColorScheme.DARK_GRAY_COLOR);
+		for (JLabel notice : new JLabel[]{statusLabel, lastUpdatedLabel, versionLabel})
+		{
+			notice.setVisible(false);
+			notice.setAlignmentX(LEFT_ALIGNMENT);
+			notices.add(notice);
+		}
 
 		JPanel top = new JPanel(new BorderLayout(0, 10));
 		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
 		top.add(controls, BorderLayout.NORTH);
-		top.add(statusLabel, BorderLayout.CENTER);
-		top.add(versionLabel, BorderLayout.SOUTH);
+		top.add(notices, BorderLayout.CENTER);
 
 		content.setLayout(new DynamicGridLayout(0, 1, 0, Spacing.BLOCK_GAP));
 		content.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -127,9 +139,10 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	{
 		if (data == null)
 		{
+			client.loadSaved((saved, savedAt) -> SwingUtilities.invokeLater(() -> showSaved(saved, savedAt)));
 			refresh(false);
 		}
-		else if (Instant.now().isAfter(loadedAt.plus(REFRESH_INTERVAL)))
+		else if (loadedAt == null || Instant.now().isAfter(loadedAt.plus(REFRESH_INTERVAL)))
 		{
 			refresh(true);
 		}
@@ -158,7 +171,8 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	}
 
 	/**
-	 * Reloads the clan data. A quiet refresh keeps the page as it is while loading.
+	 * Reloads the clan data. A quiet refresh keeps the page as it is while loading, and on failure only shows when
+	 * the data on screen is from.
 	 */
 	private void refresh(boolean quiet)
 	{
@@ -183,7 +197,11 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 				{
 					loading = false;
 					refreshButton.setEnabled(true);
-					showStatus("ERROR: Couldn't load the clan panel. Press Refresh to try again.", ColorScheme.PROGRESS_ERROR_COLOR);
+					if (!quiet)
+					{
+						showStatus("ERROR: Couldn't load the clan panel. Press Refresh to try again.", ColorScheme.PROGRESS_ERROR_COLOR);
+					}
+					showLastUpdated();
 				});
 			});
 	}
@@ -198,12 +216,46 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private void show(ClanData data)
 	{
 		log.debug("Loaded clan panel: {} pages", data.getPages().size());
-		this.data = data;
 		loadedAt = Instant.now();
+		updatedAt = loadedAt;
 		loading = false;
 		refreshButton.setEnabled(true);
 		statusLabel.setVisible(false);
+		lastUpdatedLabel.setVisible(false);
+		display(data);
+	}
 
+	/**
+	 * Shows the saved copy, unless fresh data has already arrived.
+	 */
+	private void showSaved(ClanData data, Instant savedAt)
+	{
+		if (this.data != null)
+		{
+			return;
+		}
+
+		log.debug("Showing saved clan data from {}", savedAt);
+		updatedAt = savedAt;
+		display(data);
+		showLastUpdated();
+	}
+
+	private void showLastUpdated()
+	{
+		if (data == null)
+		{
+			return;
+		}
+
+		Labels.setText(lastUpdatedLabel, "Last updated " + Times.time(updatedAt), Labels.CONTENT_WIDTH, false);
+		lastUpdatedLabel.setForeground(ThemeColours.from(data.getTheme()).getMuted());
+		lastUpdatedLabel.setVisible(true);
+	}
+
+	private void display(ClanData data)
+	{
+		this.data = data;
 		versionLabel.setForeground(ThemeColours.from(data.getTheme()).getMuted());
 		versionLabel.setVisible(data.getVersion() > SUPPORTED_VERSION);
 

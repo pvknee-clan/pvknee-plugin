@@ -4,6 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.pvknee.PvKneeConfig;
 import java.io.IOException;
+import java.time.Instant;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -17,7 +20,8 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
- * Fetches the clan panel JSON. Callbacks run on an OkHttp thread, not the client or Swing thread.
+ * Fetches the clan panel JSON and keeps the last good copy on disk.
+ * Callbacks run on a background thread, not the client or Swing thread.
  */
 @Slf4j
 @Singleton
@@ -28,15 +32,22 @@ public class ClanDataClient
 	private final OkHttpClient okHttpClient;
 	private final Gson gson;
 	private final PvKneeConfig config;
+	private final SavedCopy savedCopy;
+	private final ScheduledExecutorService executor;
 
 	@Inject
-	ClanDataClient(OkHttpClient okHttpClient, Gson gson, PvKneeConfig config)
+	ClanDataClient(OkHttpClient okHttpClient, Gson gson, PvKneeConfig config, SavedCopy savedCopy, ScheduledExecutorService executor)
 	{
 		this.okHttpClient = okHttpClient;
 		this.gson = gson;
 		this.config = config;
+		this.savedCopy = savedCopy;
+		this.executor = executor;
 	}
 
+	/**
+	 * Loads the endpoint. A good response from the real endpoint (not an override) is also saved to disk.
+	 */
 	public void fetch(Consumer<ClanData> onSuccess, Consumer<Exception> onFailure)
 	{
 		String override = config.endpointOverride().trim();
@@ -73,16 +84,12 @@ public class ClanDataClient
 						throw new IOException("Unexpected response " + response.code());
 					}
 
-					ClanData data = gson.fromJson(body.charStream(), ClanData.class);
-					if (data == null)
+					String json = body.string();
+					ClanData data = parse(json);
+					if (override.isEmpty())
 					{
-						throw new IOException("Empty response");
+						savedCopy.save(json);
 					}
-					if (data.getError() != null)
-					{
-						throw new IOException("Endpoint error: " + data.getError());
-					}
-
 					onSuccess.accept(data);
 				}
 				catch (IOException | JsonParseException e)
@@ -91,5 +98,43 @@ public class ClanDataClient
 				}
 			}
 		});
+	}
+
+	/**
+	 * Loads the saved copy, with the time it was saved. Not called if there is none or it cannot be read.
+	 */
+	public void loadSaved(BiConsumer<ClanData, Instant> onLoaded)
+	{
+		executor.execute(() ->
+		{
+			SavedCopy.Saved saved = savedCopy.load();
+			if (saved == null)
+			{
+				return;
+			}
+
+			try
+			{
+				onLoaded.accept(parse(saved.getJson()), saved.getSavedAt());
+			}
+			catch (IOException | JsonParseException e)
+			{
+				log.debug("Saved clan data is unreadable", e);
+			}
+		});
+	}
+
+	private ClanData parse(String json) throws IOException
+	{
+		ClanData data = gson.fromJson(json, ClanData.class);
+		if (data == null)
+		{
+			throw new IOException("Empty response");
+		}
+		if (data.getError() != null)
+		{
+			throw new IOException("Endpoint error: " + data.getError());
+		}
+		return data;
 	}
 }
