@@ -8,6 +8,7 @@ import com.pvknee.chat.ChatCommands;
 import com.pvknee.data.SavedCopy;
 import com.pvknee.player.PlayerInfo;
 import com.pvknee.player.WorldHopper;
+import com.pvknee.wom.LogoutUpdate;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.inject.Inject;
@@ -55,6 +56,9 @@ public class PvKneePlugin extends Plugin
 	@Inject
 	private ChallengeMessages challengeMessages;
 
+	@Inject
+	private LogoutUpdate logoutUpdate;
+
 	private PvKneePanel panel;
 	private NavigationButton navButton;
 
@@ -86,6 +90,7 @@ public class PvKneePlugin extends Plugin
 		worldHopper.start();
 		chatCommands.start();
 		challengeMessages.start();
+		logoutUpdate.start();
 		log.debug("PvKnee started");
 	}
 
@@ -96,6 +101,7 @@ public class PvKneePlugin extends Plugin
 		worldHopper.stop();
 		chatCommands.stop();
 		challengeMessages.stop();
+		logoutUpdate.stop();
 		clientToolbar.removeNavigation(navButton);
 		panel.stopUpdates();
 		navButton = null;

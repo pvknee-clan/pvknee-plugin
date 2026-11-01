@@ -41,6 +41,8 @@ public class PlayerInfo
 	private final DevLog devLog;
 
 	private volatile PlayerState state = PlayerState.LOGGED_OUT;
+	/** The name last logged in with, kept after logging out. */
+	private volatile String lastName;
 	private Runnable listener;
 	/** Set while the name or clan rank may still arrive; read again each tick until both are known. */
 	private boolean pending;
@@ -79,6 +81,14 @@ public class PlayerInfo
 	public PlayerState get()
 	{
 		return state;
+	}
+
+	/**
+	 * The name the member last logged in with, kept after they log out; null if they haven't logged in yet.
+	 */
+	public String lastName()
+	{
+		return lastName;
 	}
 
 	@Subscribe
@@ -179,6 +189,10 @@ public class PlayerInfo
 		}
 
 		state = next;
+		if (next.getName() != null)
+		{
+			lastName = next.getName();
+		}
 		if (!next.isLoggedIn())
 		{
 			devLog.log("player: logged out");

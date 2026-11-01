@@ -21,6 +21,18 @@ public interface PvKneeConfig extends Config
 		return false;
 	}
 
+	@ConfigItem(
+		keyName = "updateWomOnLogout",
+		name = "Update Wise Old Man on logout",
+		description = "Asks Wise Old Man to update your profile when you log out, for more up-to-date challenge standings",
+		warning = "This feature submits your IP address to a 3rd-party server not controlled or verified by RuneLite developers",
+		position = 2
+	)
+	default boolean updateWomOnLogout()
+	{
+		return false;
+	}
+
 	@ConfigSection(
 		name = "Challenge messages",
 		description = "Chat messages about the Skill and Boss of the Week; only you see them",

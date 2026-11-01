@@ -18,20 +18,23 @@ import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
- * Fetches Wise Old Man competition standings and keeps each for five minutes.
- * Callbacks run on the Swing thread; call it from the Swing thread too.
+ * Fetches Wise Old Man competition standings and keeps each for five minutes, and asks for player updates.
+ * Standings callbacks run on the Swing thread; ask for standings from the Swing thread too.
  */
 @Slf4j
 @Singleton
 public class WomClient
 {
 	private static final String COMPETITION_URL = "https://api.wiseoldman.net/v2/competitions/";
+	private static final HttpUrl PLAYERS_URL = HttpUrl.get("https://api.wiseoldman.net/v2/players");
 	private static final String COMPETITION_PAGE = "https://wiseoldman.net/competitions/";
 	private static final Duration CACHE_TIME = Duration.ofMinutes(5);
 
@@ -113,6 +116,40 @@ public class WomClient
 				catch (IOException | JsonParseException e)
 				{
 					finish(competitionId, null, e);
+				}
+			}
+		});
+	}
+
+	/**
+	 * Asks Wise Old Man to update a player's profile. Callbacks run on a background thread.
+	 */
+	public void updatePlayer(String name, Runnable onSuccess, Consumer<Exception> onFailure)
+	{
+		Request request = new Request.Builder()
+			.url(PLAYERS_URL.newBuilder().addPathSegment(name).build())
+			.post(RequestBody.create(null, new byte[0]))
+			.build();
+
+		okHttpClient.newCall(request).enqueue(new Callback()
+		{
+			@Override
+			public void onFailure(Call call, IOException e)
+			{
+				onFailure.accept(e);
+			}
+
+			@Override
+			public void onResponse(Call call, Response response)
+			{
+				response.close();
+				if (response.isSuccessful())
+				{
+					onSuccess.run();
+				}
+				else
+				{
+					onFailure.accept(new IOException("Unexpected response " + response.code()));
 				}
 			}
 		});
