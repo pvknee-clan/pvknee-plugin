@@ -18,6 +18,10 @@ setup needed.
   starts, has 1 hour left and ends. Only you see them.
 - **Chat commands.** Type `!sotw` or `!botw` to see the challenge, its time left and your place and gain. Others see
   your command as usual; only you see the reply.
+- **Clan bingo.** When the clan runs a bingo, a page with each team's board, coloured by progress, and the details of
+  any tile you select: what it needs, who got what and when it was completed. Switch between teams' boards, see
+  the standings and, at the end, the winner. View only: the data comes from the clan's bingo sheet, and submissions
+  stay in Discord.
 - **More page blocks.** Tables, big numbers and countdowns the clan's admins can add to any page.
 
 The panel keeps itself up to date while it is open. While it is closed, the plugin only loads the clan data once when
@@ -38,12 +42,12 @@ you log in, for the chat messages.
 
 | Service | Address | What for | When |
 | --- | --- | --- | --- |
-| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions, events and links, built from the clan's Google Sheet | When the panel is opened, on Refresh, and every 10 minutes while it is open; once when you log in (unless loaded in the last 10 minutes), for the chat messages; when you use `!sotw` or `!botw` and the data is more than 10 minutes old |
+| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions, events, links and bingo, built from the clan's Google Sheets | When the panel is opened, on Refresh, and every 10 minutes while it is open; once when you log in (unless loaded in the last 10 minutes), for the chat messages; when you use `!sotw` or `!botw` and the data is more than 10 minutes old |
 | Wise Old Man | `api.wiseoldman.net` | Competition standings (public data) | When a leaderboard or your place is shown, or you use `!sotw` or `!botw`, at most once every 5 minutes per competition |
 | Wise Old Man | `api.wiseoldman.net` | A profile update for your username | Only with **Update Wise Old Man on logout** on: when you log out, at most once every 10 minutes per name |
 | GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon per session |
 
-Skill icons come from RuneLite itself; all other icons are built into the plugin.
+Skill and item icons come from RuneLite itself; all other icons are built into the plugin.
 
 The plugin does not send your username or any other player data to these services, except your username to Wise Old
 Man when you turn on **Update Wise Old Man on logout**. Your clan rank, world and name are read from the game client
