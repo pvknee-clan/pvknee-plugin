@@ -128,24 +128,12 @@ public class ChatCommands
 			if (player.isNamed(standing.getName()))
 			{
 				values.put("place", Labels.ordinal(i + 1));
-				values.put("gain", gain(standing.getGained(), type));
+				values.put("gain", Labels.score(standing.getGained(), type));
 				return;
 			}
 		}
 		values.put("place", "not on the board yet");
 		values.put("gain", "no gains yet");
-	}
-
-	/**
-	 * A gain as the standings show it: +1,942 for a skill, 12 kills for a boss.
-	 */
-	private static String gain(long gained, String type)
-	{
-		if ("skill".equals(type))
-		{
-			return "+" + Labels.number(gained);
-		}
-		return Labels.number(gained) + (gained == 1 ? " kill" : " kills");
 	}
 
 	private void send(String message)

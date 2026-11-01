@@ -80,6 +80,23 @@ public final class Labels
 	}
 
 	/**
+	 * A member's own score in a challenge: "1,942 xp" for a skill, "12 kills" (or "1 kill") for a boss, otherwise just
+	 * the number. No "+": it is their score, not a gain in a list.
+	 */
+	public static String score(long value, String type)
+	{
+		if ("skill".equalsIgnoreCase(type))
+		{
+			return number(value) + " xp";
+		}
+		if ("boss".equalsIgnoreCase(type))
+		{
+			return number(value) + (value == 1 ? " kill" : " kills");
+		}
+		return number(value);
+	}
+
+	/**
 	 * A place as an ordinal, e.g. 1st, 2nd, 11th.
 	 */
 	public static String ordinal(int number)

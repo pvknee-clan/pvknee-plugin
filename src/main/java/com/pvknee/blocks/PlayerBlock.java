@@ -17,7 +17,7 @@ import net.runelite.client.ui.FontManager;
 
 /**
  * The member's own place in a competition, from the standings the leaderboard loads: a card when they are on the
- * board, a quiet line when they are not, and nothing while logged out.
+ * board, a quiet line when others are and they are not, and nothing while logged out or the board is empty.
  */
 @Slf4j
 class PlayerBlock implements BlockRenderer
@@ -53,7 +53,12 @@ class PlayerBlock implements BlockRenderer
 				{
 					shown = result;
 					place.removeAll();
-					place.add(placeView(Standing.gainers(result), player, block, context));
+					List<Standing> gainers = Standing.gainers(result);
+					// An empty board is left to the leaderboard's empty state, so the message isn't shown twice.
+					if (!gainers.isEmpty())
+					{
+						place.add(placeView(gainers, player, target, block, context));
+					}
 					place.revalidate();
 					place.repaint();
 				}
@@ -65,7 +70,7 @@ class PlayerBlock implements BlockRenderer
 		return place;
 	}
 
-	private static JComponent placeView(List<Standing> gainers, PlayerState player, Block block, BlockContext context)
+	private static JComponent placeView(List<Standing> gainers, PlayerState player, CompetitionTarget target, Block block, BlockContext context)
 	{
 		ThemeColours colours = context.getColours();
 		int index = 0;
@@ -86,7 +91,6 @@ class PlayerBlock implements BlockRenderer
 		long behind = gainers.get(0).getGained() - mine.getGained();
 		String line = rank == 1 ? "Leading" : behind == 0 ? "Level with 1st" : Labels.number(behind) + " behind 1st";
 		boolean medal = rank <= Math.min(RankBadge.medalPlaces(), Math.max(0, block.intSetting("podium", 3)));
-		String value = block.setting("prefix", "") + Labels.number(mine.getGained());
-		return new StandingCard("You", rank, medal, mine.getName(), line, value, colours);
+		return new StandingCard("You", rank, medal, mine.getName(), line, Labels.score(mine.getGained(), target.getType()), colours);
 	}
 }
