@@ -4,8 +4,11 @@ import com.pvknee.data.Bingo;
 import com.pvknee.data.Block;
 import com.pvknee.ui.Card;
 import com.pvknee.ui.Centred;
+import com.pvknee.ui.Divider;
 import com.pvknee.ui.Dots;
+import com.pvknee.ui.EmptyState;
 import com.pvknee.ui.Fonts;
+import com.pvknee.ui.GlyphIcon;
 import com.pvknee.ui.Glyphs;
 import com.pvknee.ui.IconButton;
 import com.pvknee.ui.Labels;
@@ -16,10 +19,12 @@ import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -28,13 +33,18 @@ import net.runelite.client.ui.FontManager;
 
 /**
  * The bingo team being viewed: a switcher through every team's board, its rank, tiles done and points, and a bar of
- * tiles done. The title's aside is the time until the start, the time left, or "Ended".
+ * tiles done (before the start, its number of members instead). The title's aside is the time until the start, the
+ * time left, or "Ended". Above it, while the bingo runs, a note for members who are logged out or not on a team, and
+ * once it has ended, the result: "Tallying results" until the admins finish, then the winner.
  */
 class BingoTeamBlock implements BlockRenderer
 {
 	private static final int INNER_WIDTH = Labels.CONTENT_WIDTH - 2 * Spacing.PADDING;
 	private static final int ROW_GAP = 8;
 	private static final int SWITCHER_GAP = 6;
+	private static final int TROPHY_SIZE = 28;
+	private static final float WINNER_SIZE = 17f;
+	private static final int RESULT_GAP = 6;
 
 	@Override
 	public JComponent render(Block block, BlockContext context)
@@ -53,7 +63,87 @@ class BingoTeamBlock implements BlockRenderer
 			.withTimeAside(() -> time(start, end), () -> started(start) && end != null && Times.endingSoon(end), colours);
 		context.onUpdate(header::update);
 		view.onChange(() -> header.setTitle(title(view)));
-		return new Section(header, context.followBingo(() -> card(view, bingo, colours)));
+		Section team = new Section(header, context.followBingo(() -> card(view, bingo, colours)));
+
+		JComponent above = above(view, bingo, end, context);
+		if (above == null)
+		{
+			return team;
+		}
+		JPanel stack = new JPanel(new BorderLayout(0, Spacing.BLOCK_GAP));
+		stack.setOpaque(false);
+		stack.add(above, BorderLayout.NORTH);
+		stack.add(team, BorderLayout.CENTER);
+		return stack;
+	}
+
+	/**
+	 * What goes above the team card: the result once the bingo has ended, otherwise a note when the member is logged
+	 * out or not on a team. Null for nothing.
+	 */
+	private static JComponent above(BingoView view, Bingo bingo, Instant end, BlockContext context)
+	{
+		ThemeColours colours = context.getColours();
+		Bingo.State state = bingo.getState();
+		if (state == Bingo.State.TALLYING || state == Bingo.State.FINAL)
+		{
+			SectionHeader header = new SectionHeader("Result", colours)
+				.withAside(() -> end == null ? "" : "Ended " + Times.date(end, false), colours);
+			return new Section(header, state == Bingo.State.TALLYING
+				? new EmptyState(Glyphs.HOURGLASS, "Tallying results", "Points below may still change.", colours)
+				: result(view, bingo, colours));
+		}
+		if (!context.getPlayer().isLoggedIn())
+		{
+			return new EmptyState(Glyphs.USER, "Log in to see your team", "The teams and their points still show below.", colours);
+		}
+		if (view.getOwnTeam() == null)
+		{
+			return new EmptyState(Glyphs.GROUP, "You're not on a team", "Ask an admin to add you. You can still follow the teams below.", colours);
+		}
+		return null;
+	}
+
+	/**
+	 * The final result: a trophy, "[Team] won" with its points and tiles, then the member's own team's place.
+	 */
+	private static Card result(BingoView view, Bingo bingo, ThemeColours colours)
+	{
+		List<Bingo.Team> winners = bingo.getTeams().stream()
+			.filter(team -> team.getRank() == 1)
+			.collect(Collectors.toList());
+		if (winners.isEmpty())
+		{
+			winners = bingo.getTeams().subList(0, 1);
+		}
+		Color gold = RankBadge.medalColour(1);
+		int total = bingo.getBoardSize() * bingo.getBoardSize();
+
+		Card card = new Card(new DynamicGridLayout(0, 1, 0, RESULT_GAP));
+		card.add(new JLabel(new GlyphIcon(Glyphs.TROPHY, gold, TROPHY_SIZE)));
+		String names = winners.stream().map(team -> Objects.toString(team.getName(), "")).collect(Collectors.joining(" & "));
+		card.add(Labels.label(names + " won", gold, Fonts.boldName().deriveFont(WINNER_SIZE), INNER_WIDTH, true));
+		Bingo.Team winner = winners.get(0);
+		card.add(Labels.label(Labels.decimal(winner.getPoints()) + " pts · " + winner.getTilesDone() + " of " + total + " tiles",
+			colours.getMuted(), FontManager.getRunescapeSmallFont(), INNER_WIDTH, true));
+
+		Bingo.Team own = view.getOwnTeam();
+		if (own != null)
+		{
+			card.add(new Divider(colours.getMuted()));
+			JPanel row = new JPanel(new BorderLayout(ROW_GAP, 0));
+			row.setOpaque(false);
+			JLabel yours = new JLabel("Your team, " + own.getName());
+			yours.setForeground(ThemeColours.TEXT);
+			yours.setFont(FontManager.getRunescapeSmallFont());
+			row.add(yours, BorderLayout.CENTER);
+			JLabel place = new JLabel(Labels.ordinal(own.getRank()) + " · " + Labels.decimal(own.getPoints()) + " pts");
+			place.setForeground(colours.getValue());
+			place.setFont(FontManager.getRunescapeSmallFont());
+			row.add(place, BorderLayout.EAST);
+			card.add(row);
+		}
+		return card;
 	}
 
 	private static String title(BingoView view)
@@ -90,6 +180,13 @@ class BingoTeamBlock implements BlockRenderer
 
 		Card card = new Card(new DynamicGridLayout(0, 1, 0, ROW_GAP));
 		card.add(switcher(view, bingo.getTeams(), team, colours));
+		if (bingo.getState() == Bingo.State.UPCOMING)
+		{
+			int members = team.getMembers().size();
+			card.add(Labels.label(members + (members == 1 ? " member" : " members"), colours.getMuted(),
+				FontManager.getRunescapeSmallFont(), INNER_WIDTH, true));
+			return card;
+		}
 		card.add(standing(team, total, colours));
 		card.add(new ProgressBar(total == 0 ? 0 : (double) team.getTilesDone() / total, ThemeColours.DONE));
 		return card;

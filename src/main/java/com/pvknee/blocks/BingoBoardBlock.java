@@ -11,12 +11,14 @@ import com.pvknee.ui.ThemeColours;
 import com.pvknee.ui.TileGrid;
 import java.awt.BorderLayout;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import net.runelite.client.ui.FontManager;
 
 /**
  * The viewed team's bingo board: a tile per place, coloured by the team's progress, with a legend under it, and the
@@ -34,12 +36,16 @@ class BingoBoardBlock implements BlockRenderer
 	{
 		BingoView view = context.getBingoView();
 		Bingo bingo = view.getBingo();
-		if (bingo == null || view.getTeam() == null || bingo.getTiles().isEmpty())
+		if (bingo == null || view.getTeam() == null)
 		{
 			return null;
 		}
 
 		ThemeColours colours = context.getColours();
+		if (bingo.getTiles().isEmpty())
+		{
+			return new Section(new SectionHeader(block.setting("title", "Board"), colours), placeholder(bingo, context));
+		}
 		SectionHeader header = new SectionHeader(block.setting("title", "Board"), colours)
 			.withAside(() -> "Select a tile", colours);
 		JPanel cards = new JPanel(new BorderLayout(0, CARD_GAP));
@@ -47,6 +53,22 @@ class BingoBoardBlock implements BlockRenderer
 		cards.add(board(view, bingo, context), BorderLayout.NORTH);
 		cards.add(context.followBingo(() -> BingoTileDetail.of(bingo, view.getTeam(), view.getTile(), context)), BorderLayout.CENTER);
 		return new Section(header, cards);
+	}
+
+	/**
+	 * Two rows of empty places, until the endpoint sends the tiles at the start.
+	 */
+	private static Card placeholder(Bingo bingo, BlockContext context)
+	{
+		int size = Math.max(1, bingo.getBoardSize());
+		TileGrid grid = new TileGrid(size, Collections.nCopies(2 * size, null), -1, context.getColours().getAccent(), INNER_WIDTH, index ->
+		{
+		});
+		Card card = new Card(new BorderLayout(0, LEGEND_GAP));
+		card.add(grid, BorderLayout.CENTER);
+		card.add(Labels.label("The board is revealed when the bingo starts.", context.getColours().getMuted(),
+			FontManager.getRunescapeSmallFont(), INNER_WIDTH, true), BorderLayout.SOUTH);
+		return card;
 	}
 
 	/**

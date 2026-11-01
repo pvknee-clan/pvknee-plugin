@@ -50,6 +50,8 @@ public final class Glyphs
 	public static final Shape EXTERNAL = path("M14 4h6v6M20 4l-9 9M18 14v6H4V6h6");
 	public static final Shape CALENDAR = join(rect(4, 5, 16, 15, 2), path("M4 10h16M9 3v4M15 3v4"));
 	public static final Shape TICK = path("M5 12l5 5 9-10");
+	public static final Shape HOURGLASS = path("M7 3h10M7 21h10M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9");
+	public static final Shape USER = join(circle(12, 8, 4), path("M4 21c0-4 4-6 8-6s8 2 8 6"));
 	public static final Shape GRID = join(rect(3, 3, 18, 18, 2), path("M9 3v18M15 3v18M3 9h18M3 15h18"));
 
 	private static final Map<String, Shape> NAMED = named();
@@ -106,6 +108,8 @@ public final class Glyphs
 		named.put("external", EXTERNAL);
 		named.put("calendar", CALENDAR);
 		named.put("grid", GRID);
+		named.put("hourglass", HOURGLASS);
+		named.put("user", USER);
 		return Collections.unmodifiableMap(named);
 	}
 

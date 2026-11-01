@@ -31,7 +31,8 @@ import net.runelite.client.ui.FontManager;
 /**
  * A square grid of clickable tiles, e.g. a bingo board, each with an icon and coloured by status: done tiles are
  * tinted green with a tick in the corner, tiles in progress are tinted orange with a progress line along the bottom,
- * and the rest are plain with the icon slightly dimmed. The selected tile has an outline.
+ * and the rest are plain with the icon slightly dimmed. The selected tile has an outline. Places without a tile are
+ * dashed outlines, e.g. for a board that isn't revealed yet.
  */
 public class TileGrid extends JComponent
 {
@@ -47,6 +48,8 @@ public class TileGrid extends JComponent
 	private static final Color PROGRESS_TINT = new Color(255, 152, 0, 41);
 	private static final Color LINE_TRACK = new Color(0, 0, 0, 90);
 	private static final Color LEGEND_PLAIN = new Color(90, 90, 90);
+	private static final Color EMPTY = new Color(74, 74, 74);
+	private static final float[] DASH = {4, 3};
 	private static final float DIMMED = 0.75f;
 
 	public enum Status
@@ -195,8 +198,11 @@ public class TileGrid extends JComponent
 			Rectangle r = bounds(i);
 			if (tile == null)
 			{
-				g2.setColor(Card.BORDER);
-				g2.drawRoundRect(r.x, r.y, r.width - 1, r.height - 1, ARC, ARC);
+				Graphics2D dashed = (Graphics2D) g2.create();
+				dashed.setColor(EMPTY);
+				dashed.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10, DASH, 0));
+				dashed.drawRoundRect(r.x, r.y, r.width - 1, r.height - 1, ARC, ARC);
+				dashed.dispose();
 				continue;
 			}
 
