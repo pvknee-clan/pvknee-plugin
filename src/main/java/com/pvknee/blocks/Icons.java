@@ -6,23 +6,29 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 import net.runelite.api.Skill;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.SkillIconManager;
+import net.runelite.client.util.AsyncBufferedImage;
 
 /**
- * Icons for Wise Old Man metrics: skills come from the game client, bosses are downloaded.
+ * Icons for Wise Old Man metrics and items: skills and items come from the game client, bosses are downloaded.
  */
 @Singleton
 public class Icons
 {
 	private final SkillIconManager skillIcons;
+	private final ItemManager itemManager;
 	private final ImageLoader images;
 	private final Map<String, ImageIcon> scaledSkills = new HashMap<>();
+	private final Map<String, ImageIcon> scaledItems = new HashMap<>();
 
 	@Inject
-	Icons(SkillIconManager skillIcons, ImageLoader images)
+	Icons(SkillIconManager skillIcons, ItemManager itemManager, ImageLoader images)
 	{
 		this.skillIcons = skillIcons;
+		this.itemManager = itemManager;
 		this.images = images;
 	}
 
@@ -40,6 +46,32 @@ public class Icons
 			return new JLabel(icon);
 		}
 		return images.icon(iconBase == null || metric == null ? null : iconBase + metric + ".png", size);
+	}
+
+	/**
+	 * The icon for an item, e.g. 11832 for a Bandos chestplate, drawn by the game client. The label keeps its size
+	 * and fills in once the client has drawn the item; it stays empty for 0 or an unknown item. Call on the Swing thread.
+	 */
+	public JLabel item(int itemId, int size)
+	{
+		JLabel label = ImageLoader.emptyLabel(size);
+		if (itemId <= 0)
+		{
+			return label;
+		}
+
+		String key = itemId + "@" + size;
+		ImageIcon cached = scaledItems.get(key);
+		if (cached != null)
+		{
+			label.setIcon(cached);
+			return label;
+		}
+
+		AsyncBufferedImage image = itemManager.getImage(itemId);
+		image.onLoaded(() -> SwingUtilities.invokeLater(() ->
+			label.setIcon(scaledItems.computeIfAbsent(key, k -> ImageLoader.scaled(image, size)))));
+		return label;
 	}
 
 	private static Skill skill(String metric)

@@ -48,13 +48,21 @@ public class ImageLoader
 	 */
 	public JLabel icon(String url, int size)
 	{
+		JLabel label = emptyLabel(size);
+		load(url, image -> label.setIcon(icon(url, image, size)));
+		return label;
+	}
+
+	/**
+	 * An empty label that keeps the size of the square icon it will show.
+	 */
+	static JLabel emptyLabel(int size)
+	{
 		JLabel label = new JLabel();
 		Dimension dimension = new Dimension(size, size);
 		label.setPreferredSize(dimension);
 		label.setMinimumSize(dimension);
 		label.setMaximumSize(dimension);
-
-		load(url, image -> label.setIcon(icon(url, image, size)));
 		return label;
 	}
 
