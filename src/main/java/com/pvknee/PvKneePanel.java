@@ -9,13 +9,11 @@ import com.pvknee.data.Block;
 import com.pvknee.data.ClanData;
 import com.pvknee.data.ClanDataClient;
 import com.pvknee.data.Page;
-import com.pvknee.ui.Glyphs;
-import com.pvknee.ui.IconButton;
 import com.pvknee.ui.Labels;
 import com.pvknee.ui.Notice;
-import com.pvknee.ui.PagePicker;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
+import com.pvknee.ui.TopBar;
 import com.pvknee.wom.WomClient;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -36,13 +34,11 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.EmptyBorder;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 
-@Slf4j
 class PvKneePanel extends PluginPanel implements PageNavigator
 {
 	private static final int SUPPORTED_VERSION = 1;
@@ -53,9 +49,8 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final BlockRegistry blocks;
 	private final Icons icons;
 	private final WomClient wom;
-	private final PagePicker pagePicker = new PagePicker(this::showPage);
-	private final IconButton homeButton = new IconButton(Glyphs.HOME, "Home", this::openHome);
-	private final IconButton refreshButton = new IconButton(Glyphs.REFRESH, "Refresh", () -> refresh(false));
+	private final DevLog devLog;
+	private final TopBar topBar = new TopBar(this::showPage, () -> refresh(false, "button"));
 	private final Notice notice = new Notice();
 	private final Notice.Line errorLine = notice.addLine();
 	private final Notice.Line lastUpdatedLine = notice.addLine();
@@ -63,7 +58,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final JPanel content = new JPanel();
 	private final JScrollPane scrollPane;
 	private final Timer countdownTimer = new Timer((int) COUNTDOWN_INTERVAL.toMillis(), e -> updateLive());
-	private final Timer refreshTimer = new Timer((int) REFRESH_INTERVAL.toMillis(), e -> refresh(true));
+	private final Timer refreshTimer = new Timer((int) REFRESH_INTERVAL.toMillis(), e -> refresh(true, "timer"));
 
 	private ClanData data;
 	/** When the data was last loaded from the endpoint; null while only the saved copy is shown. */
@@ -77,27 +72,22 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private List<Runnable> liveUpdates = new ArrayList<>();
 
 	@Inject
-	PvKneePanel(ClanDataClient client, BlockRegistry blocks, Icons icons, WomClient wom)
+	PvKneePanel(ClanDataClient client, BlockRegistry blocks, Icons icons, WomClient wom, DevLog devLog)
 	{
 		super(false);
 		this.client = client;
 		this.blocks = blocks;
 		this.icons = icons;
 		this.wom = wom;
+		this.devLog = devLog;
 
 		setLayout(new BorderLayout(0, 10));
 		setBorder(new EmptyBorder(10, 10, 10, 10));
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-		JPanel controls = new JPanel(new BorderLayout(Spacing.ITEM_GAP, 0));
-		controls.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		controls.add(homeButton, BorderLayout.WEST);
-		controls.add(pagePicker, BorderLayout.CENTER);
-		controls.add(refreshButton, BorderLayout.EAST);
-
 		JPanel top = new JPanel(new BorderLayout(0, 10));
 		top.setBackground(ColorScheme.DARK_GRAY_COLOR);
-		top.add(controls, BorderLayout.NORTH);
+		top.add(topBar, BorderLayout.NORTH);
 		top.add(notice, BorderLayout.CENTER);
 
 		content.setLayout(new DynamicGridLayout(0, 1, 0, Spacing.BLOCK_GAP));
@@ -121,11 +111,11 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		if (data == null)
 		{
 			client.loadSaved((saved, savedAt) -> SwingUtilities.invokeLater(() -> showSaved(saved, savedAt)));
-			refresh(false);
+			refresh(false, "first open");
 		}
 		else if (loadedAt == null || Instant.now().isAfter(loadedAt.plus(REFRESH_INTERVAL)))
 		{
-			refresh(true);
+			refresh(true, "open, data is old");
 		}
 		else
 		{
@@ -155,28 +145,30 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	 * Reloads the clan data. A quiet refresh keeps the page as it is while loading, and on failure only shows when
 	 * the data on screen is from.
 	 */
-	private void refresh(boolean quiet)
+	private void refresh(boolean quiet, String reason)
 	{
 		if (loading)
 		{
+			devLog.log("refresh: {} skipped, already loading", reason);
 			return;
 		}
 
+		devLog.log("refresh: {}{}", reason, quiet ? " (quiet)" : "");
 		loading = true;
 		if (!quiet)
 		{
-			setLoading(true);
+			topBar.setLoading(true);
 		}
 
 		client.fetch(
 			data -> SwingUtilities.invokeLater(() -> show(data)),
 			e ->
 			{
-				log.debug("Failed to load clan panel", e);
+				devLog.log("load: failed, {}", e.getMessage(), e);
 				SwingUtilities.invokeLater(() ->
 				{
 					loading = false;
-					setLoading(false);
+					topBar.setLoading(false);
 					if (!quiet)
 					{
 						errorLine.setMessage("Couldn't load the clan panel. Press the refresh button to try again.", ColorScheme.PROGRESS_ERROR_COLOR);
@@ -186,22 +178,13 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			});
 	}
 
-	/**
-	 * Spins and disables the refresh button while a load the member is waiting on runs.
-	 */
-	private void setLoading(boolean loading)
-	{
-		refreshButton.setSpinning(loading ? ThemeColours.from(data == null ? null : data.getTheme()).getAccent() : null);
-		refreshButton.setEnabled(!loading);
-	}
-
 	private void show(ClanData data)
 	{
-		log.debug("Loaded clan panel: {} pages", data.getPages().size());
+		devLog.log("load: {} pages", data.getPages().size());
 		loadedAt = Instant.now();
 		updatedAt = loadedAt;
 		loading = false;
-		setLoading(false);
+		topBar.setLoading(false);
 		errorLine.clear();
 		lastUpdatedLine.clear();
 		display(data);
@@ -218,7 +201,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			return;
 		}
 
-		log.debug("Showing saved clan data from {}", savedAt);
+		devLog.log("load: showing saved copy from {}", savedAt);
 		updatedAt = savedAt;
 		display(data);
 		if (!loading)
@@ -249,7 +232,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			versionLine.clear();
 		}
 
-		Page previous = pagePicker.getSelected();
+		Page previous = topBar.getSelected();
 		String previousId = previous == null ? null : previous.getId();
 		List<Page> pages = data.getPages().stream()
 			.filter(PvKneePanel::isVisible)
@@ -258,7 +241,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			.filter(page -> Objects.equals(page.getId(), previousId))
 			.findFirst()
 			.orElse(pages.isEmpty() ? null : pages.get(0));
-		pagePicker.setPages(pages, selected, ThemeColours.from(data.getTheme()));
+		topBar.setPages(pages, selected, ThemeColours.from(data.getTheme()));
 
 		if (selected == null)
 		{
@@ -277,7 +260,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	{
 		if (data != null)
 		{
-			showPage(pagePicker.getSelected());
+			showPage(topBar.getSelected());
 			if (lastUpdatedLine.isVisible())
 			{
 				showLastUpdated();
@@ -304,7 +287,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		}
 
 		ThemeColours colours = ThemeColours.from(data.getTheme());
-		homeButton.setHighlight(page == pagePicker.getPages().get(0) ? colours.getAccent() : null);
+		topBar.setShown(page);
 
 		liveUpdates = new ArrayList<>();
 		BlockContext context = new BlockContext(data, colours, icons, this, wom, liveUpdates);
@@ -328,17 +311,6 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		}
 	}
 
-	/**
-	 * Opens the first page, which is Home when the sheet has it.
-	 */
-	private void openHome()
-	{
-		if (!pagePicker.getPages().isEmpty())
-		{
-			pagePicker.select(pagePicker.getPages().get(0));
-		}
-	}
-
 	@Override
 	public boolean canOpen(String pageId)
 	{
@@ -351,7 +323,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		Page page = findPage(pageId);
 		if (page != null)
 		{
-			pagePicker.select(page);
+			topBar.select(page);
 		}
 	}
 
@@ -379,7 +351,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	{
 		liveUpdates = new ArrayList<>();
 		shownPageId = null;
-		homeButton.setHighlight(null);
+		topBar.setShown(null);
 		content.removeAll();
 		content.add(Labels.label(message, Color.WHITE, FontManager.getRunescapeFont(), Labels.CONTENT_WIDTH, false));
 		content.revalidate();
