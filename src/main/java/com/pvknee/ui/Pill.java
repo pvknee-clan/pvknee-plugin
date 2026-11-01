@@ -7,13 +7,13 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import javax.swing.Icon;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 /**
- * A short piece of text in a small rounded outline, optionally after an icon, e.g. "Home world 509".
+ * A short piece of text in a small rounded outline, optionally after an icon, e.g. "Home world 509". Clickable like
+ * a card through {@link #onClick}, filling with the hover tint under the mouse.
  */
-public class Pill extends JPanel
+public class Pill extends Card
 {
 	/** The size of the glyph before the text. */
 	public static final int ICON_SIZE = 13;
@@ -24,7 +24,6 @@ public class Pill extends JPanel
 	public Pill(String text, Color colour, Icon icon)
 	{
 		super(new BorderLayout());
-		setOpaque(false);
 		setBorder(new EmptyBorder(PADDING_Y, PADDING_X, PADDING_Y, PADDING_X));
 
 		JLabel label = new JLabel(text);
@@ -40,7 +39,12 @@ public class Pill extends JPanel
 	{
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g2.setColor(Card.BORDER);
+		if (isHovered())
+		{
+			g2.setColor(HOVER);
+			g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, getHeight() - 1, getHeight() - 1);
+		}
+		g2.setColor(BORDER);
 		g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, getHeight() - 1, getHeight() - 1);
 		g2.dispose();
 	}

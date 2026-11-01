@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.pvknee.blocks.Times;
 import com.pvknee.data.SavedCopy;
 import com.pvknee.player.PlayerInfo;
+import com.pvknee.player.WorldHopper;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.inject.Inject;
@@ -43,6 +44,9 @@ public class PvKneePlugin extends Plugin
 	@Inject
 	private PlayerInfo playerInfo;
 
+	@Inject
+	private WorldHopper worldHopper;
+
 	private PvKneePanel panel;
 	private NavigationButton navButton;
 
@@ -71,6 +75,7 @@ public class PvKneePlugin extends Plugin
 
 		clientToolbar.addNavigation(navButton);
 		playerInfo.start(panel::redraw);
+		worldHopper.start();
 		log.debug("PvKnee started");
 	}
 
@@ -78,6 +83,7 @@ public class PvKneePlugin extends Plugin
 	protected void shutDown() throws Exception
 	{
 		playerInfo.stop();
+		worldHopper.stop();
 		clientToolbar.removeNavigation(navButton);
 		panel.stopUpdates();
 		navButton = null;

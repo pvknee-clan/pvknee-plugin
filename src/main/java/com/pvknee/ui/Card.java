@@ -25,6 +25,7 @@ public class Card extends JPanel
 	static final Color BORDER = new Color(64, 64, 64);
 
 	private final boolean bordered;
+	private boolean hovered;
 	private Color outline = BORDER;
 	private int arc = Spacing.ARC;
 
@@ -88,14 +89,14 @@ public class Card extends JPanel
 			{
 				if (isEnabled())
 				{
-					setBackground(HOVER);
+					setHovered(true);
 				}
 			}
 
 			@Override
 			public void mouseExited(MouseEvent e)
 			{
-				setBackground(BACKGROUND);
+				setHovered(false);
 			}
 		});
 	}
@@ -106,8 +107,22 @@ public class Card extends JPanel
 		super.setEnabled(enabled);
 		if (!enabled)
 		{
-			setBackground(BACKGROUND);
+			setHovered(false);
 		}
+	}
+
+	/**
+	 * Whether the mouse is over a clickable card, for kit pieces that paint themselves.
+	 */
+	protected boolean isHovered()
+	{
+		return hovered;
+	}
+
+	private void setHovered(boolean hovered)
+	{
+		this.hovered = hovered;
+		repaint();
 	}
 
 	@Override
@@ -115,7 +130,7 @@ public class Card extends JPanel
 	{
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g2.setColor(getBackground());
+		g2.setColor(hovered ? HOVER : getBackground());
 		g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
 		if (bordered)
 		{
