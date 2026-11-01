@@ -10,6 +10,7 @@ import com.pvknee.data.ClanData;
 import com.pvknee.data.ClanDataClient;
 import com.pvknee.data.Page;
 import com.pvknee.player.PlayerInfo;
+import com.pvknee.player.PlayerState;
 import com.pvknee.player.WorldHopper;
 import com.pvknee.ui.Labels;
 import com.pvknee.ui.Notice;
@@ -240,8 +241,12 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 
 		Page previous = topBar.getSelected();
 		String previousId = previous == null ? null : previous.getId();
+		PlayerState player = playerInfo.get();
+		data.getPages().stream()
+			.filter(page -> page.isShow() && !player.hasRank(page.getRank()))
+			.forEach(page -> devLog.log("pages: {} hidden, needs rank {}", page.getId(), page.getRank()));
 		List<Page> pages = data.getPages().stream()
-			.filter(PvKneePanel::isVisible)
+			.filter(this::isVisible)
 			.collect(Collectors.toList());
 		Page selected = pages.stream()
 			.filter(page -> Objects.equals(page.getId(), previousId))
@@ -260,7 +265,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	}
 
 	/**
-	 * Builds the current page again in place, e.g. after a setting that changes how it looks or a change in game.
+	 * Builds the current page again in place, e.g. after a setting that changes how it looks.
 	 */
 	void redraw()
 	{
@@ -271,6 +276,18 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			{
 				showLastUpdated();
 			}
+		}
+	}
+
+	/**
+	 * Updates the pages after a change in game: rank-gated pages appear or disappear, and the current page is built
+	 * again (staying on it while it is still shown).
+	 */
+	void playerChanged()
+	{
+		if (data != null)
+		{
+			display(data);
 		}
 	}
 
@@ -346,11 +363,11 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	}
 
 	/**
-	 * Pages with a rank stay hidden until rank checks exist.
+	 * Shown pages, except those whose rank is above the member's clan rank.
 	 */
-	private static boolean isVisible(Page page)
+	private boolean isVisible(Page page)
 	{
-		return page.isShow() && (page.getRank() == null || page.getRank().trim().isEmpty());
+		return page.isShow() && playerInfo.get().hasRank(page.getRank());
 	}
 
 	private void showMessage(String message)

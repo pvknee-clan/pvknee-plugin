@@ -21,6 +21,17 @@ public interface PvKneeConfig extends Config
 		return false;
 	}
 
+	@ConfigItem(
+		keyName = "loginMessage",
+		name = "Login message",
+		description = "Shows the clan's message in chat once each time you log in",
+		position = 1
+	)
+	default boolean loginMessage()
+	{
+		return true;
+	}
+
 	// Debug only: remove this section and hide its items before publishing
 	@ConfigSection(
 		name = "Debug",

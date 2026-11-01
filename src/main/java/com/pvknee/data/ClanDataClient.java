@@ -35,6 +35,10 @@ public class ClanDataClient
 	private final SavedCopy savedCopy;
 	private final ScheduledExecutorService executor;
 
+	/** The last data loaded from the endpoint or the saved copy, and when it was fetched. */
+	private volatile ClanData latest;
+	private volatile Instant latestAt;
+
 	@Inject
 	ClanDataClient(OkHttpClient okHttpClient, Gson gson, PvKneeConfig config, SavedCopy savedCopy, ScheduledExecutorService executor)
 	{
@@ -90,6 +94,7 @@ public class ClanDataClient
 					{
 						savedCopy.save(json);
 					}
+					remember(data, Instant.now());
 					onSuccess.accept(data);
 				}
 				catch (IOException | JsonParseException e)
@@ -115,13 +120,40 @@ public class ClanDataClient
 
 			try
 			{
-				onLoaded.accept(parse(saved.getJson()), saved.getSavedAt());
+				ClanData data = parse(saved.getJson());
+				if (latest == null)
+				{
+					remember(data, saved.getSavedAt());
+				}
+				onLoaded.accept(data, saved.getSavedAt());
 			}
 			catch (IOException | JsonParseException e)
 			{
 				log.debug("Saved clan data is unreadable", e);
 			}
 		});
+	}
+
+	/**
+	 * The last data loaded from the endpoint or the saved copy; null if nothing has been loaded yet.
+	 */
+	public ClanData latest()
+	{
+		return latest;
+	}
+
+	/**
+	 * When {@link #latest()} was fetched from the endpoint; null if nothing has been loaded yet.
+	 */
+	public Instant latestAt()
+	{
+		return latestAt;
+	}
+
+	private void remember(ClanData data, Instant fetchedAt)
+	{
+		latestAt = fetchedAt;
+		latest = data;
 	}
 
 	private ClanData parse(String json) throws IOException

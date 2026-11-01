@@ -62,14 +62,7 @@ public class BlockContext
 			: "current_boss".equalsIgnoreCase(setting) ? "boss"
 			: null;
 		Competitions competitions = data.getCompetitions();
-		if (type == null || competitions == null || competitions.getCurrent() == null)
-		{
-			return null;
-		}
-		return competitions.getCurrent().stream()
-			.filter(c -> type.equalsIgnoreCase(c.getType()))
-			.findFirst()
-			.orElse(null);
+		return competitions == null ? null : competitions.current(type);
 	}
 
 	/**

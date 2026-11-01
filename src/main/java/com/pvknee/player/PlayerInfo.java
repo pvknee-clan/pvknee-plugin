@@ -1,6 +1,10 @@
 package com.pvknee.player;
 
 import com.pvknee.DevLog;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -133,7 +137,7 @@ public class PlayerInfo
 		{
 			// Just hopped and the new world hasn't sent the clan channel yet: keep the last rank meanwhile.
 			hopTicks--;
-			update(new PlayerState(true, name, client.getWorld(), state.getRank(), state.getRankTitle()));
+			update(new PlayerState(true, name, client.getWorld(), state.getRank(), state.getRankTitle(), state.getRankTitles()));
 			return;
 		}
 		hopTicks = 0;
@@ -145,7 +149,25 @@ public class PlayerInfo
 
 		// In a clan channel whose settings haven't arrived yet: try again next tick.
 		pending = channel != null && settings == null;
-		update(new PlayerState(true, name, client.getWorld(), rank, title == null ? null : title.getName()));
+		update(new PlayerState(true, name, client.getWorld(), rank, title == null ? null : title.getName(),
+			rank == null ? Collections.emptyMap() : rankTitles(settings)));
+	}
+
+	/**
+	 * Every rank title the clan uses, in lower case, with the lowest rank that has it.
+	 */
+	private static Map<String, Integer> rankTitles(ClanSettings settings)
+	{
+		Map<String, Integer> titles = new HashMap<>();
+		for (int rank = ClanRank.GUEST.getRank(); rank <= ClanRank.JMOD.getRank(); rank++)
+		{
+			ClanTitle title = settings.titleForRank(new ClanRank(rank));
+			if (title != null && title.getName() != null)
+			{
+				titles.putIfAbsent(title.getName().toLowerCase(Locale.ENGLISH), rank);
+			}
+		}
+		return Collections.unmodifiableMap(titles);
 	}
 
 	private void update(PlayerState next)
