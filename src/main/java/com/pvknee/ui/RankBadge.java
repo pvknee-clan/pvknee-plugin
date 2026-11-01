@@ -2,18 +2,14 @@ package com.pvknee.ui;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
-import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
 /**
- * A place in the standings: a round medal-coloured badge for the top places, otherwise a muted number, both in a
- * slot of the same width.
+ * A place in the standings: a {@link PlacePill} for the medal places, otherwise the muted place as a word (e.g.
+ * "12th"), both centred in a slot of the same width so names line up. Also the medal and place colours.
  */
 public final class RankBadge
 {
@@ -22,7 +18,10 @@ public final class RankBadge
 		new Color(0xC0C0C0),
 		new Color(0xCD7F32),
 	};
-	private static final int SLOT = 18;
+	/** The place colour below the medals. */
+	private static final Color PLACE_GREY = new Color(0x9E9E9E);
+	/** The widest plain place the slot is sized for. */
+	private static final String WIDEST_PLAIN = "20th";
 
 	private RankBadge()
 	{
@@ -45,54 +44,42 @@ public final class RankBadge
 	}
 
 	/**
-	 * A medal badge, which must be for one of the top {@link #medalPlaces()} places, or a plain muted number.
+	 * A place's colour: its medal colour for the top {@link #medalPlaces()} places, otherwise a neutral grey.
 	 */
-	public static JComponent of(int rank, boolean medal, ThemeColours colours)
+	public static Color placeColour(int rank)
 	{
-		if (medal)
-		{
-			return new Badge(rank, medalColour(rank));
-		}
-
-		JLabel label = new JLabel(String.valueOf(rank), SwingConstants.CENTER);
-		label.setForeground(colours.getMuted());
-		label.setFont(FontManager.getRunescapeSmallFont());
-		label.setPreferredSize(new Dimension(SLOT, label.getPreferredSize().height));
-		return label;
+		return rank >= 1 && rank <= MEDALS.length ? medalColour(rank) : PLACE_GREY;
 	}
 
 	/**
-	 * A round medal-coloured badge with the place number in dark text.
+	 * A place pill, which must be for one of the top {@link #medalPlaces()} places, or the plain muted place.
 	 */
-	private static class Badge extends JComponent
+	public static JComponent of(int rank, boolean medal, ThemeColours colours)
 	{
-		private final String number;
-		private final Color colour;
+		JComponent place = medal ? new PlacePill(rank) : plain(Labels.ordinal(rank), colours);
+		Centred slot = new Centred(place);
+		slot.setPreferredSize(new Dimension(slotWidth(colours), Math.max(PlacePill.HEIGHT, place.getPreferredSize().height)));
+		return slot;
+	}
 
-		Badge(int rank, Color colour)
+	/**
+	 * Wide enough for any medal pill and for plain places up to "20th".
+	 */
+	private static int slotWidth(ThemeColours colours)
+	{
+		int width = plain(WIDEST_PLAIN, colours).getPreferredSize().width;
+		for (int rank = 1; rank <= MEDALS.length; rank++)
 		{
-			this.number = String.valueOf(rank);
-			this.colour = colour;
-			setFont(FontManager.getRunescapeSmallFont());
-			setPreferredSize(new Dimension(SLOT, SLOT));
+			width = Math.max(width, new PlacePill(rank).getPreferredSize().width);
 		}
+		return width;
+	}
 
-		@Override
-		protected void paintComponent(Graphics g)
-		{
-			Graphics2D g2 = (Graphics2D) g.create();
-			int y = (getHeight() - SLOT) / 2;
-			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			g2.setColor(colour);
-			g2.fillOval(0, y, SLOT, SLOT);
-
-			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-			g2.setFont(getFont());
-			g2.setColor(ColorScheme.DARK_GRAY_COLOR);
-			int textX = (SLOT - g2.getFontMetrics().stringWidth(number)) / 2;
-			int textY = y + (SLOT + g2.getFontMetrics().getAscent() - g2.getFontMetrics().getDescent()) / 2;
-			g2.drawString(number, textX, textY);
-			g2.dispose();
-		}
+	private static JLabel plain(String text, ThemeColours colours)
+	{
+		JLabel label = new JLabel(text, SwingConstants.CENTER);
+		label.setForeground(colours.getMuted());
+		label.setFont(FontManager.getRunescapeSmallFont());
+		return label;
 	}
 }

@@ -9,7 +9,7 @@ import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
 
 /**
- * One player's place in a card, e.g. the member's own: a muted caption such as "You", their {@link RankBadge}, their
+ * One player's place in a card, e.g. the member's own: a muted caption such as "You", their place ({@link RankBadge}), their
  * name with a muted line under it, and their value on the right.
  */
 public class StandingCard extends Card

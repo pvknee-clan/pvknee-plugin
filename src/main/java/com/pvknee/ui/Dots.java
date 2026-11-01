@@ -5,27 +5,31 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.util.List;
 import javax.swing.JComponent;
 
 /**
- * A centred row of small dots, one per choice, with the current one in a highlight colour, e.g. which team is shown.
+ * A centred row of small dots, one per choice, each in its own colour, e.g. a team's place. The current one is a
+ * little larger with a ring in its colour; the others are dimmed.
  */
 public class Dots extends JComponent
 {
 	private static final int SIZE = 6;
+	private static final int CURRENT_SIZE = 8;
+	private static final int RING = 12;
 	private static final int GAP = 4;
-	private static final Color OFF = new Color(74, 74, 74);
+	private static final int DIMMED = 110;
 
-	private final int count;
+	private final List<Color> colours;
 	private final int current;
-	private final Color on;
 
-	public Dots(int count, int current, Color on)
+	public Dots(List<Color> colours, int current)
 	{
-		this.count = count;
+		this.colours = colours;
 		this.current = current;
-		this.on = on;
-		setPreferredSize(new Dimension(count * SIZE + Math.max(0, count - 1) * GAP, SIZE));
+		int count = colours.size();
+		int width = count * SIZE + Math.max(0, count - 1) * GAP + (current >= 0 && current < count ? RING - SIZE : 0);
+		setPreferredSize(new Dimension(width, RING));
 	}
 
 	@Override
@@ -33,13 +37,31 @@ public class Dots extends JComponent
 	{
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		int x = (getWidth() - getPreferredSize().width) / 2;
-		int y = (getHeight() - SIZE) / 2;
-		for (int i = 0; i < count; i++)
+		double x = (getWidth() - getPreferredSize().width) / 2.0;
+		double centreY = getHeight() / 2.0;
+		for (int i = 0; i < colours.size(); i++)
 		{
-			g2.setColor(i == current ? on : OFF);
-			g2.fillOval(x + i * (SIZE + GAP), y, SIZE, SIZE);
+			Color colour = colours.get(i);
+			int slot = i == current ? RING : SIZE;
+			double centreX = x + slot / 2.0;
+			if (i == current)
+			{
+				g2.setColor(colour);
+				fillCircle(g2, centreX, centreY, CURRENT_SIZE);
+				g2.drawOval((int) Math.round(centreX - RING / 2.0), (int) Math.round(centreY - RING / 2.0), RING - 1, RING - 1);
+			}
+			else
+			{
+				g2.setColor(new Color(colour.getRed(), colour.getGreen(), colour.getBlue(), DIMMED));
+				fillCircle(g2, centreX, centreY, SIZE);
+			}
+			x += slot + GAP;
 		}
 		g2.dispose();
+	}
+
+	private static void fillCircle(Graphics2D g2, double centreX, double centreY, int size)
+	{
+		g2.fillOval((int) Math.round(centreX - size / 2.0), (int) Math.round(centreY - size / 2.0), size, size);
 	}
 }

@@ -13,6 +13,7 @@ import com.pvknee.ui.GlyphIcon;
 import com.pvknee.ui.Glyphs;
 import com.pvknee.ui.IconButton;
 import com.pvknee.ui.Labels;
+import com.pvknee.ui.PlacePill;
 import com.pvknee.ui.ProgressBar;
 import com.pvknee.ui.RankBadge;
 import com.pvknee.ui.Section;
@@ -24,6 +25,7 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -254,11 +256,15 @@ class BingoTeamBlock implements BlockRenderer
 	}
 
 	/**
-	 * The team's name with a dot per team under it, between arrows that step through the teams and wrap around.
-	 * Just the name when there is only one team.
+	 * The team's name with a dot per team under it, between arrows that step through the teams in place order (1st
+	 * first) and wrap around, so flicking through it is the standings. The dots are in the same order, coloured by
+	 * place. Just the name when there is only one team.
 	 */
-	private static JComponent switcher(BingoView view, List<Bingo.Team> teams, Bingo.Team team, ThemeColours colours)
+	private static JComponent switcher(BingoView view, List<Bingo.Team> all, Bingo.Team team, ThemeColours colours)
 	{
+		List<Bingo.Team> teams = all.stream()
+			.sorted(Comparator.comparingInt(t -> t.getRank() >= 1 ? t.getRank() : Integer.MAX_VALUE))
+			.collect(Collectors.toList());
 		int count = teams.size();
 		int index = teams.indexOf(team);
 		int nameWidth = count > 1 ? INNER_WIDTH - 2 * (IconButton.SMALL_SIZE + SWITCHER_GAP) : INNER_WIDTH;
@@ -273,7 +279,8 @@ class BingoTeamBlock implements BlockRenderer
 		row.add(middle, BorderLayout.CENTER);
 		if (count > 1)
 		{
-			middle.add(new Dots(count, index, colours.getAccent()), BorderLayout.SOUTH);
+			List<Color> places = teams.stream().map(t -> RankBadge.placeColour(t.getRank())).collect(Collectors.toList());
+			middle.add(new Dots(places, index), BorderLayout.SOUTH);
 			row.add(new Centred(new IconButton(Glyphs.CHEVRON_LEFT, "Previous team",
 				() -> view.selectTeam(teams.get((index + count - 1) % count))).small()), BorderLayout.WEST);
 			row.add(new Centred(new IconButton(Glyphs.CHEVRON_RIGHT, "Next team",
@@ -290,7 +297,10 @@ class BingoTeamBlock implements BlockRenderer
 		int rank = team.getRank();
 		JPanel row = new JPanel(new BorderLayout(ROW_GAP, 0));
 		row.setOpaque(false);
-		row.add(RankBadge.of(rank, rank >= 1 && rank <= RankBadge.medalPlaces(), colours), BorderLayout.WEST);
+		if (rank >= 1)
+		{
+			row.add(new Centred(new PlacePill(rank)), BorderLayout.WEST);
+		}
 
 		JLabel tiles = new JLabel(team.getTilesDone() + " of " + total + " tiles");
 		tiles.setForeground(colours.getMuted());
