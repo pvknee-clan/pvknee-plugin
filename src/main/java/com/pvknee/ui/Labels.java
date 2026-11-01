@@ -89,6 +89,28 @@ public final class Labels
 	}
 
 	/**
+	 * A short number for big amounts, e.g. 950, 12.3k, 640k or 1M.
+	 */
+	public static String compact(long value)
+	{
+		if (Math.abs(value) >= 1_000_000)
+		{
+			return decimal(value / 1_000_000.0) + "M";
+		}
+		return Math.abs(value) >= 1_000 ? decimal(value / 1_000.0) + "k" : number(value);
+	}
+
+	/**
+	 * How much of an amount is in, with its unit, e.g. "1 / 2 pieces" or "640k / 1M xp" (xp is shortened).
+	 */
+	public static String fraction(long amount, long needed, String unit)
+	{
+		boolean xp = "xp".equalsIgnoreCase(unit);
+		String text = (xp ? compact(amount) : number(amount)) + " / " + (xp ? compact(needed) : number(needed));
+		return unit == null || unit.trim().isEmpty() ? text : text + " " + unit.trim();
+	}
+
+	/**
 	 * A member's own score in a challenge: "1,942 xp" for a skill, "12 kills" (or "1 kill") for a boss, otherwise just
 	 * the number. No "+": it is their score, not a gain in a list.
 	 */

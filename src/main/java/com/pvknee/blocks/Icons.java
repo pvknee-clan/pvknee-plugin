@@ -2,6 +2,7 @@ package com.pvknee.blocks;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.ImageIcon;
@@ -55,23 +56,33 @@ public class Icons
 	public JLabel item(int itemId, int size)
 	{
 		JLabel label = ImageLoader.emptyLabel(size);
+		loadItem(itemId, size, label::setIcon);
+		return label;
+	}
+
+	/**
+	 * Hands over an item's icon at the given size on the Swing thread once the game client has drawn it, at once if
+	 * it has already; never for 0 or an unknown item. For kit pieces that paint icons themselves. Call on the Swing
+	 * thread.
+	 */
+	public void loadItem(int itemId, int size, Consumer<ImageIcon> onLoad)
+	{
 		if (itemId <= 0)
 		{
-			return label;
+			return;
 		}
 
 		String key = itemId + "@" + size;
 		ImageIcon cached = scaledItems.get(key);
 		if (cached != null)
 		{
-			label.setIcon(cached);
-			return label;
+			onLoad.accept(cached);
+			return;
 		}
 
 		AsyncBufferedImage image = itemManager.getImage(itemId);
 		image.onLoaded(() -> SwingUtilities.invokeLater(() ->
-			label.setIcon(scaledItems.computeIfAbsent(key, k -> ImageLoader.scaled(image, size)))));
-		return label;
+			onLoad.accept(scaledItems.computeIfAbsent(key, k -> ImageLoader.scaled(image, size)))));
 	}
 
 	private static Skill skill(String metric)

@@ -16,6 +16,8 @@ public class ThemeColours
 	public static final Color ENDING_SOON = new Color(0xFF9800);
 	/** Bingo tiles that are done, and a team's tiles done. Fixed, like {@link #ENDING_SOON}. */
 	public static final Color DONE = new Color(0x4CAF50);
+	/** Bingo tiles in progress: the same orange as {@link #ENDING_SOON}. */
+	public static final Color IN_PROGRESS = ENDING_SOON;
 
 	Color header;
 	Color accent;

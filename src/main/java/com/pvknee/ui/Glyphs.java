@@ -49,6 +49,7 @@ public final class Glyphs
 	public static final Shape TROPHY = path("M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v3M8 20h8M9 20l1-3h4l1 3");
 	public static final Shape EXTERNAL = path("M14 4h6v6M20 4l-9 9M18 14v6H4V6h6");
 	public static final Shape CALENDAR = join(rect(4, 5, 16, 15, 2), path("M4 10h16M9 3v4M15 3v4"));
+	public static final Shape TICK = path("M5 12l5 5 9-10");
 	public static final Shape GRID = join(rect(3, 3, 18, 18, 2), path("M9 3v18M15 3v18M3 9h18M3 15h18"));
 
 	private static final Map<String, Shape> NAMED = named();
@@ -70,6 +71,14 @@ public final class Glyphs
 	 */
 	static void draw(Graphics g, Shape glyph, Color colour, int size, double centreX, double centreY, double angle)
 	{
+		draw(g, glyph, colour, size, centreX, centreY, angle, STROKE);
+	}
+
+	/**
+	 * Draws a glyph with a stroke of its own on the 24 by 24 grid, e.g. a heavier one for a tiny glyph.
+	 */
+	static void draw(Graphics g, Shape glyph, Color colour, int size, double centreX, double centreY, double angle, float stroke)
+	{
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
@@ -78,7 +87,7 @@ public final class Glyphs
 		g2.scale((double) size / GRID_SIZE, (double) size / GRID_SIZE);
 		g2.translate(-GRID_SIZE / 2.0, -GRID_SIZE / 2.0);
 		g2.setColor(colour);
-		g2.setStroke(new BasicStroke(STROKE, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		g2.setStroke(new BasicStroke(stroke, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g2.draw(glyph);
 		g2.dispose();
 	}
