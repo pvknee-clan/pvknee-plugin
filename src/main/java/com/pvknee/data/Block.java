@@ -1,6 +1,7 @@
 package com.pvknee.data;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.Data;
 
@@ -9,6 +10,8 @@ public class Block
 {
 	private String type;
 	private Map<String, String> settings = new HashMap<>();
+	/** The values of the block's sheet range, for blocks that show one (e.g. table); null for the others. */
+	private List<List<String>> rows;
 
 	/**
 	 * A trimmed setting, or the default if it is missing or blank.

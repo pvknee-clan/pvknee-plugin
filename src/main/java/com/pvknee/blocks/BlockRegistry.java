@@ -30,6 +30,9 @@ public class BlockRegistry
 		renderers.put("competition", new CompetitionBlock());
 		renderers.put("leaderboard", new LeaderboardBlock());
 		renderers.put("player", new PlayerBlock());
+		renderers.put("table", new TableBlock());
+		renderers.put("stat", new StatBlock());
+		renderers.put("countdown", new CountdownBlock());
 	}
 
 	public JComponent render(Block block, BlockContext context)
