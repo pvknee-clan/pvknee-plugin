@@ -72,6 +72,32 @@ public class ImageLoader
 	}
 
 	/**
+	 * The image cut down to its visible part, e.g. an item icon without the empty space around the item. A fully
+	 * transparent image is left as it is.
+	 */
+	static BufferedImage trimmed(BufferedImage image)
+	{
+		int minX = image.getWidth();
+		int minY = image.getHeight();
+		int maxX = -1;
+		int maxY = -1;
+		for (int y = 0; y < image.getHeight(); y++)
+		{
+			for (int x = 0; x < image.getWidth(); x++)
+			{
+				if ((image.getRGB(x, y) >>> 24) != 0)
+				{
+					minX = Math.min(minX, x);
+					minY = Math.min(minY, y);
+					maxX = Math.max(maxX, x);
+					maxY = Math.max(maxY, y);
+				}
+			}
+		}
+		return maxX < 0 ? image : image.getSubimage(minX, minY, maxX - minX + 1, maxY - minY + 1);
+	}
+
+	/**
 	 * The image fitted inside a square of the given size, keeping its proportions.
 	 */
 	static ImageIcon scaled(BufferedImage image, int size)

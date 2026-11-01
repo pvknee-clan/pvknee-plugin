@@ -82,7 +82,7 @@ public class Icons
 
 		AsyncBufferedImage image = itemManager.getImage(itemId);
 		image.onLoaded(() -> SwingUtilities.invokeLater(() ->
-			onLoad.accept(scaledItems.computeIfAbsent(key, k -> ImageLoader.scaled(image, size)))));
+			onLoad.accept(scaledItems.computeIfAbsent(key, k -> ImageLoader.scaled(ImageLoader.trimmed(image), size)))));
 	}
 
 	private static Skill skill(String metric)

@@ -6,12 +6,16 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -37,7 +41,7 @@ public class TileGrid extends JComponent
 	private static final int ARC = 10;
 	private static final int OUTLINE_ARC = 14;
 	private static final int TICK_SIZE = 10;
-	private static final double ICON_SHARE = 0.65;
+	private static final double ICON_SHARE = 0.75;
 	private static final Color PLAIN = new Color(42, 42, 42);
 	private static final Color DONE_TINT = new Color(76, 175, 80, 56);
 	private static final Color PROGRESS_TINT = new Color(255, 152, 0, 41);
@@ -63,6 +67,8 @@ public class TileGrid extends JComponent
 	}
 
 	private final int columns;
+	/** The narrowest the grid is laid out; the tiles grow to fill any extra width, and the height follows. */
+	private final int width;
 	/** One per place on the grid, left to right and top to bottom; null for an empty place. */
 	private final List<Tile> tiles;
 	private final Image[] icons;
@@ -76,12 +82,11 @@ public class TileGrid extends JComponent
 	public TileGrid(int columns, List<Tile> tiles, int selected, Color outline, int width, IntConsumer onClick)
 	{
 		this.columns = Math.max(1, columns);
+		this.width = width;
 		this.tiles = tiles;
 		this.icons = new Image[tiles.size()];
 		this.selected = selected;
 		this.outline = outline;
-		int rows = (tiles.size() + this.columns - 1) / this.columns;
-		setPreferredSize(new Dimension(width, (int) Math.round(2 * MARGIN + rows * tileSize(width, this.columns) + (rows - 1) * GAP)));
 		// Registers with the tooltip manager; the text comes from the tile under the mouse.
 		setToolTipText("");
 
@@ -97,6 +102,18 @@ public class TileGrid extends JComponent
 				}
 			}
 		});
+		addComponentListener(new ComponentAdapter()
+		{
+			@Override
+			public void componentResized(ComponentEvent e)
+			{
+				// The tiles follow the width, so a new width needs a new height.
+				if (getHeight() != getPreferredSize().height)
+				{
+					revalidate();
+				}
+			}
+		});
 		addMouseMotionListener(new MouseAdapter()
 		{
 			@Override
@@ -107,8 +124,16 @@ public class TileGrid extends JComponent
 		});
 	}
 
+	@Override
+	public Dimension getPreferredSize()
+	{
+		int rows = (tiles.size() + columns - 1) / columns;
+		double size = tileSize(layoutWidth(), columns);
+		return new Dimension(width, (int) Math.round(2 * MARGIN + rows * size + (rows - 1) * GAP));
+	}
+
 	/**
-	 * The icon size that suits a grid of this width and number of columns.
+	 * The icon size that suits a grid of this narrowest width and number of columns.
 	 */
 	public static int iconSize(int width, int columns)
 	{
@@ -129,11 +154,13 @@ public class TileGrid extends JComponent
 	 */
 	public static JComponent legend(Color muted)
 	{
-		JPanel legend = new JPanel(new FlowLayout(FlowLayout.CENTER, 3 * GAP, 0));
+		JPanel legend = new JPanel(new GridBagLayout());
 		legend.setOpaque(false);
-		legend.add(legendItem(ThemeColours.DONE, true, "Done", muted));
-		legend.add(legendItem(ThemeColours.IN_PROGRESS, true, "In progress", muted));
-		legend.add(legendItem(LEGEND_PLAIN, false, "Not started", muted));
+		GridBagConstraints constraints = new GridBagConstraints();
+		legend.add(legendItem(ThemeColours.DONE, true, "Done", muted), constraints);
+		constraints.insets = new Insets(0, 2 * GAP, 0, 0);
+		legend.add(legendItem(ThemeColours.IN_PROGRESS, true, "In progress", muted), constraints);
+		legend.add(legendItem(LEGEND_PLAIN, false, "Not started", muted), constraints);
 		return legend;
 	}
 
@@ -228,9 +255,14 @@ public class TileGrid extends JComponent
 		return (width - 2.0 * MARGIN - (columns - 1) * GAP) / columns;
 	}
 
+	private int layoutWidth()
+	{
+		return Math.max(width, getWidth());
+	}
+
 	private Rectangle bounds(int index)
 	{
-		double size = tileSize(getWidth(), columns);
+		double size = tileSize(layoutWidth(), columns);
 		int column = index % columns;
 		int row = index / columns;
 		int x = (int) Math.round(MARGIN + column * (size + GAP));
