@@ -1,10 +1,11 @@
 package com.pvknee.blocks;
 
 import com.pvknee.data.Block;
-import com.pvknee.data.Competition;
 import com.pvknee.ui.EmptyState;
 import com.pvknee.ui.Glyphs;
+import com.pvknee.ui.Labels;
 import com.pvknee.ui.LinkButton;
+import com.pvknee.ui.RankBadge;
 import com.pvknee.ui.RankTable;
 import com.pvknee.ui.Section;
 import com.pvknee.ui.SectionHeader;
@@ -13,12 +14,10 @@ import com.pvknee.ui.ThemeColours;
 import com.pvknee.wom.Standing;
 import com.pvknee.wom.WomClient;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.DynamicGridLayout;
 
@@ -32,7 +31,7 @@ class LeaderboardBlock implements BlockRenderer
 	@Override
 	public JComponent render(Block block, BlockContext context)
 	{
-		Target target = target(block.setting("competition", "current_skill"), context);
+		CompetitionTarget target = CompetitionTarget.from(block.setting("competition", "current_skill"), context);
 		if (target == null)
 		{
 			log.debug("No competition for leaderboard {}", block.getSettings());
@@ -57,7 +56,7 @@ class LeaderboardBlock implements BlockRenderer
 				if (result != shown)
 				{
 					shown = result;
-					show(standings, standingsView(result, target, block, colours));
+					show(standings, standingsView(result, target, block, context));
 				}
 			}
 		};
@@ -68,31 +67,10 @@ class LeaderboardBlock implements BlockRenderer
 		return new Section(header, standings);
 	}
 
-	/**
-	 * current_skill and current_boss pick from the current competitions; anything else is a WOM id.
-	 */
-	private static Target target(String setting, BlockContext context)
+	private static JComponent standingsView(List<Standing> standings, CompetitionTarget target, Block block, BlockContext context)
 	{
-		Competition current = context.currentCompetition(setting);
-		if (current != null)
-		{
-			return current.getWomId() > 0 ? new Target(current.getWomId(), current.getType().toLowerCase(), current.getName()) : null;
-		}
-
-		try
-		{
-			return new Target(Long.parseLong(setting), null, null);
-		}
-		catch (NumberFormatException e)
-		{
-			return null;
-		}
-	}
-
-	private static JComponent standingsView(List<Standing> standings, Target target, Block block, ThemeColours colours)
-	{
-		List<Standing> gainers = standings.stream()
-			.filter(s -> s.getGained() > 0)
+		ThemeColours colours = context.getColours();
+		List<Standing> gainers = Standing.gainers(standings).stream()
 			.limit(Math.max(0, block.intSetting("rows", 20)))
 			.collect(Collectors.toList());
 		if (gainers.isEmpty())
@@ -101,12 +79,12 @@ class LeaderboardBlock implements BlockRenderer
 		}
 
 		String prefix = block.setting("prefix", "");
-		int medals = Math.min(RankTable.medalPlaces(), Math.max(0, block.intSetting("podium", 3)));
+		int medals = Math.min(RankBadge.medalPlaces(), Math.max(0, block.intSetting("podium", 3)));
 		RankTable table = new RankTable(colours);
 		for (int i = 0; i < gainers.size(); i++)
 		{
 			Standing standing = gainers.get(i);
-			table.addRow(i + 1, standing.getName(), prefix + format(standing.getGained()), i < medals);
+			table.addRow(i + 1, standing.getName(), prefix + Labels.number(standing.getGained()), i < medals, context.getPlayer().isNamed(standing.getName()));
 		}
 
 		String button = block.setting("button", null);
@@ -124,7 +102,7 @@ class LeaderboardBlock implements BlockRenderer
 	/**
 	 * The empty setting, or a default inviting people to take part, with {name} replaced by the competition's name.
 	 */
-	private static String emptyText(Target target, Block block)
+	private static String emptyText(CompetitionTarget target, Block block)
 	{
 		String fallback = target.isBoss() ? "Kill {name} this week to get on the board."
 			: target.isSkill() ? "Train {name} this week to get on the board."
@@ -146,31 +124,5 @@ class LeaderboardBlock implements BlockRenderer
 		JPanel panel = new JPanel(new DynamicGridLayout(0, 1, 0, gap));
 		panel.setOpaque(false);
 		return panel;
-	}
-
-	private static String format(long value)
-	{
-		return String.format(Locale.ENGLISH, "%,d", value);
-	}
-
-	/**
-	 * The WOM competition to show, with its type and name when it is one of the current competitions.
-	 */
-	@Value
-	private static class Target
-	{
-		long womId;
-		String type;
-		String name;
-
-		boolean isSkill()
-		{
-			return "skill".equals(type);
-		}
-
-		boolean isBoss()
-		{
-			return "boss".equals(type);
-		}
 	}
 }

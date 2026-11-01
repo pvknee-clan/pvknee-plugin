@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
 import java.util.Collections;
+import java.util.Locale;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.plaf.basic.BasicHTML;
@@ -68,6 +69,14 @@ public final class Labels
 		setText(label, shortened(text, low), width, centred);
 		label.setToolTipText(text);
 		return label;
+	}
+
+	/**
+	 * A whole number with thousands separators, e.g. 12,345.
+	 */
+	public static String number(long value)
+	{
+		return String.format(Locale.ENGLISH, "%,d", value);
 	}
 
 	private static String shortened(String text, int length)

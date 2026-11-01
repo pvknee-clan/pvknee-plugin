@@ -9,6 +9,7 @@ import com.pvknee.data.Block;
 import com.pvknee.data.ClanData;
 import com.pvknee.data.ClanDataClient;
 import com.pvknee.data.Page;
+import com.pvknee.player.PlayerInfo;
 import com.pvknee.ui.Labels;
 import com.pvknee.ui.Notice;
 import com.pvknee.ui.Spacing;
@@ -50,6 +51,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final Icons icons;
 	private final WomClient wom;
 	private final DevLog devLog;
+	private final PlayerInfo playerInfo;
 	private final TopBar topBar = new TopBar(this::showPage, () -> refresh(false, "button"));
 	private final Notice notice = new Notice();
 	private final Notice.Line errorLine = notice.addLine();
@@ -72,7 +74,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private List<Runnable> liveUpdates = new ArrayList<>();
 
 	@Inject
-	PvKneePanel(ClanDataClient client, BlockRegistry blocks, Icons icons, WomClient wom, DevLog devLog)
+	PvKneePanel(ClanDataClient client, BlockRegistry blocks, Icons icons, WomClient wom, DevLog devLog, PlayerInfo playerInfo)
 	{
 		super(false);
 		this.client = client;
@@ -80,6 +82,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		this.icons = icons;
 		this.wom = wom;
 		this.devLog = devLog;
+		this.playerInfo = playerInfo;
 
 		setLayout(new BorderLayout(0, 10));
 		setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -254,7 +257,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	}
 
 	/**
-	 * Builds the current page again in place, e.g. after a setting that changes how it looks.
+	 * Builds the current page again in place, e.g. after a setting that changes how it looks or a change in game.
 	 */
 	void redraw()
 	{
@@ -290,7 +293,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		topBar.setShown(page);
 
 		liveUpdates = new ArrayList<>();
-		BlockContext context = new BlockContext(data, colours, icons, this, wom, liveUpdates);
+		BlockContext context = new BlockContext(data, colours, icons, this, wom, playerInfo.get(), devLog, liveUpdates);
 
 		content.removeAll();
 		for (Block block : page.getBlocks())

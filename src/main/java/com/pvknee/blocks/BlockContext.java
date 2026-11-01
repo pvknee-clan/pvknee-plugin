@@ -1,9 +1,11 @@
 package com.pvknee.blocks;
 
+import com.pvknee.DevLog;
 import com.pvknee.data.Block;
 import com.pvknee.data.ClanData;
 import com.pvknee.data.Competition;
 import com.pvknee.data.Competitions;
+import com.pvknee.player.PlayerState;
 import com.pvknee.ui.Card;
 import com.pvknee.ui.DayBar;
 import com.pvknee.ui.GlyphIcon;
@@ -34,6 +36,9 @@ public class BlockContext
 	Icons icons;
 	PageNavigator pages;
 	WomClient wom;
+	/** The member in game when the page was built; the page is built again when it changes. */
+	PlayerState player;
+	DevLog devLog;
 	/** Run by the panel every minute while the page is shown. */
 	List<Runnable> liveUpdates;
 

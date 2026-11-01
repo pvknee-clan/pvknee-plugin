@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.pvknee.blocks.Times;
 import com.pvknee.data.SavedCopy;
+import com.pvknee.player.PlayerInfo;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.inject.Inject;
@@ -39,6 +40,9 @@ public class PvKneePlugin extends Plugin
 	@Inject
 	private PvKneeConfig config;
 
+	@Inject
+	private PlayerInfo playerInfo;
+
 	private PvKneePanel panel;
 	private NavigationButton navButton;
 
@@ -66,12 +70,14 @@ public class PvKneePlugin extends Plugin
 			.build();
 
 		clientToolbar.addNavigation(navButton);
+		playerInfo.start(panel::redraw);
 		log.debug("PvKnee started");
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
+		playerInfo.stop();
 		clientToolbar.removeNavigation(navButton);
 		panel.stopUpdates();
 		navButton = null;
