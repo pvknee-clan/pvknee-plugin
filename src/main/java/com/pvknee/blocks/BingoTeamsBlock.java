@@ -12,7 +12,7 @@ import javax.swing.JComponent;
 
 /**
  * Every bingo team's standing: medal badges for the top places, the team's name, tiles done and points, with the
- * member's own team highlighted. Clicking a team shows its board.
+ * member's own team highlighted and the team being viewed outlined. Clicking a team shows its board.
  */
 class BingoTeamsBlock implements BlockRenderer
 {
@@ -27,6 +27,13 @@ class BingoTeamsBlock implements BlockRenderer
 		}
 
 		ThemeColours colours = context.getColours();
+		String title = block.setting("title", null);
+		SectionHeader header = title == null ? null : new SectionHeader(title, colours).withAside(() -> "Points", colours);
+		return new Section(header, context.followBingo(() -> table(view, bingo, colours)));
+	}
+
+	private static RankTable table(BingoView view, Bingo bingo, ThemeColours colours)
+	{
 		RankTable table = new RankTable(colours);
 		for (Bingo.Team team : bingo.getTeams())
 		{
@@ -38,12 +45,10 @@ class BingoTeamsBlock implements BlockRenderer
 				.caption(team.getTilesDone() + (team.getTilesDone() == 1 ? " tile" : " tiles"))
 				.value(Labels.decimal(team.getPoints()))
 				.highlight(view.isOwnTeam(team))
+				.outline(team == view.getTeam() ? colours.getAccent() : null)
 				.onClick(() -> view.selectTeam(team))
 				.build());
 		}
-
-		String title = block.setting("title", null);
-		SectionHeader header = title == null ? null : new SectionHeader(title, colours).withAside(() -> "Points", colours);
-		return new Section(header, table);
+		return table;
 	}
 }

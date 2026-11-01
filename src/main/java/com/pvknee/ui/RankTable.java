@@ -19,7 +19,7 @@ import net.runelite.client.ui.FontManager;
  * A ranked table in one card. Medal rows (the top three) get a medal-coloured number badge and name and are slightly
  * taller; a thin divider separates them from the plain rows below. Values are right-aligned in the value colour,
  * optionally after a muted caption such as "3 tiles". A highlighted row, e.g. the member's own, gets a subtle rounded
- * background. Rows can also be unranked, e.g. a team's members.
+ * background, and a row can be outlined, e.g. the one being viewed. Rows can also be unranked, e.g. a team's members.
  */
 public class RankTable extends Card
 {
@@ -50,6 +50,8 @@ public class RankTable extends Card
 		String caption;
 		String value;
 		boolean highlight;
+		/** Outlines the row in this colour, e.g. the accent for the one being viewed; null for none. */
+		Color outline;
 		/** Makes the row clickable. */
 		Runnable onClick;
 	}
@@ -83,8 +85,9 @@ public class RankTable extends Card
 		}
 		lastWasMedal = medal;
 
-		Card panel = new Card(new BorderLayout(2 * Spacing.ITEM_GAP, 0), false);
+		Card panel = new Card(new BorderLayout(2 * Spacing.ITEM_GAP, 0), row.getOutline() != null);
 		panel.setArc(Spacing.CONTROL_ARC);
+		panel.setOutline(row.getOutline());
 		if (row.isHighlight())
 		{
 			panel.setBackground(HOVER);
