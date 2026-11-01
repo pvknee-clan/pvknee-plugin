@@ -23,15 +23,13 @@ import net.runelite.client.util.Text;
 
 /**
  * !sotw and !botw: when the member types one in chat, a game message only they see with the challenge, its time left
- * and their place and gain. Others typing it get no reply from this plugin, and nothing is sent to the game.
+ * and their place and score. Others typing it get no reply from this plugin, and nothing is sent to the game.
  */
 @Singleton
 public class ChatCommands
 {
 	private static final String SOTW = "!sotw";
 	private static final String BOTW = "!botw";
-	private static final String DEFAULT_SOTW = "Skill of the Week: {skill}, {timeLeft} left. You: {place}, {gain}.";
-	private static final String DEFAULT_BOTW = "Boss of the Week: {boss}, {timeLeft} left. You: {place}, {gain}.";
 
 	private final ChatCommandManager chatCommandManager;
 	private final ChatMessageManager chatMessageManager;
@@ -54,8 +52,8 @@ public class ChatCommands
 
 	public void start()
 	{
-		chatCommandManager.registerCommand(SOTW, (chat, text) -> reply(chat, "skill", "cmd_sotw", DEFAULT_SOTW));
-		chatCommandManager.registerCommand(BOTW, (chat, text) -> reply(chat, "boss", "cmd_botw", DEFAULT_BOTW));
+		chatCommandManager.registerCommand(SOTW, (chat, text) -> reply(chat, "skill", "cmd_sotw"));
+		chatCommandManager.registerCommand(BOTW, (chat, text) -> reply(chat, "boss", "cmd_botw"));
 	}
 
 	public void stop()
@@ -67,7 +65,7 @@ public class ChatCommands
 	/**
 	 * Runs on the client thread when anyone's chat message starts with the command; only the member's own get a reply.
 	 */
-	private void reply(ChatMessage chat, String type, String key, String fallback)
+	private void reply(ChatMessage chat, String type, String key)
 	{
 		PlayerState player = playerInfo.get();
 		boolean own = chat.getType() == ChatMessageType.PRIVATECHATOUT || player.isNamed(Text.sanitize(chat.getName()));
@@ -77,26 +75,25 @@ public class ChatCommands
 		}
 
 		devLog.log("command: {} typed", key);
-		clanData.recent("command", data -> SwingUtilities.invokeLater(() -> answer(data, player, type, key, fallback)));
+		clanData.recent("command", data -> SwingUtilities.invokeLater(() -> answer(data, player, type, key)));
 	}
 
 	/**
 	 * Fills the template once the standings are in, from WOM's cache when it has them. Runs on the Swing thread, as
 	 * {@link WomClient} needs.
 	 */
-	private void answer(ClanData data, PlayerState player, String type, String key, String fallback)
+	private void answer(ClanData data, PlayerState player, String type, String key)
 	{
 		Competition competition = data.getCompetitions() == null ? null : data.getCompetitions().current(type);
 		if (competition == null || competition.getWomId() <= 0)
 		{
 			devLog.log("command: no current {} challenge", type);
-			send("There's no " + ("boss".equals(type) ? "Boss" : "Skill") + " of the Week right now.");
+			send("There's no " + ("boss".equals(type) ? "Boss" : "Skill") + " of the Week right now.", Map.of());
 			return;
 		}
 
-		String template = data.getMessages() == null ? null : data.getMessages().get(key);
-		String wording = template == null || template.trim().isEmpty() ? fallback : template.trim();
-		Map<String, String> values = Messages.challengeValues(data);
+		String template = Messages.template(data, key);
+		Map<String, List<String>> values = Messages.challengeValues(data);
 
 		// WOM answers twice when its copy is old: first with the old standings, then the new. Reply only once.
 		AtomicBoolean answered = new AtomicBoolean();
@@ -105,40 +102,49 @@ public class ChatCommands
 			{
 				if (answered.compareAndSet(false, true))
 				{
-					placeAndGain(values, Standing.gainers(standings), player, type);
-					send(Messages.fill(wording, values));
+					placeAndScore(values, Standing.gainers(standings), player, type);
+					send(template, values);
 				}
 			},
 			error ->
 			{
 				if (answered.compareAndSet(false, true))
 				{
-					values.put("place", "unknown");
-					values.put("gain", "the standings didn't load");
-					send(Messages.fill(wording, values));
+					values.put("place", Messages.one("unknown"));
+					values.put("gain", Messages.one("the standings didn't load"));
+					values.put("you", Messages.one("the standings didn't load"));
+					send(template, values);
 				}
 			});
 	}
 
-	private static void placeAndGain(Map<String, String> values, List<Standing> gainers, PlayerState player, String type)
+	/**
+	 * Fills {place}, {gain} and {you} (place and score together, e.g. "2nd, 1,942 xp") from the full standings, so a
+	 * place below the table's cut-off still shows.
+	 */
+	private static void placeAndScore(Map<String, List<String>> values, List<Standing> gainers, PlayerState player, String type)
 	{
 		for (int i = 0; i < gainers.size(); i++)
 		{
 			Standing standing = gainers.get(i);
 			if (player.isNamed(standing.getName()))
 			{
-				values.put("place", Labels.ordinal(i + 1));
-				values.put("gain", Labels.score(standing.getGained(), type));
+				String place = Labels.ordinal(i + 1);
+				String score = Labels.score(standing.getGained(), type);
+				values.put("place", Messages.one(place));
+				values.put("gain", Messages.one(score));
+				values.put("you", Messages.one(place + ", " + score));
 				return;
 			}
 		}
-		values.put("place", "not on the board yet");
-		values.put("gain", "no gains yet");
+		values.put("place", Messages.one("not on the board yet"));
+		values.put("gain", Messages.one("no gains yet"));
+		values.put("you", Messages.one("skill".equals(type) ? "no xp yet" : "boss".equals(type) ? "no kills yet" : "no gains yet"));
 	}
 
-	private void send(String message)
+	private void send(String template, Map<String, List<String>> values)
 	{
-		devLog.log("command: replied");
-		chatMessageManager.queue(Messages.gameMessage(message));
+		devLog.log("command: {}", Messages.plain(template, values));
+		chatMessageManager.queue(Messages.message(template, values));
 	}
 }

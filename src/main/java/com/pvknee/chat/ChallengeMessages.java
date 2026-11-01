@@ -33,7 +33,7 @@ import net.runelite.client.eventbus.Subscribe;
 /**
  * The weekly challenge chat messages, game messages only the member sees, working while the panel is closed:
  * <ul>
- * <li>once per login, the endpoint's "login" template, filled with the current challenges;</li>
+ * <li>once per login, the sheet's "login" message, filled with the current challenges;</li>
  * <li>when a challenge starts, has 1 hour left and ends. Each minute it looks for moments since the last look, so a
  * moment is announced once, and nothing from before the client started; moments while logged out are skipped.</li>
  * </ul>
@@ -128,15 +128,10 @@ public class ChallengeMessages
 			return;
 		}
 
-		String template = data.getMessages() == null ? null : data.getMessages().get("login");
-		if (template == null || template.trim().isEmpty())
-		{
-			devLog.log("login: no template, no message");
-			return;
-		}
-
-		devLog.log("login: sent");
-		chatMessageManager.queue(Messages.gameMessage(Messages.fill(template.trim(), Messages.challengeValues(data))));
+		String template = Messages.template(data, "login");
+		Map<String, List<String>> values = Messages.challengeValues(data);
+		devLog.log("login: {}", Messages.plain(template, values));
+		chatMessageManager.queue(Messages.message(template, values));
 	}
 
 	private void check()
@@ -166,18 +161,20 @@ public class ChallengeMessages
 		Map<Kind, List<Moment>> due = moments.stream()
 			.filter(m -> m.getTime().isAfter(from) && !m.getTime().isAfter(now))
 			.collect(Collectors.groupingBy(Moment::getKind, () -> new EnumMap<>(Kind.class), Collectors.toList()));
-		due.forEach(this::notify);
+		due.forEach((kind, list) -> notify(kind, list, data));
 	}
 
 	/**
 	 * One message for every challenge with this moment in the same look, e.g. both new challenges starting.
 	 */
-	private void notify(Kind kind, List<Moment> moments)
+	private void notify(Kind kind, List<Moment> moments, ClanData data)
 	{
-		List<String> names = moments.stream()
-			.map(m -> challenge(m.getCompetition()))
-			.collect(Collectors.toList());
-		String message = "PvKnee: " + kind.message(String.join(" and ", names), names.size() > 1);
+		String template = Messages.template(data, kind.key);
+		Map<String, List<String>> values = Messages.challengeValues(data);
+		values.put("challenges", moments.stream()
+			.map(m -> m.getCompetition().getName())
+			.collect(Collectors.toList()));
+		String message = Messages.plain(template, values);
 		if (!kind.setting.test(config))
 		{
 			devLog.log("alerts: {} (turned off)", message);
@@ -189,7 +186,7 @@ public class ChallengeMessages
 		else
 		{
 			devLog.log("alerts: {}", message);
-			chatMessageManager.queue(Messages.gameMessage(message));
+			chatMessageManager.queue(Messages.message(template, values));
 		}
 	}
 
@@ -231,42 +228,20 @@ public class ChallengeMessages
 		return moments;
 	}
 
-	/**
-	 * "Skill of the Week (Woodcutting)", or just the name for other challenges.
-	 */
-	private static String challenge(Competition competition)
-	{
-		String type = competition.getType();
-		String week = "skill".equalsIgnoreCase(type) ? "Skill of the Week"
-			: "boss".equalsIgnoreCase(type) ? "Boss of the Week"
-			: null;
-		return week == null ? competition.getName() : week + " (" + competition.getName() + ")";
-	}
-
 	private enum Kind
 	{
-		START(PvKneeConfig::challengeStartAlert),
-		HOUR_LEFT(PvKneeConfig::challengeHourLeftAlert),
-		END(PvKneeConfig::challengeEndAlert);
+		START("alert_start", PvKneeConfig::challengeStartAlert),
+		HOUR_LEFT("alert_hour", PvKneeConfig::challengeHourLeftAlert),
+		END("alert_end", PvKneeConfig::challengeEndAlert);
 
+		/** The sheet's message key for this moment. */
+		private final String key;
 		private final Predicate<PvKneeConfig> setting;
 
-		Kind(Predicate<PvKneeConfig> setting)
+		Kind(String key, Predicate<PvKneeConfig> setting)
 		{
+			this.key = key;
 			this.setting = setting;
-		}
-
-		String message(String challenges, boolean plural)
-		{
-			switch (this)
-			{
-				case START:
-					return challenges + (plural ? " have started" : " has started");
-				case HOUR_LEFT:
-					return "1 hour left in " + challenges;
-				default:
-					return challenges + (plural ? " have ended" : " has ended");
-			}
 		}
 
 		String describe()
