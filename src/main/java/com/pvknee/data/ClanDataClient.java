@@ -7,6 +7,8 @@ import com.pvknee.PvKneeConfig;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -43,6 +45,8 @@ public class ClanDataClient
 	/** The last data loaded from the endpoint or the saved copy, and when it was fetched. */
 	private volatile ClanData latest;
 	private volatile Instant latestAt;
+	/** Callers of {@link #recent} waiting for the load it started; null while none is running. */
+	private List<Consumer<ClanData>> waiting;
 
 	@Inject
 	ClanDataClient(OkHttpClient okHttpClient, Gson gson, PvKneeConfig config, SavedCopy savedCopy, ScheduledExecutorService executor, DevLog devLog)
@@ -141,9 +145,17 @@ public class ClanDataClient
 	}
 
 	/**
+	 * The last data loaded from the endpoint or the saved copy; null if nothing has been loaded yet.
+	 */
+	public ClanData latest()
+	{
+		return latest;
+	}
+
+	/**
 	 * Recent data for features that work while the panel is closed: the last data if it was loaded in the last few
 	 * minutes, otherwise one endpoint load, falling back to the last data or the saved copy. Not called if there is
-	 * none at all. The callback may run on any thread.
+	 * none at all. Callers asking while that load runs share it. The callback may run on any thread.
 	 */
 	public void recent(String reason, Consumer<ClanData> onData)
 	{
@@ -155,20 +167,42 @@ public class ClanDataClient
 			return;
 		}
 
+		synchronized (this)
+		{
+			if (waiting != null)
+			{
+				waiting.add(onData);
+				return;
+			}
+			waiting = new ArrayList<>();
+			waiting.add(onData);
+		}
+
 		devLog.log("{}: loading the endpoint", reason);
-		fetch(onData, e ->
+		fetch(this::finishRecent, e ->
 		{
 			devLog.log("{}: load failed, {}", reason, e.getMessage(), e);
 			ClanData fallback = latest;
 			if (fallback != null)
 			{
-				onData.accept(fallback);
+				finishRecent(fallback);
 			}
 			else
 			{
-				loadSaved((saved, savedAt) -> onData.accept(saved));
+				loadSaved((saved, savedAt) -> finishRecent(saved));
 			}
 		});
+	}
+
+	private void finishRecent(ClanData data)
+	{
+		List<Consumer<ClanData>> callers;
+		synchronized (this)
+		{
+			callers = waiting;
+			waiting = null;
+		}
+		callers.forEach(caller -> caller.accept(data));
 	}
 
 	private void remember(ClanData data, Instant fetchedAt)

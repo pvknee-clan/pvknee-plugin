@@ -3,8 +3,8 @@ package com.pvknee;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.pvknee.blocks.Times;
+import com.pvknee.chat.ChallengeMessages;
 import com.pvknee.chat.ChatCommands;
-import com.pvknee.chat.LoginMessage;
 import com.pvknee.data.SavedCopy;
 import com.pvknee.player.PlayerInfo;
 import com.pvknee.player.WorldHopper;
@@ -50,10 +50,10 @@ public class PvKneePlugin extends Plugin
 	private WorldHopper worldHopper;
 
 	@Inject
-	private LoginMessage loginMessage;
+	private ChatCommands chatCommands;
 
 	@Inject
-	private ChatCommands chatCommands;
+	private ChallengeMessages challengeMessages;
 
 	private PvKneePanel panel;
 	private NavigationButton navButton;
@@ -84,8 +84,8 @@ public class PvKneePlugin extends Plugin
 		clientToolbar.addNavigation(navButton);
 		playerInfo.start(panel::playerChanged);
 		worldHopper.start();
-		loginMessage.start();
 		chatCommands.start();
+		challengeMessages.start();
 		log.debug("PvKnee started");
 	}
 
@@ -94,8 +94,8 @@ public class PvKneePlugin extends Plugin
 	{
 		playerInfo.stop();
 		worldHopper.stop();
-		loginMessage.stop();
 		chatCommands.stop();
+		challengeMessages.stop();
 		clientToolbar.removeNavigation(navButton);
 		panel.stopUpdates();
 		navButton = null;
