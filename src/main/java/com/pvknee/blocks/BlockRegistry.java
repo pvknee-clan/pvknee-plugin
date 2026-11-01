@@ -35,6 +35,7 @@ public class BlockRegistry
 		renderers.put("countdown", new CountdownBlock());
 		renderers.put("bingo_team", new BingoTeamBlock());
 		renderers.put("bingo_board", new BingoBoardBlock());
+		renderers.put("bingo_members", new BingoMembersBlock());
 	}
 
 	public JComponent render(Block block, BlockContext context)

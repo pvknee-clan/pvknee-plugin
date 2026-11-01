@@ -23,6 +23,15 @@ public class Block
 	}
 
 	/**
+	 * A true or false setting, or the default if it is missing or neither.
+	 */
+	public boolean booleanSetting(String key, boolean fallback)
+	{
+		String value = setting(key, "");
+		return "true".equalsIgnoreCase(value) || (!"false".equalsIgnoreCase(value) && fallback);
+	}
+
+	/**
 	 * A whole-number setting, or the default if it is missing or not a number.
 	 */
 	public int intSetting(String key, int fallback)
