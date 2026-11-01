@@ -34,6 +34,8 @@ public final class Glyphs
 	public static final Shape HOME = path("M3 11l9-7 9 7M5 10v10h14V10M10 20v-6h4v6");
 	public static final Shape REFRESH = path("M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5");
 	public static final Shape CHEVRON = path("M6 9l6 6 6-6");
+	public static final Shape CHEVRON_LEFT = path("M15 6l-6 6 6 6");
+	public static final Shape CHEVRON_RIGHT = path("M9 6l6 6-6 6");
 	public static final Shape GLOBE = join(circle(12, 12, 9), path("M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"));
 	public static final Shape CHAT = join(
 		path("M5 6c4-2 10-2 14 0l2 10c-2 2-4 3-6 3l-1-2M10 17l-1 2c-2 0-4-1-6-3L5 6"),

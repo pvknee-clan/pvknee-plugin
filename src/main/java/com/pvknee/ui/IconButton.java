@@ -13,8 +13,12 @@ import javax.swing.Timer;
 public class IconButton extends Card
 {
 	public static final int SIZE = 30;
+	public static final int SMALL_SIZE = 26;
 	private static final int ICON_SIZE = 16;
+	private static final int SMALL_ICON_SIZE = 12;
 	private static final Color ICON = new Color(187, 187, 187);
+	private static final Color SMALL_BACKGROUND = new Color(56, 56, 56);
+	private static final Color SMALL_BORDER = new Color(72, 72, 72);
 	private static final int SPIN_INTERVAL_MS = 40;
 	private static final double SPIN_STEP = Math.PI / 12;
 
@@ -22,6 +26,7 @@ public class IconButton extends Card
 	private final Timer spinner = new Timer(SPIN_INTERVAL_MS, e -> spin());
 	private Color iconColour = ICON;
 	private Color spinColour;
+	private int iconSize = ICON_SIZE;
 	private double angle;
 
 	public IconButton(Shape glyph, String name, Runnable action)
@@ -33,6 +38,18 @@ public class IconButton extends Card
 		setToolTipText(name);
 		getAccessibleContext().setAccessibleName(name);
 		onClick(action);
+	}
+
+	/**
+	 * Makes the button smaller and a little lighter, for use inside a card, e.g. a switcher's arrows.
+	 */
+	public IconButton small()
+	{
+		iconSize = SMALL_ICON_SIZE;
+		setPreferredSize(new Dimension(SMALL_SIZE, SMALL_SIZE));
+		setBackground(SMALL_BACKGROUND);
+		setOutline(SMALL_BORDER);
+		return this;
 	}
 
 	/**
@@ -74,6 +91,6 @@ public class IconButton extends Card
 	protected void paintComponent(Graphics g)
 	{
 		super.paintComponent(g);
-		Glyphs.draw(g, glyph, spinColour == null ? iconColour : spinColour, ICON_SIZE, getWidth() / 2.0, getHeight() / 2.0, angle);
+		Glyphs.draw(g, glyph, spinColour == null ? iconColour : spinColour, iconSize, getWidth() / 2.0, getHeight() / 2.0, angle);
 	}
 }

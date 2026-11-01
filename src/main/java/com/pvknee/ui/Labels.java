@@ -80,6 +80,15 @@ public final class Labels
 	}
 
 	/**
+	 * A number to one decimal place, dropping ".0", e.g. 7.5 or 18.
+	 */
+	public static String decimal(double value)
+	{
+		String text = String.format(Locale.ENGLISH, "%,.1f", value);
+		return text.endsWith(".0") ? text.substring(0, text.length() - 2) : text;
+	}
+
+	/**
 	 * A member's own score in a challenge: "1,942 xp" for a skill, "12 kills" (or "1 kill") for a boss, otherwise just
 	 * the number. No "+": it is their score, not a gain in a list.
 	 */

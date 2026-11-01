@@ -20,7 +20,7 @@ public class SectionHeader extends JPanel
 	private static final float DEFAULT_SIZE = 16f;
 
 	private final JLabel title = new JLabel();
-	private final String text;
+	private String text;
 	private final int width;
 	private final boolean centred;
 	private JLabel asideLabel;
@@ -104,9 +104,27 @@ public class SectionHeader extends JPanel
 			shownSoon = soon;
 			asideLabel.setText(next);
 			Labels.styleTime(asideLabel, soon, colours);
-			Labels.setText(title, text, width - asideLabel.getPreferredSize().width - Spacing.ITEM_GAP, centred);
-			revalidate();
+			fitTitle();
 		}
+	}
+
+	/**
+	 * Changes the title's text, e.g. "Your Team" to "Team".
+	 */
+	public void setTitle(String text)
+	{
+		if (!Objects.equals(text, this.text))
+		{
+			this.text = text;
+			fitTitle();
+		}
+	}
+
+	private void fitTitle()
+	{
+		int asideWidth = asideLabel == null ? 0 : asideLabel.getPreferredSize().width + Spacing.ITEM_GAP;
+		Labels.setText(title, text, width - asideWidth, centred);
+		revalidate();
 	}
 
 	private static Font bold(float size)

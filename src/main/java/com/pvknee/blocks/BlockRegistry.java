@@ -33,6 +33,7 @@ public class BlockRegistry
 		renderers.put("table", new TableBlock());
 		renderers.put("stat", new StatBlock());
 		renderers.put("countdown", new CountdownBlock());
+		renderers.put("bingo_team", new BingoTeamBlock());
 	}
 
 	public JComponent render(Block block, BlockContext context)

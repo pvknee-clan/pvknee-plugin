@@ -14,6 +14,8 @@ public class ThemeColours
 {
 	/** Times in an item's final 24 hours. Fixed, like the medal colours, so it reads the same in every theme. */
 	public static final Color ENDING_SOON = new Color(0xFF9800);
+	/** Bingo tiles that are done, and a team's tiles done. Fixed, like {@link #ENDING_SOON}. */
+	public static final Color DONE = new Color(0x4CAF50);
 
 	Color header;
 	Color accent;

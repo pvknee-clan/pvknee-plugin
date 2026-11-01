@@ -15,13 +15,16 @@ import com.pvknee.ui.LiveLabel;
 import com.pvknee.ui.ThemeColours;
 import com.pvknee.ui.TimeBar;
 import com.pvknee.wom.WomClient;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Shape;
 import java.time.Instant;
 import java.util.List;
 import java.util.function.Supplier;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,7 +45,7 @@ public class BlockContext
 	WorldHopper hopper;
 	DevLog devLog;
 	/** The bingo page's selected team and tile. */
-	BingoView bingo;
+	BingoView bingoView;
 	/** Run by the panel every minute while the page is shown. */
 	List<Runnable> liveUpdates;
 
@@ -118,6 +121,30 @@ public class BlockContext
 		TimeBar timeBar = new TimeBar(bar, left, timeLeft ? () -> Times.left(end) : null, () -> Times.endingSoon(end), colours);
 		onUpdate(timeBar::update);
 		return timeBar;
+	}
+
+	/**
+	 * Bingo content that is built again whenever the bingo page's selected team or tile changes. The builder may
+	 * return null for nothing.
+	 */
+	public JComponent followBingo(Supplier<JComponent> build)
+	{
+		JPanel holder = new JPanel(new BorderLayout());
+		holder.setOpaque(false);
+		Runnable fill = () ->
+		{
+			holder.removeAll();
+			JComponent content = build.get();
+			if (content != null)
+			{
+				holder.add(content);
+			}
+			holder.revalidate();
+			holder.repaint();
+		};
+		fill.run();
+		bingoView.onChange(fill);
+		return holder;
 	}
 
 	/**
