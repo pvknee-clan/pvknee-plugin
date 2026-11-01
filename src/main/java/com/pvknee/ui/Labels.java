@@ -79,6 +79,17 @@ public final class Labels
 		return String.format(Locale.ENGLISH, "%,d", value);
 	}
 
+	/**
+	 * A place as an ordinal, e.g. 1st, 2nd, 11th.
+	 */
+	public static String ordinal(int number)
+	{
+		int lastTwo = number % 100;
+		int last = number % 10;
+		String suffix = lastTwo >= 11 && lastTwo <= 13 ? "th" : last == 1 ? "st" : last == 2 ? "nd" : last == 3 ? "rd" : "th";
+		return number + suffix;
+	}
+
 	private static String shortened(String text, int length)
 	{
 		return text.substring(0, length).trim() + "...";

@@ -4,31 +4,23 @@ import com.pvknee.DevLog;
 import com.pvknee.PvKneeConfig;
 import com.pvknee.data.ClanData;
 import com.pvknee.data.ClanDataClient;
-import java.time.Duration;
-import java.time.Instant;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.chat.ChatColorType;
-import net.runelite.client.chat.ChatMessageBuilder;
 import net.runelite.client.chat.ChatMessageManager;
-import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 
 /**
- * Once per login, a game message only the member sees, built from the endpoint's "login" template. Uses data loaded
- * in the last few minutes, otherwise loads the endpoint once, falling back to the saved copy.
+ * Once per login, a game message only the member sees, built from the endpoint's "login" template, using recent
+ * clan data (see {@link ClanDataClient#recent}).
  */
 @Singleton
 public class LoginMessage
 {
-	private static final Duration FRESH = Duration.ofMinutes(10);
-
 	private final Client client;
 	private final ClientThread clientThread;
 	private final EventBus eventBus;
@@ -82,39 +74,13 @@ public class LoginMessage
 			greeted = true;
 			if (config.loginMessage())
 			{
-				greet();
+				clanData.recent("login", this::send);
 			}
 			else
 			{
 				devLog.log("login: message turned off");
 			}
 		}
-	}
-
-	private void greet()
-	{
-		ClanData latest = clanData.latest();
-		Instant latestAt = clanData.latestAt();
-		if (latest != null && latestAt != null && Instant.now().isBefore(latestAt.plus(FRESH)))
-		{
-			send(latest);
-			return;
-		}
-
-		devLog.log("login: loading the endpoint");
-		clanData.fetch(this::send, e ->
-		{
-			devLog.log("login: load failed, {}", e.getMessage(), e);
-			ClanData fallback = clanData.latest();
-			if (fallback != null)
-			{
-				send(fallback);
-			}
-			else
-			{
-				clanData.loadSaved((saved, savedAt) -> send(saved));
-			}
-		});
 	}
 
 	/**
@@ -131,12 +97,6 @@ public class LoginMessage
 
 		String message = Messages.fill(template.trim(), Messages.challengeValues(data));
 		devLog.log("login: sent");
-		chatMessageManager.queue(QueuedMessage.builder()
-			.type(ChatMessageType.GAMEMESSAGE)
-			.runeLiteFormattedMessage(new ChatMessageBuilder()
-				.append(ChatColorType.NORMAL)
-				.append(message)
-				.build())
-			.build());
+		chatMessageManager.queue(Messages.gameMessage(message));
 	}
 }

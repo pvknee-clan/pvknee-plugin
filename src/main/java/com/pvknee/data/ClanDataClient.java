@@ -2,8 +2,10 @@ package com.pvknee.data;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
+import com.pvknee.DevLog;
 import com.pvknee.PvKneeConfig;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.BiConsumer;
@@ -27,6 +29,8 @@ import okhttp3.ResponseBody;
 @Singleton
 public class ClanDataClient
 {
+	/** How old the last data may be before {@link #recent} loads the endpoint again; the panel's refresh interval. */
+	private static final Duration FRESH = Duration.ofMinutes(10);
 	private static final String ENDPOINT = "https://script.google.com/macros/s/AKfycbyuOXHeAB-dlWG4kSg1G2T4mXPPy13vyphLPGRH3iZRUiEKKmvToJmHm6M33vb_OSUe3Q/exec";
 
 	private final OkHttpClient okHttpClient;
@@ -34,19 +38,21 @@ public class ClanDataClient
 	private final PvKneeConfig config;
 	private final SavedCopy savedCopy;
 	private final ScheduledExecutorService executor;
+	private final DevLog devLog;
 
 	/** The last data loaded from the endpoint or the saved copy, and when it was fetched. */
 	private volatile ClanData latest;
 	private volatile Instant latestAt;
 
 	@Inject
-	ClanDataClient(OkHttpClient okHttpClient, Gson gson, PvKneeConfig config, SavedCopy savedCopy, ScheduledExecutorService executor)
+	ClanDataClient(OkHttpClient okHttpClient, Gson gson, PvKneeConfig config, SavedCopy savedCopy, ScheduledExecutorService executor, DevLog devLog)
 	{
 		this.okHttpClient = okHttpClient;
 		this.gson = gson;
 		this.config = config;
 		this.savedCopy = savedCopy;
 		this.executor = executor;
+		this.devLog = devLog;
 	}
 
 	/**
@@ -135,19 +141,34 @@ public class ClanDataClient
 	}
 
 	/**
-	 * The last data loaded from the endpoint or the saved copy; null if nothing has been loaded yet.
+	 * Recent data for features that work while the panel is closed: the last data if it was loaded in the last few
+	 * minutes, otherwise one endpoint load, falling back to the last data or the saved copy. Not called if there is
+	 * none at all. The callback may run on any thread.
 	 */
-	public ClanData latest()
+	public void recent(String reason, Consumer<ClanData> onData)
 	{
-		return latest;
-	}
+		ClanData data = latest;
+		Instant fetchedAt = latestAt;
+		if (data != null && fetchedAt != null && Instant.now().isBefore(fetchedAt.plus(FRESH)))
+		{
+			onData.accept(data);
+			return;
+		}
 
-	/**
-	 * When {@link #latest()} was fetched from the endpoint; null if nothing has been loaded yet.
-	 */
-	public Instant latestAt()
-	{
-		return latestAt;
+		devLog.log("{}: loading the endpoint", reason);
+		fetch(onData, e ->
+		{
+			devLog.log("{}: load failed, {}", reason, e.getMessage(), e);
+			ClanData fallback = latest;
+			if (fallback != null)
+			{
+				onData.accept(fallback);
+			}
+			else
+			{
+				loadSaved((saved, savedAt) -> onData.accept(saved));
+			}
+		});
 	}
 
 	private void remember(ClanData data, Instant fetchedAt)

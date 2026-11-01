@@ -8,6 +8,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import net.runelite.api.ChatMessageType;
+import net.runelite.client.chat.ChatColorType;
+import net.runelite.client.chat.ChatMessageBuilder;
+import net.runelite.client.chat.QueuedMessage;
 
 /**
  * Fills the sheet's chat message templates, e.g. "Skill of the Week is {skill}".
@@ -44,6 +48,20 @@ final class Messages
 			values.put("timeLeft", Times.duration(Duration.between(Instant.now(), end)));
 		}
 		return values;
+	}
+
+	/**
+	 * A game message only the member sees, with the text escaped so it cannot add chat formatting.
+	 */
+	static QueuedMessage gameMessage(String text)
+	{
+		return QueuedMessage.builder()
+			.type(ChatMessageType.GAMEMESSAGE)
+			.runeLiteFormattedMessage(new ChatMessageBuilder()
+				.append(ChatColorType.NORMAL)
+				.append(text)
+				.build())
+			.build();
 	}
 
 	/**

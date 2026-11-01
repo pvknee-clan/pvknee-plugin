@@ -81,20 +81,12 @@ class PlayerBlock implements BlockRenderer
 		}
 
 		int rank = index + 1;
-		context.getDevLog().log("player: {}, {} of {}", player.getName(), ordinal(rank), gainers.size());
+		context.getDevLog().log("player: {}, {} of {}", player.getName(), Labels.ordinal(rank), gainers.size());
 		Standing mine = gainers.get(index);
 		long behind = gainers.get(0).getGained() - mine.getGained();
 		String line = rank == 1 ? "Leading" : behind == 0 ? "Level with 1st" : Labels.number(behind) + " behind 1st";
 		boolean medal = rank <= Math.min(RankBadge.medalPlaces(), Math.max(0, block.intSetting("podium", 3)));
 		String value = block.setting("prefix", "") + Labels.number(mine.getGained());
 		return new StandingCard("You", rank, medal, mine.getName(), line, value, colours);
-	}
-
-	private static String ordinal(int number)
-	{
-		int lastTwo = number % 100;
-		int last = number % 10;
-		String suffix = lastTwo >= 11 && lastTwo <= 13 ? "th" : last == 1 ? "st" : last == 2 ? "nd" : last == 3 ? "rd" : "th";
-		return number + suffix;
 	}
 }
