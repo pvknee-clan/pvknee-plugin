@@ -4,6 +4,7 @@ import com.pvknee.blocks.Times;
 import com.pvknee.data.ClanData;
 import com.pvknee.data.Competition;
 import com.pvknee.data.Competitions;
+import java.awt.Color;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -16,10 +17,11 @@ import net.runelite.api.ChatMessageType;
 import net.runelite.client.chat.ChatColorType;
 import net.runelite.client.chat.ChatMessageBuilder;
 import net.runelite.client.chat.QueuedMessage;
+import net.runelite.client.util.Text;
 
 /**
  * Builds chat messages from the sheet's templates, e.g. "{skill} | {timeLeft} left": the wording in RuneLite's normal
- * chat colour and each placeholder's value highlighted, so RuneLite's chat colour settings decide the colours. A
+ * chat colour and each placeholder's value in the given highlight colour (see {@link ChatSender}). A
  * placeholder can hold several values, e.g. {challenges}, each highlighted and joined with ", ". A placeholder
  * without a value, or one the plugin doesn't know, stays as typed.
  */
@@ -100,12 +102,14 @@ final class Messages
 	}
 
 	/**
-	 * A game message only the member sees: the wording in the normal chat colour, the values highlighted. All text is
-	 * escaped, so the sheet cannot add chat formatting.
+	 * A game message only the member sees: the wording in the normal chat colour, the values in the highlight colour.
+	 * All text is escaped, so the sheet cannot add chat formatting.
 	 */
-	static QueuedMessage message(String template, Map<String, List<String>> values)
+	static QueuedMessage message(String template, Map<String, List<String>> values, Color highlight)
 	{
-		ChatMessageBuilder builder = new ChatMessageBuilder().append(ChatColorType.NORMAL);
+		// The game hides everything up to the first "|" of a game message as a prefix, so an empty prefix keeps
+		// templates such as "{skill} | {timeLeft} left" whole.
+		ChatMessageBuilder builder = new ChatMessageBuilder().append("|").append(ChatColorType.NORMAL);
 		Matcher matcher = PLACEHOLDER.matcher(template);
 		int at = 0;
 		while (matcher.find())
@@ -121,8 +125,7 @@ final class Messages
 				for (int i = 0; i < value.size(); i++)
 				{
 					builder.append(i == 0 ? "" : SEPARATOR)
-						.append(ChatColorType.HIGHLIGHT)
-						.append(value.get(i))
+						.append(highlight, Text.escapeJagex(value.get(i)))
 						.append(ChatColorType.NORMAL);
 				}
 			}

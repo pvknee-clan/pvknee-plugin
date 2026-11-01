@@ -26,7 +26,6 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 
@@ -48,7 +47,7 @@ public class ChallengeMessages
 	private final ClanDataClient clanData;
 	private final Client client;
 	private final ClientThread clientThread;
-	private final ChatMessageManager chatMessageManager;
+	private final ChatSender chatSender;
 	private final EventBus eventBus;
 	private final ScheduledExecutorService executor;
 	private final PvKneeConfig config;
@@ -63,13 +62,13 @@ public class ChallengeMessages
 	private boolean greeted;
 
 	@Inject
-	ChallengeMessages(ClanDataClient clanData, Client client, ClientThread clientThread, ChatMessageManager chatMessageManager,
+	ChallengeMessages(ClanDataClient clanData, Client client, ClientThread clientThread, ChatSender chatSender,
 		EventBus eventBus, ScheduledExecutorService executor, PvKneeConfig config, DevLog devLog)
 	{
 		this.clanData = clanData;
 		this.client = client;
 		this.clientThread = clientThread;
-		this.chatMessageManager = chatMessageManager;
+		this.chatSender = chatSender;
 		this.eventBus = eventBus;
 		this.executor = executor;
 		this.config = config;
@@ -131,7 +130,7 @@ public class ChallengeMessages
 		String template = Messages.template(data, "login");
 		Map<String, List<String>> values = Messages.challengeValues(data);
 		devLog.log("login: {}", Messages.plain(template, values));
-		chatMessageManager.queue(Messages.message(template, values));
+		chatSender.send(template, values);
 	}
 
 	private void check()
@@ -186,7 +185,7 @@ public class ChallengeMessages
 		else
 		{
 			devLog.log("alerts: {}", message);
-			chatMessageManager.queue(Messages.message(template, values));
+			chatSender.send(template, values);
 		}
 	}
 

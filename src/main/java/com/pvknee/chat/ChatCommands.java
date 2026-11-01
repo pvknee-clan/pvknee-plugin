@@ -18,7 +18,6 @@ import javax.swing.SwingUtilities;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.client.chat.ChatCommandManager;
-import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.util.Text;
 
 /**
@@ -32,18 +31,18 @@ public class ChatCommands
 	private static final String BOTW = "!botw";
 
 	private final ChatCommandManager chatCommandManager;
-	private final ChatMessageManager chatMessageManager;
+	private final ChatSender chatSender;
 	private final ClanDataClient clanData;
 	private final WomClient wom;
 	private final PlayerInfo playerInfo;
 	private final DevLog devLog;
 
 	@Inject
-	ChatCommands(ChatCommandManager chatCommandManager, ChatMessageManager chatMessageManager, ClanDataClient clanData,
+	ChatCommands(ChatCommandManager chatCommandManager, ChatSender chatSender, ClanDataClient clanData,
 		WomClient wom, PlayerInfo playerInfo, DevLog devLog)
 	{
 		this.chatCommandManager = chatCommandManager;
-		this.chatMessageManager = chatMessageManager;
+		this.chatSender = chatSender;
 		this.clanData = clanData;
 		this.wom = wom;
 		this.playerInfo = playerInfo;
@@ -145,6 +144,6 @@ public class ChatCommands
 	private void send(String template, Map<String, List<String>> values)
 	{
 		devLog.log("command: {}", Messages.plain(template, values));
-		chatMessageManager.queue(Messages.message(template, values));
+		chatSender.send(template, values);
 	}
 }
