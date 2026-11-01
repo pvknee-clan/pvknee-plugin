@@ -20,4 +20,6 @@ public class ClanData
 	private List<ClanEvent> events = new ArrayList<>();
 	private List<Link> links = new ArrayList<>();
 	private Map<String, String> messages = new HashMap<>();
+	/** Null when there is no bingo. */
+	private Bingo bingo;
 }

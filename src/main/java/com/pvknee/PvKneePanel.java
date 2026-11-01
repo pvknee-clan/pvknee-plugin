@@ -1,5 +1,6 @@
 package com.pvknee;
 
+import com.pvknee.blocks.BingoView;
 import com.pvknee.blocks.BlockContext;
 import com.pvknee.blocks.BlockRegistry;
 import com.pvknee.blocks.Icons;
@@ -53,6 +54,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final Icons icons;
 	private final WomClient wom;
 	private final DevLog devLog;
+	private final BingoView bingoView;
 	private final PlayerInfo playerInfo;
 	private final WorldHopper hopper;
 	private final TopBar topBar = new TopBar(this::showPage, () -> refresh(false, "button"));
@@ -85,6 +87,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		this.icons = icons;
 		this.wom = wom;
 		this.devLog = devLog;
+		this.bingoView = new BingoView(devLog);
 		this.playerInfo = playerInfo;
 		this.hopper = hopper;
 
@@ -242,6 +245,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		Page previous = topBar.getSelected();
 		String previousId = previous == null ? null : previous.getId();
 		PlayerState player = playerInfo.get();
+		bingoView.update(data.getBingo(), player);
 		data.getPages().stream()
 			.filter(page -> page.isShow() && !player.hasRank(page.getRank()))
 			.forEach(page -> devLog.log("pages: {} hidden, needs rank {}", page.getId(), page.getRank()));
@@ -313,7 +317,8 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		topBar.setShown(page);
 
 		liveUpdates = new ArrayList<>();
-		BlockContext context = new BlockContext(data, colours, icons, this, wom, playerInfo.get(), hopper, devLog, liveUpdates);
+		bingoView.clearListeners();
+		BlockContext context = new BlockContext(data, colours, icons, this, wom, playerInfo.get(), hopper, devLog, bingoView, liveUpdates);
 
 		content.removeAll();
 		for (Block block : page.getBlocks())
@@ -373,6 +378,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private void showMessage(String message)
 	{
 		liveUpdates = new ArrayList<>();
+		bingoView.clearListeners();
 		shownPageId = null;
 		topBar.setShown(null);
 		content.removeAll();

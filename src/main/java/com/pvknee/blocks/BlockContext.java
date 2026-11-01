@@ -41,6 +41,8 @@ public class BlockContext
 	PlayerState player;
 	WorldHopper hopper;
 	DevLog devLog;
+	/** The bingo page's selected team and tile. */
+	BingoView bingo;
 	/** Run by the panel every minute while the page is shown. */
 	List<Runnable> liveUpdates;
 
