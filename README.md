@@ -9,25 +9,45 @@ setup needed.
 - **Live standings.** One standings table for each challenge, straight from Wise Old Man.
 - **Events.** What is happening now and what is coming up, in your local time (or UTC if you prefer).
 - **Links.** One-click buttons to the clan's Discord and other pages.
+- **Your place.** On the challenge pages, a card with your own place and gain, and your row highlighted in the
+  standings.
+- **Hop to the clan world.** Click the world on Home to hop there (or, on the login screen, to pick it as your login
+  world). The game's usual hop rules apply.
+- **Admin pages.** Pages the clan limits to a rank, e.g. Administrator, only show for members of that rank or above.
+- **Chat messages.** When you log in, a short message about this week's challenges, and a message when a challenge
+  starts, has 1 hour left and ends. Only you see them.
+- **Chat commands.** Type `!sotw` or `!botw` to see the challenge, its time left and your place and gain. Others see
+  your command as usual; only you see the reply.
+- **More page blocks.** Tables, big numbers and countdowns the clan's admins can add to any page.
 
-The panel keeps itself up to date while it is open, and only while it is open.
+The panel keeps itself up to date while it is open. While it is closed, the plugin only loads the clan data once when
+you log in, for the chat messages.
 
 ## Settings
 
 - **Show times in UTC** (off by default): show all times in UTC, marked "UTC", instead of your local time.
+- **Update Wise Old Man on logout** (off by default): when you log out, ask Wise Old Man to update your profile, so the
+  challenge standings are more up to date. At most once every 10 minutes per name. This sends your username to Wise
+  Old Man.
+- **Challenge messages** (all on by default):
+  - **Login message**: a message about this week's challenges once each time you log in.
+  - **Challenge start**, **1 hour left**, **Challenge end**: a message at each of those moments while you are logged
+    in.
 
 ## Services the plugin contacts
 
 | Service | Address | What for | When |
 | --- | --- | --- | --- |
-| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions, events and links, built from the clan's Google Sheet | When the panel is opened, on Refresh, and every 10 minutes while it is open |
-| Wise Old Man | `api.wiseoldman.net` | Competition standings (public data) | When a leaderboard is shown, at most once every 5 minutes per competition |
+| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions, events and links, built from the clan's Google Sheet | When the panel is opened, on Refresh, and every 10 minutes while it is open; once when you log in (unless loaded in the last 10 minutes), for the chat messages; when you use `!sotw` or `!botw` and the data is more than 10 minutes old |
+| Wise Old Man | `api.wiseoldman.net` | Competition standings (public data) | When a leaderboard or your place is shown, or you use `!sotw` or `!botw`, at most once every 5 minutes per competition |
+| Wise Old Man | `api.wiseoldman.net` | A profile update for your username | Only with **Update Wise Old Man on logout** on: when you log out, at most once every 10 minutes per name |
 | GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon per session |
 
 Skill icons come from RuneLite itself; all other icons are built into the plugin.
 
-The plugin does not send your username or any other player data to these services. As with any web request, each
-service can see your IP address.
+The plugin does not send your username or any other player data to these services, except your username to Wise Old
+Man when you turn on **Update Wise Old Man on logout**. Your clan rank, world and name are read from the game client
+and stay on your computer. As with any web request, each service can see your IP address.
 
 ## Stored on your computer
 
