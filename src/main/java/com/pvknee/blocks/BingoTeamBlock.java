@@ -3,6 +3,7 @@ package com.pvknee.blocks;
 import com.pvknee.data.Bingo;
 import com.pvknee.data.Block;
 import com.pvknee.ui.Card;
+import com.pvknee.ui.Centred;
 import com.pvknee.ui.Dots;
 import com.pvknee.ui.Fonts;
 import com.pvknee.ui.Glyphs;
@@ -15,7 +16,6 @@ import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import java.awt.BorderLayout;
-import java.awt.GridBagLayout;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -116,9 +116,9 @@ class BingoTeamBlock implements BlockRenderer
 		if (count > 1)
 		{
 			middle.add(new Dots(count, index, colours.getAccent()), BorderLayout.SOUTH);
-			row.add(centred(new IconButton(Glyphs.CHEVRON_LEFT, "Previous team",
+			row.add(new Centred(new IconButton(Glyphs.CHEVRON_LEFT, "Previous team",
 				() -> view.selectTeam(teams.get((index + count - 1) % count))).small()), BorderLayout.WEST);
-			row.add(centred(new IconButton(Glyphs.CHEVRON_RIGHT, "Next team",
+			row.add(new Centred(new IconButton(Glyphs.CHEVRON_RIGHT, "Next team",
 				() -> view.selectTeam(teams.get((index + 1) % count))).small()), BorderLayout.EAST);
 		}
 		return row;
@@ -144,16 +144,5 @@ class BingoTeamBlock implements BlockRenderer
 		points.setFont(Fonts.boldName());
 		row.add(points, BorderLayout.EAST);
 		return row;
-	}
-
-	/**
-	 * Keeps a button at its own size, centred in the height of the row.
-	 */
-	private static JComponent centred(JComponent component)
-	{
-		JPanel panel = new JPanel(new GridBagLayout());
-		panel.setOpaque(false);
-		panel.add(component);
-		return panel;
 	}
 }

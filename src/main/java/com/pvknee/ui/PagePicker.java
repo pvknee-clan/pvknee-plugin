@@ -26,7 +26,7 @@ public class PagePicker extends Card
 {
 	private static final int CHEVRON_SIZE = 12;
 	private static final int ROW_PADDING_Y = 6;
-	private static final Color TITLE = new Color(221, 221, 221);
+	private static final Color TITLE = ThemeColours.TEXT;
 
 	private final Consumer<Page> onSelect;
 	private final JLabel title = new JLabel();

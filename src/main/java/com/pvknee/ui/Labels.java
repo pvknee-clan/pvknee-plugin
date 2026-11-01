@@ -105,9 +105,15 @@ public final class Labels
 	 */
 	public static String fraction(long amount, long needed, String unit)
 	{
-		boolean xp = "xp".equalsIgnoreCase(unit);
-		String text = (xp ? compact(amount) : number(amount)) + " / " + (xp ? compact(needed) : number(needed));
-		return unit == null || unit.trim().isEmpty() ? text : text + " " + unit.trim();
+		return withUnit(bareAmount(amount, unit) + " / " + bareAmount(needed, unit), unit);
+	}
+
+	/**
+	 * An amount with its unit, e.g. "19 kills" or "410k xp" (xp is shortened).
+	 */
+	public static String amount(long amount, String unit)
+	{
+		return withUnit(bareAmount(amount, unit), unit);
 	}
 
 	/**
@@ -136,6 +142,16 @@ public final class Labels
 		int last = number % 10;
 		String suffix = lastTwo >= 11 && lastTwo <= 13 ? "th" : last == 1 ? "st" : last == 2 ? "nd" : last == 3 ? "rd" : "th";
 		return number + suffix;
+	}
+
+	private static String bareAmount(long amount, String unit)
+	{
+		return "xp".equalsIgnoreCase(unit) ? compact(amount) : number(amount);
+	}
+
+	private static String withUnit(String text, String unit)
+	{
+		return unit == null || unit.trim().isEmpty() ? text : text + " " + unit.trim();
 	}
 
 	private static String shortened(String text, int length)

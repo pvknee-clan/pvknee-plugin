@@ -46,7 +46,6 @@ public class TileGrid extends JComponent
 	private static final Color DONE_TINT = new Color(76, 175, 80, 56);
 	private static final Color PROGRESS_TINT = new Color(255, 152, 0, 41);
 	private static final Color LINE_TRACK = new Color(0, 0, 0, 90);
-	private static final Color TICK = new Color(27, 27, 27);
 	private static final Color LEGEND_PLAIN = new Color(90, 90, 90);
 	private static final float DIMMED = 0.75f;
 
@@ -69,10 +68,12 @@ public class TileGrid extends JComponent
 	private final int columns;
 	/** The narrowest the grid is laid out; the tiles grow to fill any extra width, and the height follows. */
 	private final int width;
+	/** The width a grid was last laid out at, so a new one starts at the right height instead of jumping to it. */
+	private static int lastWidth;
 	/** One per place on the grid, left to right and top to bottom; null for an empty place. */
-	private final List<Tile> tiles;
+	private List<Tile> tiles;
 	private final Image[] icons;
-	private final int selected;
+	private int selected;
 	private final Color outline;
 
 	/**
@@ -107,6 +108,7 @@ public class TileGrid extends JComponent
 			@Override
 			public void componentResized(ComponentEvent e)
 			{
+				lastWidth = getWidth();
 				// The tiles follow the width, so a new width needs a new height.
 				if (getHeight() != getPreferredSize().height)
 				{
@@ -138,6 +140,17 @@ public class TileGrid extends JComponent
 	public static int iconSize(int width, int columns)
 	{
 		return (int) Math.round(tileSize(width, Math.max(1, columns)) * ICON_SHARE);
+	}
+
+	/**
+	 * Changes the tiles' looks and the selection in place, e.g. for another team's board. The number of tiles stays
+	 * the same, and so do their icons.
+	 */
+	public void setTiles(List<Tile> tiles, int selected)
+	{
+		this.tiles = tiles;
+		this.selected = selected;
+		repaint();
 	}
 
 	/**
@@ -207,11 +220,7 @@ public class TileGrid extends JComponent
 			Rectangle r = bounds(i);
 			if (tile != null && tile.getStatus() == Status.DONE)
 			{
-				int x = r.x + r.width - TICK_SIZE + MARGIN;
-				int y = r.y - MARGIN;
-				g2.setColor(ThemeColours.DONE);
-				g2.fillOval(x, y, TICK_SIZE, TICK_SIZE);
-				Glyphs.draw(g2, Glyphs.TICK, TICK, TICK_SIZE - 3, x + TICK_SIZE / 2.0, y + TICK_SIZE / 2.0, 0, 4f);
+				new CheckMark(true, TICK_SIZE).paintIcon(this, g2, r.x + r.width - TICK_SIZE + MARGIN, r.y - MARGIN);
 			}
 			if (i == selected && tile != null)
 			{
@@ -257,7 +266,7 @@ public class TileGrid extends JComponent
 
 	private int layoutWidth()
 	{
-		return Math.max(width, getWidth());
+		return Math.max(width, getWidth() > 0 ? getWidth() : lastWidth);
 	}
 
 	private Rectangle bounds(int index)

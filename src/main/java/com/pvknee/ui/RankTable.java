@@ -15,7 +15,7 @@ import net.runelite.client.ui.DynamicGridLayout;
  */
 public class RankTable extends Card
 {
-	static final Color NAME = new Color(221, 221, 221);
+	static final Color NAME = ThemeColours.TEXT;
 	private static final int MEDAL_ROW_PADDING = 7;
 	private static final int PLAIN_ROW_PADDING = 5;
 

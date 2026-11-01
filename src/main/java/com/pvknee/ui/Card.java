@@ -1,5 +1,6 @@
 package com.pvknee.ui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Graphics;
@@ -24,10 +25,13 @@ public class Card extends JPanel
 	/** Also the outline of other kit pieces, e.g. {@link Pill}. */
 	static final Color BORDER = new Color(64, 64, 64);
 
+	private static final float[] DASH = {4, 3};
+
 	private final boolean bordered;
 	private boolean hovered;
 	private Color outline = BORDER;
 	private int arc = Spacing.ARC;
+	private boolean dashed;
 
 	public Card(LayoutManager layout)
 	{
@@ -62,6 +66,15 @@ public class Card extends JPanel
 	public void setArc(int arc)
 	{
 		this.arc = arc;
+		repaint();
+	}
+
+	/**
+	 * Draws the border dashed, e.g. for a hint standing in for content that isn't there yet.
+	 */
+	public void setDashed(boolean dashed)
+	{
+		this.dashed = dashed;
 		repaint();
 	}
 
@@ -135,6 +148,10 @@ public class Card extends JPanel
 		if (bordered)
 		{
 			g2.setColor(outline);
+			if (dashed)
+			{
+				g2.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND, 10, DASH, 0));
+			}
 			g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arc, arc);
 		}
 		g2.dispose();

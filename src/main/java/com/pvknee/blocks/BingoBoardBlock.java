@@ -16,15 +16,18 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
 
 /**
- * The viewed team's bingo board: a tile per place, coloured by the team's progress, with a legend under it. Clicking
- * a tile selects it for every bingo block on the page; clicking it again clears the selection.
+ * The viewed team's bingo board: a tile per place, coloured by the team's progress, with a legend under it, and the
+ * selected tile's details under that. Clicking a tile selects it for every bingo block on the page; clicking it
+ * again clears the selection.
  */
 class BingoBoardBlock implements BlockRenderer
 {
 	private static final int INNER_WIDTH = Labels.CONTENT_WIDTH - 2 * Spacing.PADDING;
 	private static final int LEGEND_GAP = 8;
+	private static final int CARD_GAP = 6;
 
 	@Override
 	public JComponent render(Block block, BlockContext context)
@@ -39,27 +42,29 @@ class BingoBoardBlock implements BlockRenderer
 		ThemeColours colours = context.getColours();
 		SectionHeader header = new SectionHeader(block.setting("title", "Board"), colours)
 			.withAside(() -> "Select a tile", colours);
-		return new Section(header, context.followBingo(() -> card(view, bingo, context)));
+		JPanel cards = new JPanel(new BorderLayout(0, CARD_GAP));
+		cards.setOpaque(false);
+		cards.add(board(view, bingo, context), BorderLayout.NORTH);
+		cards.add(context.followBingo(() -> BingoTileDetail.of(bingo, view.getTeam(), view.getTile(), context)), BorderLayout.CENTER);
+		return new Section(header, cards);
 	}
 
-	private static Card card(BingoView view, Bingo bingo, BlockContext context)
+	/**
+	 * The grid and legend. Built once and changed in place when the team or tile changes, so the board doesn't
+	 * flicker.
+	 */
+	private static Card board(BingoView view, Bingo bingo, BlockContext context)
 	{
 		int size = Math.max(1, bingo.getBoardSize());
-		Map<Integer, Bingo.Progress> progress = view.getTeam().getProgress().stream()
-			.collect(Collectors.toMap(Bingo.Progress::getNum, Function.identity(), (a, b) -> a));
-		Bingo.Tile selected = view.getTile();
-
 		List<Bingo.Tile> places = new ArrayList<>();
-		List<TileGrid.Tile> tiles = new ArrayList<>();
 		for (int num = 1; num <= size * size; num++)
 		{
-			Bingo.Tile tile = bingo.tile(num);
-			places.add(tile);
-			tiles.add(tile == null ? null : gridTile(tile, progress.get(num)));
+			places.add(bingo.tile(num));
 		}
 
-		TileGrid grid = new TileGrid(size, tiles, selected == null ? -1 : places.indexOf(selected), context.getColours().getAccent(), INNER_WIDTH,
-			index -> view.selectTile(places.get(index) == selected ? null : places.get(index)));
+		TileGrid grid = new TileGrid(size, gridTiles(view, places), selectedIndex(view, places), context.getColours().getAccent(), INNER_WIDTH,
+			index -> view.selectTile(places.get(index) == view.getTile() ? null : places.get(index)));
+		view.onChange(() -> grid.setTiles(gridTiles(view, places), selectedIndex(view, places)));
 		int iconSize = TileGrid.iconSize(INNER_WIDTH, size);
 		for (int i = 0; i < places.size(); i++)
 		{
@@ -75,6 +80,27 @@ class BingoBoardBlock implements BlockRenderer
 		card.add(grid, BorderLayout.CENTER);
 		card.add(TileGrid.legend(context.getColours().getMuted()), BorderLayout.SOUTH);
 		return card;
+	}
+
+	/**
+	 * Each place's look from the viewed team's progress; null for a place without a tile.
+	 */
+	private static List<TileGrid.Tile> gridTiles(BingoView view, List<Bingo.Tile> places)
+	{
+		Map<Integer, Bingo.Progress> progress = view.getTeam().getProgress().stream()
+			.collect(Collectors.toMap(Bingo.Progress::getNum, Function.identity(), (a, b) -> a));
+		List<TileGrid.Tile> tiles = new ArrayList<>();
+		for (Bingo.Tile tile : places)
+		{
+			tiles.add(tile == null ? null : gridTile(tile, progress.get(tile.getNum())));
+		}
+		return tiles;
+	}
+
+	private static int selectedIndex(BingoView view, List<Bingo.Tile> places)
+	{
+		Bingo.Tile selected = view.getTile();
+		return selected == null ? -1 : places.indexOf(selected);
 	}
 
 	/**

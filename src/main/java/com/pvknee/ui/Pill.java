@@ -8,6 +8,7 @@ import java.awt.RenderingHints;
 import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.border.EmptyBorder;
+import net.runelite.client.ui.FontManager;
 
 /**
  * A short piece of text in a small rounded outline, optionally after an icon, e.g. "Home world 509". Clickable like
@@ -21,17 +22,28 @@ public class Pill extends Card
 	private static final int PADDING_Y = 3;
 	private static final int ICON_GAP = 5;
 
+	private final JLabel label;
+
 	public Pill(String text, Color colour, Icon icon)
 	{
 		super(new BorderLayout());
 		setBorder(new EmptyBorder(PADDING_Y, PADDING_X, PADDING_Y, PADDING_X));
 
-		JLabel label = new JLabel(text);
+		label = new JLabel(text);
 		label.setForeground(colour);
 		label.setFont(Fonts.body());
 		label.setIcon(icon);
 		label.setIconTextGap(ICON_GAP);
 		add(label, BorderLayout.CENTER);
+	}
+
+	/**
+	 * Makes the text bold, e.g. for points.
+	 */
+	public Pill bold()
+	{
+		label.setFont(FontManager.getRunescapeBoldFont());
+		return this;
 	}
 
 	@Override
