@@ -26,7 +26,8 @@ import net.runelite.client.ui.FontManager;
 
 /**
  * Running and upcoming events in one list card. A time every entry shares shows once beside the title; otherwise
- * each entry shows its own. A block with nothing to show draws nothing.
+ * each entry shows its own. Running entries, and a bingo even before it starts, open the page the block names for
+ * their kind (e.g. bingo_page). A block with nothing to show draws nothing.
  */
 class EventsBlock implements BlockRenderer
 {
@@ -105,8 +106,9 @@ class EventsBlock implements BlockRenderer
 	{
 		ClanEvent event = timed.event;
 		ThemeColours colours = context.getColours();
+		boolean bingo = kind(event).equals("bingo");
 		JComponent icon = event.getMetric() == null || event.getMetric().isEmpty()
-			? new JLabel(new GlyphIcon(Glyphs.CALENDAR, colours.getMuted(), GLYPH_SIZE))
+			? new JLabel(new GlyphIcon(bingo ? Glyphs.GRID : Glyphs.CALENDAR, colours.getMuted(), GLYPH_SIZE))
 			: context.metricIcon(event.getMetric(), EntryRow.ICON_SIZE);
 
 		EntryRow row = new EntryRow(icon, event.getName(), colours.resolve(event.getColour(), colours.getValue()), ROW_WIDTH);
@@ -116,9 +118,13 @@ class EventsBlock implements BlockRenderer
 			row.addLine(context.liveLabel(timed::timeText, colours.getMuted(), FontManager.getRunescapeSmallFont(), row.getTextWidth(), false));
 		}
 
+		// The bingo page has its own state for before the start, so an upcoming bingo opens it too.
+		if (timed.running || bingo)
+		{
+			context.linkToPage(row, block, kind(event));
+		}
 		if (timed.running)
 		{
-			context.linkToPage(row, block, event.getKind());
 			if (timed.end != null)
 			{
 				row.setBar(context.runningBar(timed.start, timed.end, null, showTime));
@@ -156,6 +162,8 @@ class EventsBlock implements BlockRenderer
 				return "Skill of the Week";
 			case "boss":
 				return "Boss of the Week";
+			case "bingo":
+				return "Bingo";
 			default:
 				return "Event";
 		}
