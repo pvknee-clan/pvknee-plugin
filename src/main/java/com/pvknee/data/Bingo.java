@@ -90,7 +90,7 @@ public class Bingo
 	public static class Team
 	{
 		private String name;
-		/** Hex colour; null for the theme's value colour. */
+		/** Hex colour; null for a default one (see {@code TeamColours}). */
 		private String colour;
 		/** Teams on the same points share a rank. */
 		private int rank;

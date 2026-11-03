@@ -22,10 +22,17 @@ setup needed.
   any tile you select: what it needs, who got what and when it was completed. Switch between teams' boards, see
   the standings and, at the end, the winner. View only: the data comes from the clan's bingo sheet, and submissions
   stay in Discord.
+- **Bingo team icons.** While a bingo runs, a dot in each team's colour in front of its players' names in clan and
+  public chat and in the Clan tab's member list (in clan chat and the member list, in place of the rank icon), and
+  beside the names RuneLite's Player Indicators plugin shows for them above their heads (not in the Wilderness or on
+  PvP worlds). Only you see them; your messages are sent as usual.
+- **Bingo team overlay.** While a bingo runs and you are on a team, a small on-screen box with your team and the date
+  and time in UTC, e.g. `Team Ember · Tue 3 Nov 2026, 21:35 UTC`, so screenshots for submissions show when they were
+  taken. Move it like any RuneLite overlay.
 - **More page blocks.** Tables, big numbers and countdowns the clan's admins can add to any page.
 
 The panel keeps itself up to date while it is open. While it is closed, the plugin only loads the clan data once when
-you log in, for the chat messages.
+you log in, for the chat messages and team icons.
 
 ## Settings
 
@@ -37,6 +44,12 @@ you log in, for the chat messages.
   - **Login message**: a message about this week's challenges once each time you log in.
   - **Challenge start**, **1 hour left**, **Challenge end**: a message at each of those moments while you are logged
     in.
+- **Bingo** (all on by default):
+  - **Team icons in chat**: team dots in clan and public chat and the Clan tab's member list.
+  - **Team icons above heads**: team dots beside the players' names from Player Indicators. Needs RuneLite's Player
+    Indicators plugin turned on and showing names for that player's group (yourself, clan members, others and so
+    on); where it shows no name, there is no dot.
+  - **Bingo team overlay**: the on-screen box with your team and the time in UTC.
 
 ## Services the plugin contacts
 

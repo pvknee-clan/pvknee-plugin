@@ -16,6 +16,8 @@ public final class Times
 {
 	private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH);
 	private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm", Locale.ENGLISH);
+	private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("EEE d MMM uuuu, HH:mm 'UTC'", Locale.ENGLISH)
+		.withZone(ZoneOffset.UTC);
 	/** An item is ending soon in its final 24 hours. */
 	private static final Duration ENDING_SOON = Duration.ofHours(24);
 	/** Spans longer than this get one bar segment per week instead of per day. */
@@ -33,6 +35,14 @@ public final class Times
 	public static void setUtc(boolean utc)
 	{
 		Times.utc = utc;
+	}
+
+	/**
+	 * The date and time to the minute, always in UTC whatever the time setting, e.g. "Tue 3 Nov 2026, 21:35 UTC".
+	 */
+	public static String utcStamp(Instant instant)
+	{
+		return STAMP.format(instant);
 	}
 
 	/**

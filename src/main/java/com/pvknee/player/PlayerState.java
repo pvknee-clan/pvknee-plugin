@@ -31,7 +31,7 @@ public class PlayerState
 	 */
 	public boolean isNamed(String other)
 	{
-		return name != null && other != null && normalise(name).equals(normalise(other));
+		return name != null && other != null && nameKey(name).equals(nameKey(other));
 	}
 
 	/**
@@ -61,7 +61,10 @@ public class PlayerState
 		return needed != null && rank.getRank() >= needed;
 	}
 
-	private static String normalise(String name)
+	/**
+	 * The name as {@link #isNamed} compares it, for looking names up in a map.
+	 */
+	public static String nameKey(String name)
 	{
 		return name.replace('\u00A0', ' ').replace('_', ' ').replace('-', ' ').trim().toLowerCase(Locale.ENGLISH);
 	}

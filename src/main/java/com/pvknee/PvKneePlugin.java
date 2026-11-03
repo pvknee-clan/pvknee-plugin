@@ -2,6 +2,10 @@ package com.pvknee;
 
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.pvknee.bingo.TeamChatIcons;
+import com.pvknee.bingo.TeamHeadOverlay;
+import com.pvknee.bingo.TeamOverlay;
+import com.pvknee.bingo.TeamRoster;
 import com.pvknee.blocks.Times;
 import com.pvknee.chat.ChallengeMessages;
 import com.pvknee.chat.ChatCommands;
@@ -59,6 +63,18 @@ public class PvKneePlugin extends Plugin
 	@Inject
 	private LogoutUpdate logoutUpdate;
 
+	@Inject
+	private TeamRoster teamRoster;
+
+	@Inject
+	private TeamChatIcons teamChatIcons;
+
+	@Inject
+	private TeamHeadOverlay teamHeadOverlay;
+
+	@Inject
+	private TeamOverlay teamOverlay;
+
 	private PvKneePanel panel;
 	private NavigationButton navButton;
 
@@ -91,6 +107,10 @@ public class PvKneePlugin extends Plugin
 		chatCommands.start();
 		challengeMessages.start();
 		logoutUpdate.start();
+		teamRoster.start();
+		teamChatIcons.start();
+		teamHeadOverlay.start();
+		teamOverlay.start();
 		log.debug("PvKnee started");
 	}
 
@@ -102,6 +122,10 @@ public class PvKneePlugin extends Plugin
 		chatCommands.stop();
 		challengeMessages.stop();
 		logoutUpdate.stop();
+		teamOverlay.stop();
+		teamHeadOverlay.stop();
+		teamChatIcons.stop();
+		teamRoster.stop();
 		clientToolbar.removeNavigation(navButton);
 		panel.stopUpdates();
 		navButton = null;

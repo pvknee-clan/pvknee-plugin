@@ -1,5 +1,6 @@
 package com.pvknee.blocks;
 
+import com.pvknee.bingo.TeamColours;
 import com.pvknee.data.Bingo;
 import com.pvknee.data.Block;
 import com.pvknee.player.PlayerState;
@@ -271,7 +272,7 @@ class BingoTeamBlock implements BlockRenderer
 
 		JPanel middle = new JPanel(new BorderLayout(0, Spacing.ITEM_GAP));
 		middle.setOpaque(false);
-		middle.add(Labels.clamped(Objects.toString(team.getName(), ""), colours.resolve(team.getColour(), colours.getValue()),
+		middle.add(Labels.clamped(Objects.toString(team.getName(), ""), TeamColours.of(all, team),
 			Fonts.boldName(), nameWidth, true, Labels.NAME_LINES), BorderLayout.CENTER);
 
 		JPanel row = new JPanel(new BorderLayout(SWITCHER_GAP, 0));

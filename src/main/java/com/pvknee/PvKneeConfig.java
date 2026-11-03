@@ -88,6 +88,49 @@ public interface PvKneeConfig extends Config
 		return true;
 	}
 
+	@ConfigSection(
+		name = "Bingo",
+		description = "Team icons and the team overlay while a clan bingo runs; only you see them",
+		position = 3
+	)
+	String bingoSection = "bingo";
+
+	@ConfigItem(
+		keyName = "teamIconsInChat",
+		name = "Team icons in chat",
+		description = "Shows a dot in the team colour before the names of bingo players in clan and public chat and in the Clan tab's member list",
+		position = 0,
+		section = bingoSection
+	)
+	default boolean teamIconsInChat()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "teamIconsAboveHeads",
+		name = "Team icons above heads",
+		description = "Shows a dot in the team colour beside the names Player Indicators draws for bingo players, except in the Wilderness and on PvP worlds. Needs Player Indicators on and showing names",
+		position = 1,
+		section = bingoSection
+	)
+	default boolean teamIconsAboveHeads()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "bingoTeamOverlay",
+		name = "Bingo team overlay",
+		description = "Shows your team and the date and time in UTC on screen, so screenshots show when they were taken",
+		position = 2,
+		section = bingoSection
+	)
+	default boolean bingoTeamOverlay()
+	{
+		return true;
+	}
+
 	// Debug only: remove this section and hide its items before publishing
 	@ConfigSection(
 		name = "Debug",
