@@ -3,6 +3,12 @@
 A sidebar panel for the PvKnee clan. Install it, click the icon, and see what the clan is doing: no API key, sheet ID or
 setup needed.
 
+**Install:** in RuneLite, open the Plugin Hub (the plug icon at the top of the Configuration panel), search for
+**PvKnee** and click Install. The PvKnee icon then appears in the sidebar.
+
+Anyone can install it and view the clan's pages, but it is made for PvKnee members: your place in the challenges,
+rank-limited pages and bingo team icons only mean something if you are in the clan.
+
 - **Pages from the clan sheet.** Home, Skill of the Week, Boss of the Week and any other page the clan's admins add,
   in the clan's theme colours.
 - **Challenges.** This week's skill and boss with their icons and the time left. Click one to open its page.
@@ -49,16 +55,13 @@ you log in, for the login message and the bingo team icons and overlay (not at a
     on); where it shows no name, there is no dot.
   - **Bingo team overlay**: the on-screen box with your team and the time in UTC.
 
-A Debug section (an endpoint override for testing against another sheet) only appears when RuneLite runs in
-developer mode; a normal client always uses the clan's own endpoint.
-
 ## Services the plugin contacts
 
 | Service | Address | What for | When |
 | --- | --- | --- | --- |
-| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions and their standings, events, links and bingo, built from the clan's Google Sheets | When the panel is opened, on Refresh, and every 10 minutes while it is open; once when you log in (unless loaded in the last 10 minutes, or the login message, team icons and team overlay are all off); when you use `!sotw` or `!botw` and the data is more than 10 minutes old. Never more than once a minute; after a failed load, automatic tries wait 1, then 5, then 15 minutes |
-| Wise Old Man | `api.wiseoldman.net` | A profile update for your username | Only with **Update Wise Old Man on logout** on: when you log out after progress (over 10,000 xp or a kill or completion count) on a normal world, unless XP Updater already sends it; at most once every 10 minutes per name |
-| GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon per session; a failed icon is not tried again until the client restarts |
+| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions and their standings, events, links and bingo, built from the clan's Google Sheets | When the panel opens, on Refresh, every 10 minutes while it is open, once at login and for `!sotw` / `!botw`; never more than once a minute |
+| Wise Old Man | `api.wiseoldman.net` | A profile update for your username | Only with **Update Wise Old Man on logout** on, when you log out after progress (see Settings) |
+| GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon while the client runs |
 
 Skill and item icons come from RuneLite itself; all other icons are built into the plugin.
 Images are only ever loaded from `https://raw.githubusercontent.com`, at most 256 KB and 512 pixels a side; the
