@@ -172,8 +172,8 @@ class EventsBlock implements BlockRenderer
 
 	/**
 	 * An event with its times worked out. A date-only event (no time of day) covers whole calendar days in the
-	 * member's own time zone, from its start day to its end day (or just its start day), so it shows under the day
-	 * the sheet has wherever the member is.
+	 * member's own time zone, from its start day up to the day the sheet's end falls on (or just its start day), so
+	 * it shows under the day the sheet has wherever the member is.
 	 */
 	private static class TimedEvent
 	{
@@ -197,10 +197,12 @@ class EventsBlock implements BlockRenderer
 			}
 			else
 			{
+				// The sheet sends the end as midnight UTC after the last day, so that day is the first one not covered.
 				startDay = Times.sheetDay(sheetStart);
-				LocalDate lastDay = sheetEnd == null ? startDay : Times.sheetDay(sheetEnd);
+				LocalDate dayAfter = startDay.plusDays(1);
+				LocalDate endDay = sheetEnd == null ? dayAfter : Times.sheetDay(sheetEnd);
 				start = Times.startOfDay(startDay);
-				end = Times.startOfDay((lastDay.isBefore(startDay) ? startDay : lastDay).plusDays(1));
+				end = Times.startOfDay(endDay.isBefore(dayAfter) ? dayAfter : endDay);
 			}
 			this.running = start != null && !now.isBefore(start) && (end == null || now.isBefore(end));
 		}
