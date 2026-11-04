@@ -8,34 +8,33 @@ and click Install. The PvKnee icon then appears in the sidebar.
 Anyone can install it and view the clan's pages, but it is made for PvKnee members: your place in the challenges,
 rank-limited pages and bingo team icons only mean something if you are in the clan.
 
-### Clan pages
+# Features
 
-- **Home, Skill of the Week, Boss of the Week and more**, in the clan's theme colours.
+### Overview
+View a summary of the clan, home world, current and upcoming events.
+Participate in boss/skill of the week, or view current events such as bingo boards directly within Runelite.
 
 ### Skill and Boss of the Week
-
-- **Challenges.** This week's skill and boss with their icons and time left; click one to open its page.
-- **Standings.** Everyone's gains for each challenge, updated every few minutes.
+- **Challenges.** Participate in this weeks skill/boss challenge to climb the ranks for this week.
+- **Standings.** View clan members gains for each challenge, updated regularly.
 - **Your place.** Your own place and gain, with your row highlighted in the standings.
 
 ### Events and links
-
 - **Events.** What's happening now and what's coming up, in your local time or UTC.
-- **Links.** One-click buttons to the clan's Discord and other pages.
+- **Links.** One-click buttons to the clan's Discord and WiseOldMan pages.
 
 ### Chat
-
-- **Chat commands.** Type `!sotw` or `!botw` for the challenge, its time left and your place. Only you see the reply.
 - **Login message** (off by default). This week's challenges in chat when you log in.
+- **Chat commands.** Type `!sotw` or `!botw` for the challenge, its time left and your place. Only you see the reply.
+
 
 ### Bingo
-
 - **Bingo page.** Each team's board coloured by progress, tile details (what's needed, who got what and when), team
   standings and the winner.
-- **Team icons.** Dots in team colours beside your clanmates' names in chat and above their heads (above heads needs
-  RuneLite's Player Indicators).
-- **Team overlay.** While you're on a team, a small box with your team and the UTC date and time, for screenshot
-  proof.
+- **Interactive tiles** Click tiles to view the tile requirements, see completion points and partial progress of players through a tile.
+- **Chat Team Icons.** Toggleable coloured dots beside your clanmates' names in chat and above their heads if you have Player Indicators installed.
+- **Team overlay.** While you're on a team, a small box with your team and the UTC date and time, useful for screenshot
+  proof for manual bingo submissions.
 
 ## Settings
 
