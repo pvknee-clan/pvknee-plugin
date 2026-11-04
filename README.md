@@ -1,7 +1,6 @@
 # PvKnee
 
-A sidebar panel for the PvKnee clan. Install it, click the icon, and see what the clan is doing: no API key, sheet ID or
-setup needed.
+A sidebar panel for the PvKnee clan: install it, click the icon, and see what the clan is doing.
 
 **Install:** in RuneLite, open the Configuration panel (the wrench icon), click **Plugin Hub**, search for **PvKnee**
 and click Install. The PvKnee icon then appears in the sidebar.
