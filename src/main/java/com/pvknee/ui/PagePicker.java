@@ -45,6 +45,7 @@ public class PagePicker extends Card
 		setPreferredSize(new Dimension(0, IconButton.SIZE));
 		getAccessibleContext().setAccessibleName("Page");
 
+		Labels.noHtml(title);
 		title.setForeground(TITLE);
 		title.setFont(FontManager.getRunescapeFont());
 		add(title, BorderLayout.CENTER);
@@ -90,7 +91,7 @@ public class PagePicker extends Card
 	{
 		selected = page;
 		title.setText(page == null ? "" : page.getTitle());
-		setToolTipText(page == null ? null : page.getTitle());
+		Labels.tooltip(this, page == null ? null : page.getTitle());
 	}
 
 	private void updateChevron()
@@ -115,9 +116,8 @@ public class PagePicker extends Card
 
 	private JPanel row(Page page)
 	{
-		JLabel label = new JLabel(page.getTitle());
-		label.setForeground(page == selected ? colours.getAccent() : colours.getValue());
-		label.setFont(FontManager.getRunescapeFont());
+		JLabel label = Labels.plain(page.getTitle(), page == selected ? colours.getAccent() : colours.getValue(),
+			FontManager.getRunescapeFont());
 
 		JPanel row = new JPanel(new BorderLayout());
 		row.setBackground(BACKGROUND);

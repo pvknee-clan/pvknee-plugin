@@ -6,6 +6,7 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.util.Collections;
 import java.util.Locale;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.plaf.basic.BasicHTML;
@@ -14,7 +15,8 @@ import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 
 /**
- * Wrapped text labels for the panel.
+ * Labels for the panel. Text from the sheet or Wise Old Man is always shown as written: wrapped labels escape it, and
+ * one-line labels and tooltips never render it as HTML, so it cannot load images from other sites.
  */
 public final class Labels
 {
@@ -25,6 +27,49 @@ public final class Labels
 
 	private Labels()
 	{
+	}
+
+	/**
+	 * A one-line label that shows its text as written, never as HTML.
+	 */
+	public static JLabel plain(String text, Color colour, Font font)
+	{
+		return plain(text, colour, font, SwingConstants.LEADING);
+	}
+
+	public static JLabel plain(String text, Color colour, Font font, int alignment)
+	{
+		JLabel label = new JLabel();
+		noHtml(label);
+		label.setForeground(colour);
+		label.setFont(font);
+		label.setHorizontalAlignment(alignment);
+		label.setText(text == null ? "" : text);
+		return label;
+	}
+
+	/**
+	 * Stops a label rendering text that starts with "<html>" as HTML. Call before its text is set.
+	 */
+	public static void noHtml(JLabel label)
+	{
+		label.putClientProperty("html.disable", Boolean.TRUE);
+	}
+
+	/**
+	 * Sets a tooltip that shows its text as written, never as HTML; blank removes it.
+	 */
+	public static void tooltip(JComponent component, String text)
+	{
+		component.setToolTipText(tooltipText(text));
+	}
+
+	/**
+	 * Tooltip text that shows as written, never as HTML; null for blank.
+	 */
+	public static String tooltipText(String text)
+	{
+		return text == null || text.trim().isEmpty() ? null : "<html>" + escape(text) + "</html>";
 	}
 
 	public static JLabel label(String text, Color colour, Font font, int width, boolean centred)
@@ -67,7 +112,7 @@ public final class Labels
 			}
 		}
 		setText(label, shortened(text, low), width, centred);
-		label.setToolTipText(text);
+		tooltip(label, text);
 		return label;
 	}
 
@@ -183,14 +228,22 @@ public final class Labels
 			(int) Math.ceil(view.getPreferredSpan(View.Y_AXIS)) + insets.top + insets.bottom));
 	}
 
-	private static String html(String text, boolean centred)
+	/**
+	 * Text escaped for HTML, with line breaks kept.
+	 */
+	private static String escape(String text)
 	{
-		String body = text
+		return text
 			.replace("&", "&amp;")
 			.replace("<", "&lt;")
 			.replace(">", "&gt;")
 			.replace("\r\n", "\n")
 			.replace("\n", "<br>");
+	}
+
+	private static String html(String text, boolean centred)
+	{
+		String body = escape(text);
 		if (centred)
 		{
 			body = "<div style='text-align:center'>" + body + "</div>";

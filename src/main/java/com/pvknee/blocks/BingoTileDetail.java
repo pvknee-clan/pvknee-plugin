@@ -13,7 +13,6 @@ import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Font;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
@@ -107,7 +106,7 @@ final class BingoTileDetail
 	private static void notStarted(Card card, Bingo bingo, ThemeColours colours)
 	{
 		String submit = bingo.getSubmit() == null || bingo.getSubmit().trim().isEmpty() ? "" : " in " + bingo.getSubmit().trim();
-		card.add(text("Not started", colours.getMuted(), FontManager.getRunescapeBoldFont()));
+		card.add(Labels.plain("Not started", colours.getMuted(), FontManager.getRunescapeBoldFont()));
 		card.add(small("Got it? Post a screenshot" + submit + " on Discord.", colours.getMuted(), false));
 	}
 
@@ -179,7 +178,7 @@ final class BingoTileDetail
 			lead.add(context.getIcons().item(part.getItemId(), PART_ICON_SIZE), BorderLayout.WEST);
 		}
 		lead.add(done || needed == 1 ? new JLabel(new CheckMark(done, MARK_SIZE))
-			: text((progress == null ? 0 : progress.getAmount()) + " / " + needed, colours.getMuted(), FontManager.getRunescapeSmallFont()),
+			: Labels.plain((progress == null ? 0 : progress.getAmount()) + " / " + needed, colours.getMuted(), FontManager.getRunescapeSmallFont()),
 			BorderLayout.CENTER);
 
 		String who = progress == null ? "" : progress.getContributors().stream()
@@ -201,8 +200,8 @@ final class BingoTileDetail
 		{
 			row.add(lead, BorderLayout.WEST);
 		}
-		row.add(text(Objects.toString(name, ""), ThemeColours.TEXT, Fonts.name()), BorderLayout.CENTER);
-		row.add(text(note, colours.getMuted(), FontManager.getRunescapeSmallFont()), BorderLayout.EAST);
+		row.add(Labels.plain(Objects.toString(name, ""), ThemeColours.TEXT, Fonts.name()), BorderLayout.CENTER);
+		row.add(Labels.plain(note, colours.getMuted(), FontManager.getRunescapeSmallFont()), BorderLayout.EAST);
 		return row;
 	}
 
@@ -213,17 +212,9 @@ final class BingoTileDetail
 	{
 		JPanel row = new JPanel(new BorderLayout(ROW_GAP, 0));
 		row.setOpaque(false);
-		row.add(text(status, colour, FontManager.getRunescapeBoldFont()), BorderLayout.WEST);
-		row.add(text(value, valueColour, FontManager.getRunescapeSmallFont()), BorderLayout.EAST);
+		row.add(Labels.plain(status, colour, FontManager.getRunescapeBoldFont()), BorderLayout.WEST);
+		row.add(Labels.plain(value, valueColour, FontManager.getRunescapeSmallFont()), BorderLayout.EAST);
 		return row;
-	}
-
-	private static JLabel text(String text, Color colour, Font font)
-	{
-		JLabel label = new JLabel(text);
-		label.setForeground(colour);
-		label.setFont(font);
-		return label;
 	}
 
 	private static JLabel small(String text, Color colour, boolean centred)

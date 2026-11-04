@@ -62,7 +62,7 @@ class LinksBlock implements BlockRenderer
 	{
 		ThemeColours colours = context.getColours();
 		Card card = new Card(new BorderLayout());
-		card.setToolTipText(link.getUrl());
+		Labels.tooltip(card, link.getUrl());
 		card.onClick(() -> LinkBrowser.browse(link.getUrl()));
 
 		String label = link.getLabel() == null ? link.getUrl() : link.getLabel();

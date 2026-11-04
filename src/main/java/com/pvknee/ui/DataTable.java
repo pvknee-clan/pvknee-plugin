@@ -53,10 +53,8 @@ public class DataTable extends Card
 		{
 			boolean last = x == weights.length - 1 && x > 0;
 			String text = x < cells.size() && cells.get(x) != null ? cells.get(x) : "";
-			JLabel label = new JLabel(text, last ? SwingConstants.RIGHT : SwingConstants.LEFT);
-			label.setForeground(x == 0 ? first : rest);
-			label.setFont(font);
-			label.setToolTipText(text.isEmpty() ? null : text);
+			JLabel label = Labels.plain(text, x == 0 ? first : rest, font, last ? SwingConstants.RIGHT : SwingConstants.LEFT);
+			Labels.tooltip(label, text);
 			// A zero preferred width lets the weights alone share the width, so long text is cut rather than widening it.
 			label.setPreferredSize(new Dimension(0, label.getPreferredSize().height));
 

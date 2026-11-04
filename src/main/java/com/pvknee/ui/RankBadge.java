@@ -77,9 +77,6 @@ public final class RankBadge
 
 	private static JLabel plain(String text, ThemeColours colours)
 	{
-		JLabel label = new JLabel(text, SwingConstants.CENTER);
-		label.setForeground(colours.getMuted());
-		label.setFont(FontManager.getRunescapeSmallFont());
-		return label;
+		return Labels.plain(text, colours.getMuted(), FontManager.getRunescapeSmallFont(), SwingConstants.CENTER);
 	}
 }

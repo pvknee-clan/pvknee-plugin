@@ -17,12 +17,10 @@ public class LinkButton extends Card
 	public LinkButton(String text, String url, ThemeColours colours)
 	{
 		super(new FlowLayout(FlowLayout.CENTER, 0, 0));
-		setToolTipText(url);
+		Labels.tooltip(this, url);
 		onClick(() -> LinkBrowser.browse(url));
 
-		JLabel label = new JLabel(text);
-		label.setForeground(colours.getValue());
-		label.setFont(FontManager.getRunescapeFont());
+		JLabel label = Labels.plain(text, colours.getValue(), FontManager.getRunescapeFont());
 		label.setIcon(new GlyphIcon(Glyphs.EXTERNAL, colours.getMuted(), ICON_SIZE));
 		label.setHorizontalTextPosition(SwingConstants.LEFT);
 		label.setIconTextGap(ICON_GAP);

@@ -80,6 +80,7 @@ public class SectionHeader extends JPanel
 		asideEndingSoon = endingSoon;
 		this.colours = colours;
 		asideLabel = new JLabel();
+		Labels.noHtml(asideLabel);
 		Labels.styleTime(asideLabel, false, colours);
 		asideLabel.setVerticalAlignment(SwingConstants.BOTTOM);
 		add(asideLabel, BorderLayout.EAST);

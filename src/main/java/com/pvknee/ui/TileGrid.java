@@ -184,7 +184,7 @@ public class TileGrid extends JComponent
 	public String getToolTipText(MouseEvent e)
 	{
 		int index = tileAt(e.getX(), e.getY());
-		return index < 0 ? null : tiles.get(index).getTooltip();
+		return index < 0 ? null : Labels.tooltipText(tiles.get(index).getTooltip());
 	}
 
 	@Override
@@ -304,9 +304,7 @@ public class TileGrid extends JComponent
 
 	private static JComponent legendItem(Color colour, boolean filled, String text, Color muted)
 	{
-		JLabel label = new JLabel(text);
-		label.setForeground(muted);
-		label.setFont(FontManager.getRunescapeSmallFont());
+		JLabel label = Labels.plain(text, muted, FontManager.getRunescapeSmallFont());
 		label.setIcon(new SwatchIcon(colour, filled));
 		label.setIconTextGap(GAP);
 		return label;

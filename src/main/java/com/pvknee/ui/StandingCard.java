@@ -1,9 +1,6 @@
 package com.pvknee.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
@@ -20,24 +17,16 @@ public class StandingCard extends Card
 
 		JPanel place = new JPanel(new BorderLayout(2 * Spacing.ITEM_GAP, 0));
 		place.setOpaque(false);
-		place.add(text(caption, colours.getMuted(), FontManager.getRunescapeSmallFont()), BorderLayout.WEST);
+		place.add(Labels.plain(caption, colours.getMuted(), FontManager.getRunescapeSmallFont()), BorderLayout.WEST);
 		place.add(RankBadge.of(rank, medal, colours), BorderLayout.EAST);
 
 		JPanel who = new JPanel(new DynamicGridLayout(0, 1, 0, 0));
 		who.setOpaque(false);
-		who.add(text(name, RankTable.NAME, Fonts.boldName()));
-		who.add(text(line, colours.getMuted(), FontManager.getRunescapeSmallFont()));
+		who.add(Labels.plain(name, RankTable.NAME, Fonts.boldName()));
+		who.add(Labels.plain(line, colours.getMuted(), FontManager.getRunescapeSmallFont()));
 
 		add(place, BorderLayout.WEST);
 		add(who, BorderLayout.CENTER);
-		add(text(value, colours.getValue(), Fonts.boldName()), BorderLayout.EAST);
-	}
-
-	private static JLabel text(String text, Color colour, Font font)
-	{
-		JLabel label = new JLabel(text);
-		label.setForeground(colour);
-		label.setFont(font);
-		return label;
+		add(Labels.plain(value, colours.getValue(), Fonts.boldName()), BorderLayout.EAST);
 	}
 }

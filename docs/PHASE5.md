@@ -235,3 +235,5 @@ New features; Plugin Hub submission itself (`docs/SUBMISSION.md`).
 - Task 5: the endpoint request waits up to 30 seconds for a response instead of OkHttp's default 10. In the dev client
   the first (uncached) load timed out after exactly 10 seconds while the script was still building the response;
   the next load, served from the script's cache, took about a second.
+- Task 6: the safe label factory (`Labels.plain`) replaced the private label helpers in `StandingCard`, `RankTable`,
+  `RankBadge`, `TimeBar`, `BingoTileDetail` and `BingoTeamBlock`, so that part of task 12's duplication item is done.

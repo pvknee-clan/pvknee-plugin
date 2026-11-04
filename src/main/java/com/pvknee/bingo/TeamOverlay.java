@@ -5,6 +5,7 @@ import com.pvknee.PvKneeConfig;
 import com.pvknee.blocks.Times;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.time.Instant;
 import javax.inject.Inject;
@@ -23,6 +24,7 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.ComponentConstants;
 import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.util.ColorUtil;
+import net.runelite.client.util.Text;
 
 /**
  * A small movable box with the member's team name in the team colour and the date and time in UTC to the minute, so
@@ -32,6 +34,8 @@ import net.runelite.client.util.ColorUtil;
 public class TeamOverlay extends OverlayPanel
 {
 	private static final String SEPARATOR = " · ";
+	/** Longer team names are cut short with "...", so the box stays small. */
+	private static final int MAX_NAME_WIDTH = 140;
 
 	private final Client client;
 	private final ClientThread clientThread;
@@ -43,6 +47,9 @@ public class TeamOverlay extends OverlayPanel
 
 	/** The member's team while the box shows, else null; checked each tick. */
 	private TeamRoster.Team team;
+	/** The team name as drawn, worked out once per team. */
+	private TeamRoster.Team nameFor;
+	private String name;
 	/** The last state logged, so it is logged once per change. */
 	private String logged;
 
@@ -76,6 +83,7 @@ public class TeamOverlay extends OverlayPanel
 		clientThread.invoke(() ->
 		{
 			team = null;
+			nameFor = null;
 			logged = null;
 		});
 	}
@@ -110,14 +118,39 @@ public class TeamOverlay extends OverlayPanel
 			return null;
 		}
 
+		FontMetrics metrics = graphics.getFontMetrics();
+		if (nameFor != shown)
+		{
+			nameFor = shown;
+			name = plainName(shown.getName(), metrics);
+		}
+
 		String stamp = Times.utcStamp(Instant.now());
-		int width = graphics.getFontMetrics().stringWidth(shown.getName() + SEPARATOR + stamp);
+		int width = metrics.stringWidth(name + SEPARATOR + stamp);
 		panelComponent.setPreferredSize(new Dimension(width + 2 * ComponentConstants.STANDARD_BORDER, 0));
 		panelComponent.getChildren().add(LineComponent.builder()
 			// Overlay text reads opening colour tags only, so each part starts with its own.
-			.left(ColorUtil.prependColorTag(shown.getName(), shown.getColour()) + ColorUtil.prependColorTag(SEPARATOR + stamp, Color.WHITE))
+			.left(ColorUtil.prependColorTag(name, shown.getColour()) + ColorUtil.prependColorTag(SEPARATOR + stamp, Color.WHITE))
 			.build());
 		return super.render(graphics);
+	}
+
+	/**
+	 * The team name as plain text, so no tags in it take effect, cut short with "..." if it is too wide.
+	 */
+	private static String plainName(String teamName, FontMetrics metrics)
+	{
+		String plain = Text.removeTags(teamName == null ? "" : teamName).replace('<', '(').replace('>', ')').trim();
+		if (metrics.stringWidth(plain) <= MAX_NAME_WIDTH)
+		{
+			return plain;
+		}
+		int length = plain.length();
+		while (length > 0 && metrics.stringWidth(plain.substring(0, length).trim() + "...") > MAX_NAME_WIDTH)
+		{
+			length--;
+		}
+		return plain.substring(0, length).trim() + "...";
 	}
 
 	/**

@@ -3,7 +3,6 @@ package com.pvknee.ui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -109,11 +108,11 @@ public class RankTable extends Card
 		end.setOpaque(false);
 		if (row.getCaption() != null)
 		{
-			end.add(text(row.getCaption(), colours.getMuted(), FontManager.getRunescapeSmallFont(), SwingConstants.RIGHT), BorderLayout.CENTER);
+			end.add(Labels.plain(row.getCaption(), colours.getMuted(), FontManager.getRunescapeSmallFont(), SwingConstants.RIGHT), BorderLayout.CENTER);
 		}
 		if (row.getValue() != null)
 		{
-			JLabel value = text(row.getValue(), colours.getValue(), Fonts.name(), SwingConstants.RIGHT);
+			JLabel value = Labels.plain(row.getValue(), colours.getValue(), Fonts.name(), SwingConstants.RIGHT);
 			if (row.getCaption() != null)
 			{
 				Dimension size = value.getPreferredSize();
@@ -130,7 +129,7 @@ public class RankTable extends Card
 	 */
 	private JPanel name(Row row)
 	{
-		JLabel name = text(row.getName(), row.isMedal() ? RankBadge.medalColour(row.getRank()) : NAME, Fonts.name(), SwingConstants.LEFT);
+		JLabel name = Labels.plain(row.getName(), row.isMedal() ? RankBadge.medalColour(row.getRank()) : NAME, Fonts.name(), SwingConstants.LEFT);
 		name.setMinimumSize(new Dimension(0, name.getPreferredSize().height));
 		name.setMaximumSize(name.getPreferredSize());
 
@@ -141,17 +140,9 @@ public class RankTable extends Card
 		if (row.getSuffix() != null)
 		{
 			panel.add(Box.createHorizontalStrut(Spacing.ITEM_GAP));
-			panel.add(text(row.getSuffix(), colours.getMuted(), FontManager.getRunescapeSmallFont(), SwingConstants.LEFT));
+			panel.add(Labels.plain(row.getSuffix(), colours.getMuted(), FontManager.getRunescapeSmallFont(), SwingConstants.LEFT));
 		}
 		panel.add(Box.createHorizontalGlue());
 		return panel;
-	}
-
-	private static JLabel text(String text, Color colour, Font font, int alignment)
-	{
-		JLabel label = new JLabel(text, alignment);
-		label.setForeground(colour);
-		label.setFont(font);
-		return label;
 	}
 }

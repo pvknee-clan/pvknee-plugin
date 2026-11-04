@@ -145,13 +145,10 @@ class BingoTeamBlock implements BlockRenderer
 			card.add(new Divider(colours.getMuted()));
 			JPanel row = new JPanel(new BorderLayout(ROW_GAP, 0));
 			row.setOpaque(false);
-			JLabel yours = new JLabel("Your team, " + own.getName());
-			yours.setForeground(ThemeColours.TEXT);
-			yours.setFont(FontManager.getRunescapeSmallFont());
+			JLabel yours = Labels.plain("Your team, " + own.getName(), ThemeColours.TEXT, FontManager.getRunescapeSmallFont());
 			row.add(yours, BorderLayout.CENTER);
-			JLabel place = new JLabel(Labels.ordinal(own.getRank()) + " · " + Labels.decimal(own.getPoints()) + " pts");
-			place.setForeground(colours.getValue());
-			place.setFont(FontManager.getRunescapeSmallFont());
+			JLabel place = Labels.plain(Labels.ordinal(own.getRank()) + " · " + Labels.decimal(own.getPoints()) + " pts",
+				colours.getValue(), FontManager.getRunescapeSmallFont());
 			row.add(place, BorderLayout.EAST);
 			card.add(row);
 		}
@@ -230,12 +227,10 @@ class BingoTeamBlock implements BlockRenderer
 			cell.setArc(Spacing.CONTROL_ARC);
 			cell.setBackground(own ? new Color(tint.getRed(), tint.getGreen(), tint.getBlue(), OWN_TINT) : new Color(0, 0, 0, 0));
 
-			JLabel label = new JLabel(name);
-			label.setForeground(own ? colours.getValue() : ThemeColours.TEXT);
-			label.setFont(Fonts.name());
+			JLabel label = Labels.plain(name, own ? colours.getValue() : ThemeColours.TEXT, Fonts.name());
 			if (label.getPreferredSize().width > nameWidth)
 			{
-				label.setToolTipText(name);
+				Labels.tooltip(label, name);
 			}
 			cell.add(label, BorderLayout.CENTER);
 			names.add(cell);
@@ -250,10 +245,7 @@ class BingoTeamBlock implements BlockRenderer
 
 	private static JLabel muted(String text, ThemeColours colours)
 	{
-		JLabel label = new JLabel(text);
-		label.setForeground(colours.getMuted());
-		label.setFont(FontManager.getRunescapeSmallFont());
-		return label;
+		return Labels.plain(text, colours.getMuted(), FontManager.getRunescapeSmallFont());
 	}
 
 	/**
@@ -303,14 +295,10 @@ class BingoTeamBlock implements BlockRenderer
 			row.add(new Centred(new PlacePill(rank)), BorderLayout.WEST);
 		}
 
-		JLabel tiles = new JLabel(team.getTilesDone() + " of " + total + " tiles");
-		tiles.setForeground(colours.getMuted());
-		tiles.setFont(FontManager.getRunescapeSmallFont());
+		JLabel tiles = Labels.plain(team.getTilesDone() + " of " + total + " tiles", colours.getMuted(), FontManager.getRunescapeSmallFont());
 		row.add(tiles, BorderLayout.CENTER);
 
-		JLabel points = new JLabel(Labels.decimal(team.getPoints()) + " pts");
-		points.setForeground(colours.getValue());
-		points.setFont(Fonts.boldName());
+		JLabel points = Labels.plain(Labels.decimal(team.getPoints()) + " pts", colours.getValue(), Fonts.boldName());
 		row.add(points, BorderLayout.EAST);
 		return row;
 	}

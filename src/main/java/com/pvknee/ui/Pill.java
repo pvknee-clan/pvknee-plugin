@@ -29,9 +29,7 @@ public class Pill extends Card
 		super(new BorderLayout());
 		setBorder(new EmptyBorder(PADDING_Y, PADDING_X, PADDING_Y, PADDING_X));
 
-		label = new JLabel(text);
-		label.setForeground(colour);
-		label.setFont(Fonts.body());
+		label = Labels.plain(text, colour, Fonts.body());
 		label.setIcon(icon);
 		label.setIconTextGap(ICON_GAP);
 		add(label, BorderLayout.CENTER);

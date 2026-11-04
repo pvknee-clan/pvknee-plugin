@@ -80,10 +80,6 @@ public class TimeBar extends JPanel
 
 	private static JLabel caption(String text, int alignment, ThemeColours colours)
 	{
-		JLabel label = new JLabel(Objects.toString(text, ""));
-		label.setForeground(colours.getMuted());
-		label.setFont(FontManager.getRunescapeSmallFont());
-		label.setHorizontalAlignment(alignment);
-		return label;
+		return Labels.plain(Objects.toString(text, ""), colours.getMuted(), FontManager.getRunescapeSmallFont(), alignment);
 	}
 }
