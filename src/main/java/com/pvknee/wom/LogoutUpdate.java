@@ -3,6 +3,7 @@ package com.pvknee.wom;
 import com.pvknee.DevLog;
 import com.pvknee.PvKneeConfig;
 import com.pvknee.player.PlayerInfo;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
@@ -16,6 +17,13 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * When the member logs out with "Update Wise Old Man on logout" on, asks Wise Old Man to update the name they were
@@ -24,13 +32,14 @@ import net.runelite.client.eventbus.Subscribe;
 @Singleton
 public class LogoutUpdate
 {
+	private static final HttpUrl PLAYERS_URL = HttpUrl.get("https://api.wiseoldman.net/v2/players");
 	private static final Duration MIN_GAP = Duration.ofMinutes(10);
 
 	private final Client client;
 	private final ClientThread clientThread;
 	private final EventBus eventBus;
 	private final PlayerInfo playerInfo;
-	private final WomClient wom;
+	private final OkHttpClient okHttpClient;
 	private final PvKneeConfig config;
 	private final DevLog devLog;
 
@@ -39,14 +48,14 @@ public class LogoutUpdate
 	private boolean loggedIn;
 
 	@Inject
-	LogoutUpdate(Client client, ClientThread clientThread, EventBus eventBus, PlayerInfo playerInfo, WomClient wom,
+	LogoutUpdate(Client client, ClientThread clientThread, EventBus eventBus, PlayerInfo playerInfo, OkHttpClient okHttpClient,
 		PvKneeConfig config, DevLog devLog)
 	{
 		this.client = client;
 		this.clientThread = clientThread;
 		this.eventBus = eventBus;
 		this.playerInfo = playerInfo;
-		this.wom = wom;
+		this.okHttpClient = okHttpClient;
 		this.config = config;
 		this.devLog = devLog;
 	}
@@ -101,8 +110,32 @@ public class LogoutUpdate
 
 		sentAt.put(key, now);
 		devLog.log("wom: updating {}", player);
-		wom.updatePlayer(player,
-			() -> devLog.log("wom: {} updated", player),
-			e -> devLog.log("wom: update for {} failed, {}", player, e.getMessage(), e));
+		Request request = new Request.Builder()
+			.url(PLAYERS_URL.newBuilder().addPathSegment(player).build())
+			.post(RequestBody.create(null, new byte[0]))
+			.build();
+
+		okHttpClient.newCall(request).enqueue(new Callback()
+		{
+			@Override
+			public void onFailure(Call call, IOException e)
+			{
+				devLog.log("wom: update for {} failed, {}", player, e.getMessage(), e);
+			}
+
+			@Override
+			public void onResponse(Call call, Response response)
+			{
+				response.close();
+				if (response.isSuccessful())
+				{
+					devLog.log("wom: {} updated", player);
+				}
+				else
+				{
+					devLog.log("wom: update for {} failed, response {}", player, response.code());
+				}
+			}
+		});
 	}
 }

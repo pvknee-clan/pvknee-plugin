@@ -6,7 +6,8 @@ setup needed.
 - **Pages from the clan sheet.** Home, Skill of the Week, Boss of the Week and any other page the clan's admins add,
   in the clan's theme colours.
 - **Challenges.** This week's skill and boss with their icons and the time left. Click one to open its page.
-- **Live standings.** One standings table for each challenge, straight from Wise Old Man.
+- **Standings.** One standings table for each challenge, from Wise Old Man via the clan sheet, which copies them
+  every 5 minutes. Players level on the same gain share a place.
 - **Events.** What is happening now and what is coming up, in your local time (or UTC if you prefer).
 - **Links.** One-click buttons to the clan's Discord and other pages.
 - **Your place.** On the challenge pages, a card with your own place and gain, and your row highlighted in the
@@ -53,8 +54,7 @@ you log in, for the chat messages and team icons.
 
 | Service | Address | What for | When |
 | --- | --- | --- | --- |
-| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions, events, links and bingo, built from the clan's Google Sheets | When the panel is opened, on Refresh, and every 10 minutes while it is open; once when you log in (unless loaded in the last 10 minutes), for the chat messages; when you use `!sotw` or `!botw` and the data is more than 10 minutes old |
-| Wise Old Man | `api.wiseoldman.net` | Competition standings (public data) | When a leaderboard or your place is shown, or you use `!sotw` or `!botw`, at most once every 5 minutes per competition |
+| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions and their standings, events, links and bingo, built from the clan's Google Sheets | When the panel is opened, on Refresh, and every 10 minutes while it is open; once when you log in (unless loaded in the last 10 minutes), for the chat messages; when you use `!sotw` or `!botw` and the data is more than 10 minutes old |
 | Wise Old Man | `api.wiseoldman.net` | A profile update for your username | Only with **Update Wise Old Man on logout** on: when you log out, at most once every 10 minutes per name |
 | GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon per session |
 

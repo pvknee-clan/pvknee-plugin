@@ -224,3 +224,7 @@ is allowed; only changing another plugin's config is not); `build.gradle` matche
 New features; Plugin Hub submission itself (`docs/SUBMISSION.md`).
 
 ## Changes made beyond the task list
+
+- Task 3: a leaderboard or player block's `competition=<WOM id>` now only matches a current competition (only those
+  carry standings in the endpoint); any other id draws nothing. A tied lead reads "Level with 1st" rather than
+  "Leading".

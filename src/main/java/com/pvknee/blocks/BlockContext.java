@@ -13,7 +13,6 @@ import com.pvknee.ui.Glyphs;
 import com.pvknee.ui.LiveLabel;
 import com.pvknee.ui.ThemeColours;
 import com.pvknee.ui.TimeBar;
-import com.pvknee.wom.WomClient;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
@@ -38,7 +37,6 @@ public class BlockContext
 	ThemeColours colours;
 	Icons icons;
 	PageNavigator pages;
-	WomClient wom;
 	/** The member in game when the page was built; the page is built again when it changes. */
 	PlayerState player;
 	DevLog devLog;
@@ -66,6 +64,24 @@ public class BlockContext
 			: null;
 		Competitions competitions = data.getCompetitions();
 		return competitions == null ? null : competitions.current(type);
+	}
+
+	/**
+	 * The current competition a block's "competition" setting names: current_skill, current_boss or a current
+	 * competition's Wise Old Man id. Null if there is no such competition.
+	 */
+	public Competition competition(String setting)
+	{
+		Competition current = currentCompetition(setting);
+		Competitions competitions = data.getCompetitions();
+		if (current != null || setting == null || competitions == null || competitions.getCurrent() == null)
+		{
+			return current;
+		}
+		return competitions.getCurrent().stream()
+			.filter(c -> c.getWomId() > 0 && setting.trim().equals(String.valueOf(c.getWomId())))
+			.findFirst()
+			.orElse(null);
 	}
 
 	/**

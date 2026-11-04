@@ -17,7 +17,6 @@ import com.pvknee.ui.Notice;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import com.pvknee.ui.TopBar;
-import com.pvknee.wom.WomClient;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -51,7 +50,6 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final ClanDataClient client;
 	private final BlockRegistry blocks;
 	private final Icons icons;
-	private final WomClient wom;
 	private final DevLog devLog;
 	private final BingoView bingoView;
 	private final PlayerInfo playerInfo;
@@ -73,17 +71,16 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private boolean loading;
 	/** The page on screen, so a redraw of the same page keeps its scroll position. */
 	private String shownPageId;
-	/** Countdowns and standings on the current page, updated in place every minute. */
+	/** Countdowns and bars on the current page, updated in place every minute. */
 	private List<Runnable> liveUpdates = new ArrayList<>();
 
 	@Inject
-	PvKneePanel(ClanDataClient client, BlockRegistry blocks, Icons icons, WomClient wom, DevLog devLog, PlayerInfo playerInfo)
+	PvKneePanel(ClanDataClient client, BlockRegistry blocks, Icons icons, DevLog devLog, PlayerInfo playerInfo)
 	{
 		super(false);
 		this.client = client;
 		this.blocks = blocks;
 		this.icons = icons;
-		this.wom = wom;
 		this.devLog = devLog;
 		this.bingoView = new BingoView(devLog);
 		this.playerInfo = playerInfo;
@@ -293,7 +290,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	}
 
 	/**
-	 * Updates the countdowns and standings on the current page without rebuilding it.
+	 * Updates the countdowns and bars on the current page without rebuilding it.
 	 */
 	private void updateLive()
 	{
@@ -315,7 +312,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 
 		liveUpdates = new ArrayList<>();
 		bingoView.clearListeners();
-		BlockContext context = new BlockContext(data, colours, icons, this, wom, playerInfo.get(), devLog, bingoView, liveUpdates);
+		BlockContext context = new BlockContext(data, colours, icons, this, playerInfo.get(), devLog, bingoView, liveUpdates);
 
 		content.removeAll();
 		for (Block block : page.getBlocks())
