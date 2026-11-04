@@ -2,6 +2,7 @@ package com.pvknee.blocks;
 
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.ImageIcon;
@@ -18,8 +19,10 @@ import net.runelite.client.util.AsyncBufferedImage;
 @Singleton
 public class Icons
 {
-	/** Wise Old Man's own metric icons, used when the endpoint's iconBase is missing or not an allowed address. */
-	private static final String DEFAULT_ICON_BASE = "https://raw.githubusercontent.com/wise-old-man/wise-old-man/master/app/public/img/metrics/";
+	/** Wise Old Man's own metric icons. Fixed here, so the clan data can never point icon requests elsewhere. */
+	private static final String ICON_BASE = "https://raw.githubusercontent.com/wise-old-man/wise-old-man/master/app/public/img/metrics/";
+
+	private static final Pattern METRIC_NAME = Pattern.compile("[a-z0-9_]+");
 
 	private final SkillIconManager skillIcons;
 	private final ItemManager itemManager;
@@ -46,11 +49,10 @@ public class Icons
 	}
 
 	/**
-	 * The icon for a Wise Old Man metric, e.g. woodcutting or cerberus. Bosses load from iconBase if it is an allowed
-	 * address, otherwise from Wise Old Man's own icons.
+	 * The icon for a Wise Old Man metric, e.g. woodcutting or cerberus. Bosses load from Wise Old Man's own icons.
 	 * Call on the Swing thread.
 	 */
-	public JLabel metric(String metric, String iconBase, int size)
+	public JLabel metric(String metric, int size)
 	{
 		Skill skill = skill(metric);
 		if (skill != null)
@@ -59,8 +61,9 @@ public class Icons
 				k -> ImageLoader.scaled(skillIcons.getSkillImage(skill), size));
 			return new JLabel(icon);
 		}
-		String base = ImageLoader.isAllowed(iconBase) ? iconBase : DEFAULT_ICON_BASE;
-		return images.icon(metric == null ? null : base + metric + ".png", size);
+		// Only plain metric names, e.g. "cerberus", so the path cannot lead to another file.
+		boolean plain = metric != null && METRIC_NAME.matcher(metric).matches();
+		return images.icon(plain ? ICON_BASE + metric + ".png" : null, size);
 	}
 
 	/**

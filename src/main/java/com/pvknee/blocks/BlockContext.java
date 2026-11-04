@@ -50,7 +50,7 @@ public class BlockContext
 	 */
 	public JLabel metricIcon(String metric, int size)
 	{
-		return icons.metric(metric, data.getIconBase(), size);
+		return icons.metric(metric, size);
 	}
 
 	/**

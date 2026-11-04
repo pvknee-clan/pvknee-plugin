@@ -11,7 +11,6 @@ public class ClanData
 {
 	private int version;
 	private String error;
-	private String iconBase;
 	private Theme theme;
 	private List<Page> pages = new ArrayList<>();
 	private Competitions competitions = new Competitions();
