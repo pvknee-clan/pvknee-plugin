@@ -24,7 +24,8 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
- * Fetches the clan panel JSON and keeps the last good copy on disk.
+ * Fetches the clan panel JSON and keeps the last good copy on disk. Decides when loading again is worth it: not within
+ * a minute of a good load (the endpoint's own cache time), and after failures, automatic tries wait longer each time.
  * Callbacks run on a background thread, not the client or Swing thread.
  */
 @Slf4j
@@ -33,6 +34,10 @@ public class ClanDataClient
 {
 	/** How old the last data may be before {@link #recent} loads the endpoint again; the panel's refresh interval. */
 	private static final Duration FRESH = Duration.ofMinutes(10);
+	/** The endpoint keeps its response this long, so loading again sooner gets the same data. */
+	private static final Duration MIN_GAP = Duration.ofSeconds(60);
+	/** How long automatic tries wait after the first, second and any later failure in a row. */
+	private static final Duration[] BACK_OFF = {Duration.ofMinutes(1), Duration.ofMinutes(5), Duration.ofMinutes(15)};
 	private static final String ENDPOINT = "https://script.google.com/macros/s/AKfycbyuOXHeAB-dlWG4kSg1G2T4mXPPy13vyphLPGRH3iZRUiEKKmvToJmHm6M33vb_OSUe3Q/exec";
 
 	private final OkHttpClient okHttpClient;
@@ -45,6 +50,11 @@ public class ClanDataClient
 	/** The last data loaded from the endpoint or the saved copy, and when it was fetched. */
 	private volatile ClanData latest;
 	private volatile Instant latestAt;
+	/** When the endpoint last loaded successfully; null if it hasn't this session. */
+	private volatile Instant loadedAt;
+	/** Failed endpoint loads in a row, and when automatic tries may load again after them. */
+	private int failures;
+	private Instant retryAt;
 	/** Callers of {@link #recent} waiting for the load it started; null while none is running. */
 	private List<Consumer<ClanData>> waiting;
 
@@ -60,15 +70,42 @@ public class ClanDataClient
 	}
 
 	/**
+	 * Whether loading the endpoint now is worth it: not within a minute of a good load, and for automatic tries (not
+	 * the Refresh button) not while waiting after failures.
+	 */
+	public synchronized boolean mayLoad(boolean manual)
+	{
+		Instant now = Instant.now();
+		if (loadedAt != null && now.isBefore(loadedAt.plus(MIN_GAP)))
+		{
+			return false;
+		}
+		return manual || retryAt == null || !now.isBefore(retryAt);
+	}
+
+	/**
+	 * When the endpoint last loaded successfully; null if it hasn't this session.
+	 */
+	public Instant loadedAt()
+	{
+		return loadedAt;
+	}
+
+	/**
 	 * Loads the endpoint. A good response from the real endpoint (not an override) is also saved to disk.
 	 */
 	public void fetch(Consumer<ClanData> onSuccess, Consumer<Exception> onFailure)
 	{
+		Consumer<Exception> failed = e ->
+		{
+			countFailure();
+			onFailure.accept(e);
+		};
 		String override = config.endpointOverride().trim();
 		HttpUrl url = HttpUrl.parse(override.isEmpty() ? ENDPOINT : override);
 		if (url == null)
 		{
-			onFailure.accept(new IOException("Invalid endpoint override: " + override));
+			failed.accept(new IOException("Invalid endpoint override: " + override));
 			return;
 		}
 		if (!override.isEmpty())
@@ -85,7 +122,7 @@ public class ClanDataClient
 			@Override
 			public void onFailure(Call call, IOException e)
 			{
-				onFailure.accept(e);
+				failed.accept(e);
 			}
 
 			@Override
@@ -104,43 +141,44 @@ public class ClanDataClient
 					{
 						savedCopy.save(json);
 					}
-					remember(data, Instant.now());
+					Instant now = Instant.now();
+					countSuccess(now);
+					remember(data, now);
 					onSuccess.accept(data);
 				}
 				catch (IOException | JsonParseException e)
 				{
-					onFailure.accept(e);
+					failed.accept(e);
 				}
 			}
 		});
 	}
 
 	/**
-	 * Loads the saved copy, with the time it was saved. Not called if there is none or it cannot be read.
+	 * Loads the saved copy, with the time it was saved; both null if there is none or it cannot be read.
 	 */
 	public void loadSaved(BiConsumer<ClanData, Instant> onLoaded)
 	{
 		executor.execute(() ->
 		{
 			SavedCopy.Saved saved = savedCopy.load();
-			if (saved == null)
+			ClanData data = null;
+			if (saved != null)
 			{
-				return;
-			}
-
-			try
-			{
-				ClanData data = parse(saved.getJson());
-				if (latest == null)
+				try
 				{
-					remember(data, saved.getSavedAt());
+					data = parse(saved.getJson());
+					if (latest == null)
+					{
+						remember(data, saved.getSavedAt());
+					}
 				}
-				onLoaded.accept(data, saved.getSavedAt());
+				catch (IOException | JsonParseException e)
+				{
+					log.debug("Saved clan data is unreadable", e);
+				}
 			}
-			catch (IOException | JsonParseException e)
-			{
-				log.debug("Saved clan data is unreadable", e);
-			}
+			onLoaded.accept(data, data == null ? null : saved.getSavedAt());
 		});
 	}
 
@@ -154,8 +192,9 @@ public class ClanDataClient
 
 	/**
 	 * Recent data for features that work while the panel is closed: the last data if it was loaded in the last few
-	 * minutes, otherwise one endpoint load, falling back to the last data or the saved copy. Not called if there is
-	 * none at all. Callers asking while that load runs share it. The callback may run on any thread.
+	 * minutes, otherwise one endpoint load (unless {@link #mayLoad} says it isn't worth it), falling back to the last
+	 * data or the saved copy. Called with null if there is none at all. Callers asking while that load runs share it.
+	 * The callback may run on any thread.
 	 */
 	public void recent(String reason, Consumer<ClanData> onData)
 	{
@@ -178,20 +217,35 @@ public class ClanDataClient
 			waiting.add(onData);
 		}
 
+		if (!mayLoad(false))
+		{
+			devLog.log("{}: not loading the endpoint yet, using the last data", reason);
+			finishWithFallback();
+			return;
+		}
+
 		devLog.log("{}: loading the endpoint", reason);
 		fetch(this::finishRecent, e ->
 		{
 			devLog.log("{}: load failed, {}", reason, e.getMessage(), e);
-			ClanData fallback = latest;
-			if (fallback != null)
-			{
-				finishRecent(fallback);
-			}
-			else
-			{
-				loadSaved((saved, savedAt) -> finishRecent(saved));
-			}
+			finishWithFallback();
 		});
+	}
+
+	/**
+	 * Answers the waiting callers with the last data, or the saved copy, or null if there is neither.
+	 */
+	private void finishWithFallback()
+	{
+		ClanData fallback = latest;
+		if (fallback != null)
+		{
+			finishRecent(fallback);
+		}
+		else
+		{
+			loadSaved((saved, savedAt) -> finishRecent(saved));
+		}
 	}
 
 	private void finishRecent(ClanData data)
@@ -203,6 +257,21 @@ public class ClanDataClient
 			waiting = null;
 		}
 		callers.forEach(caller -> caller.accept(data));
+	}
+
+	private synchronized void countSuccess(Instant now)
+	{
+		loadedAt = now;
+		failures = 0;
+		retryAt = null;
+	}
+
+	private synchronized void countFailure()
+	{
+		Duration wait = BACK_OFF[Math.min(failures, BACK_OFF.length - 1)];
+		failures++;
+		retryAt = Instant.now().plus(wait);
+		devLog.log("load: failure {} in a row, next automatic try after {} minutes", failures, wait.toMinutes());
 	}
 
 	private void remember(ClanData data, Instant fetchedAt)

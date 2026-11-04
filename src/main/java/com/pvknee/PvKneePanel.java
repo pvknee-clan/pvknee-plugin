@@ -53,7 +53,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final DevLog devLog;
 	private final BingoView bingoView;
 	private final PlayerInfo playerInfo;
-	private final TopBar topBar = new TopBar(this::showPage, () -> refresh(false, "button"));
+	private final TopBar topBar = new TopBar(this::showPage, () -> refresh(false, true, "button"));
 	private final Notice notice = new Notice();
 	private final Notice.Line errorLine = notice.addLine();
 	private final Notice.Line lastUpdatedLine = notice.addLine();
@@ -61,7 +61,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final JPanel content = new JPanel();
 	private final JScrollPane scrollPane;
 	private final Timer countdownTimer = new Timer((int) COUNTDOWN_INTERVAL.toMillis(), e -> updateLive());
-	private final Timer refreshTimer = new Timer((int) REFRESH_INTERVAL.toMillis(), e -> refresh(true, "timer"));
+	private final Timer refreshTimer = new Timer((int) REFRESH_INTERVAL.toMillis(), e -> refresh(true, false, "timer"));
 
 	private ClanData data;
 	/** When the data was last loaded from the endpoint; null while only the saved copy is shown. */
@@ -115,11 +115,11 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		if (data == null)
 		{
 			client.loadSaved((saved, savedAt) -> SwingUtilities.invokeLater(() -> showSaved(saved, savedAt)));
-			refresh(false, "first open");
+			refresh(false, false, "first open");
 		}
 		else if (loadedAt == null || Instant.now().isAfter(loadedAt.plus(REFRESH_INTERVAL)))
 		{
-			refresh(true, "open, data is old");
+			refresh(true, false, "open, data is old");
 		}
 		else
 		{
@@ -146,14 +146,30 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	}
 
 	/**
-	 * Reloads the clan data. A quiet refresh keeps the page as it is while loading, and on failure only shows when
-	 * the data on screen is from.
+	 * Reloads the clan data, unless it loaded less than a minute ago or, for automatic tries, a failure means waiting
+	 * longer. A quiet refresh keeps the page as it is while loading, and on failure only shows when the data on
+	 * screen is from. A skipped Refresh button press says when the data on screen was loaded.
 	 */
-	private void refresh(boolean quiet, String reason)
+	private void refresh(boolean quiet, boolean manual, String reason)
 	{
 		if (loading)
 		{
 			devLog.log("refresh: {} skipped, already loading", reason);
+			return;
+		}
+		if (!client.mayLoad(manual))
+		{
+			devLog.log("refresh: {} skipped, loaded recently or waiting after a failure", reason);
+			Instant elsewhere = client.loadedAt();
+			if (elsewhere != null && (loadedAt == null || elsewhere.isAfter(loadedAt)) && client.latest() != null)
+			{
+				// Loaded for a chat feature while the panel was closed.
+				show(client.latest(), elsewhere);
+			}
+			if (manual && loadedAt != null)
+			{
+				lastUpdatedLine.setMessage("Up to date, loaded at " + Times.time(loadedAt), ThemeColours.from(data.getTheme()).getMuted());
+			}
 			return;
 		}
 
@@ -165,7 +181,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		}
 
 		client.fetch(
-			data -> SwingUtilities.invokeLater(() -> show(data)),
+			data -> SwingUtilities.invokeLater(() -> show(data, client.loadedAt())),
 			e ->
 			{
 				devLog.log("load: failed, {}", e.getMessage(), e);
@@ -182,10 +198,10 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			});
 	}
 
-	private void show(ClanData data)
+	private void show(ClanData data, Instant at)
 	{
 		devLog.log("load: {} pages", data.getPages().size());
-		loadedAt = Instant.now();
+		loadedAt = at;
 		updatedAt = loadedAt;
 		loading = false;
 		topBar.setLoading(false);
@@ -195,12 +211,12 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	}
 
 	/**
-	 * Shows the saved copy, unless fresh data has already arrived. While a load is still running, the "Last updated"
+	 * Shows the saved copy, unless there is none or fresh data has already arrived. While a load is still running, the "Last updated"
 	 * line waits until it fails, so the page doesn't jump when the fresh data replaces the saved copy.
 	 */
 	private void showSaved(ClanData data, Instant savedAt)
 	{
-		if (this.data != null)
+		if (data == null || this.data != null)
 		{
 			return;
 		}

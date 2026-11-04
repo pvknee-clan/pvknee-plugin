@@ -114,13 +114,34 @@ public class ChallengeMessages
 		else if (event.getGameState() == GameState.LOGGED_IN && !greeted)
 		{
 			greeted = true;
-			// Loaded even with the login message off, so the alerts have fresh times.
+			if (!needsLoginLoad())
+			{
+				devLog.log("login: nothing needs the clan data, not loading it");
+				return;
+			}
+			// Loaded even with the login message off, so the alerts and team icons have fresh data.
 			clanData.recent("login", this::greet);
 		}
 	}
 
+	/**
+	 * Whether any feature that works while the panel is closed is on: the login message, the challenge messages or
+	 * the bingo team icons and overlay. Otherwise the data loads on first use, e.g. opening the panel.
+	 */
+	private boolean needsLoginLoad()
+	{
+		return config.loginMessage() || config.challengeStartAlert() || config.challengeHourLeftAlert()
+			|| config.challengeEndAlert() || config.teamIconsInChat() || config.teamIconsAboveHeads()
+			|| config.bingoTeamOverlay();
+	}
+
 	private void greet(ClanData data)
 	{
+		if (data == null)
+		{
+			devLog.log("login: no clan data");
+			return;
+		}
 		if (!config.loginMessage())
 		{
 			devLog.log("login: message turned off");

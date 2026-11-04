@@ -73,10 +73,17 @@ public class ChatCommands
 	}
 
 	/**
-	 * Fills the template from the standings in the loaded data.
+	 * Fills the template from the standings in the loaded data; null if nothing could be loaded.
 	 */
 	private void answer(ClanData data, PlayerState player, String type, String key)
 	{
+		if (data == null)
+		{
+			devLog.log("command: no clan data");
+			send("The clan data couldn't be loaded. Try again in a few minutes.", Map.of());
+			return;
+		}
+
 		Competition competition = data.getCompetitions() == null ? null : data.getCompetitions().current(type);
 		if (competition == null)
 		{
