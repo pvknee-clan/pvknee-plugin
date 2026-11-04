@@ -43,8 +43,13 @@ Participate in boss/skill of the week, or view current events such as bingo boar
   players through a tile.
 - **Team icons.** Toggleable coloured dots beside your clanmates' names in chat, and above their heads if RuneLite's
   Player Indicators plugin is turned on.
+
+  ![A team dot beside a player's name above their head](screenshots/team-dot.png)
+
 - **Team overlay.** While you're on a team, a small box with your team and the UTC date and time, useful for screenshot
   proof for manual bingo submissions.
+
+  ![The team overlay with the team name and the UTC date and time](screenshots/team-overlay.png)
 
 ## Settings
 
