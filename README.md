@@ -9,32 +9,34 @@ and click Install. The PvKnee icon then appears in the sidebar.
 Anyone can install it and view the clan's pages, but it is made for PvKnee members: your place in the challenges,
 rank-limited pages and bingo team icons only mean something if you are in the clan.
 
-- **Pages from the clan sheet.** Home, Skill of the Week, Boss of the Week and any other page the clan's admins add,
-  in the clan's theme colours.
-- **Challenges.** This week's skill and boss with their icons and the time left. Click one to open its page.
-- **Standings.** One standings table for each challenge, from Wise Old Man via the clan sheet, which copies them
-  every 5 minutes. Players level on the same gain share a place.
-- **Events.** What is happening now and what is coming up, in your local time (or UTC if you prefer).
-- **Links.** One-click buttons to the clan's Discord and other pages. Only pages on Discord, Wise Old Man, the Old
-  School wiki and runescape.com are opened, so a changed link in the clan sheet cannot send you anywhere else.
-- **Your place.** On the challenge pages, a card with your own place and gain, and your row highlighted in the
-  standings.
-- **Admin pages.** Pages the clan limits to a rank, e.g. Administrator, only show for members of that rank or above.
-- **Login message** (off by default). When you log in, a short message about this week's challenges. Only you see it.
-- **Chat commands.** Type `!sotw` or `!botw` to see the challenge, its time left and your place and gain. Others see
-  your command as usual; only you see the reply.
-- **Clan bingo.** When the clan runs a bingo, a page with each team's board, coloured by progress, and the details of
-  any tile you select: what it needs, who got what and when it was completed. Switch between teams' boards, see
-  the standings and, at the end, the winner. View only: the data comes from the clan's bingo sheet, and submissions
-  stay in Discord.
-- **Bingo team icons.** While a bingo runs, a dot in each team's colour in front of the names of clan members on a
-  team in clan and public chat (after the clan rank icon), and beside the names RuneLite's Player Indicators plugin
-  shows for them above their heads. Only clan members are marked, and no dots show in the Wilderness, on PvP worlds or
-  in PvP areas. Only you see them; your messages are sent as usual.
-- **Bingo team overlay.** While a bingo runs and you are on a team, a small on-screen box with your team and the date
-  and time in UTC, e.g. `Team Ember · Tue 3 Nov 2026, 21:35 UTC`, so screenshots for submissions show when they were
-  taken. Move it like any RuneLite overlay.
-- **More page blocks.** Tables, big numbers and countdowns the clan's admins can add to any page.
+### Clan pages
+
+- **Home, Skill of the Week, Boss of the Week and more**, in the clan's theme colours.
+
+### Skill and Boss of the Week
+
+- **Challenges.** This week's skill and boss with their icons and time left; click one to open its page.
+- **Standings.** Everyone's gains for each challenge, updated every few minutes.
+- **Your place.** Your own place and gain, with your row highlighted in the standings.
+
+### Events and links
+
+- **Events.** What's happening now and what's coming up, in your local time or UTC.
+- **Links.** One-click buttons to the clan's Discord and other pages.
+
+### Chat
+
+- **Chat commands.** Type `!sotw` or `!botw` for the challenge, its time left and your place. Only you see the reply.
+- **Login message** (off by default). This week's challenges in chat when you log in.
+
+### Bingo
+
+- **Bingo page.** Each team's board coloured by progress, tile details (what's needed, who got what and when), team
+  standings and the winner.
+- **Team icons.** Dots in team colours beside your clanmates' names in chat and above their heads (above heads needs
+  RuneLite's Player Indicators).
+- **Team overlay.** While you're on a team, a small box with your team and the UTC date and time, for screenshot
+  proof.
 
 The panel keeps itself up to date while it is open. While it is closed, the plugin only loads the clan data once when
 you log in, for the login message and the bingo team icons and overlay (not at all if those are turned off), and when
