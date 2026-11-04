@@ -44,7 +44,7 @@ you use `!sotw` or `!botw` with data more than 10 minutes old.
 
 - **Display:** **Show times in UTC** (off): all times in UTC instead of your local time.
 - **Chat:** **Login message** (off): this week's challenges in chat once each time you log in.
-- **Wise Old Man:** **Update Wise Old Man on logout** (off): updates your Wise Old Man profile when you log out after
+- **Wise Old Man:** **Update on logout** (off): updates your Wise Old Man profile when you log out after
   making progress, so your place in the challenges stays up to date.
 - **Bingo** (all on): **Team icons in chat**, **Team icons above heads** (needs Player Indicators showing names) and
   **Bingo team overlay**.
