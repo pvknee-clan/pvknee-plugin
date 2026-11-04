@@ -6,17 +6,28 @@ import com.pvknee.player.PlayerInfo;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.regex.Pattern;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.WorldType;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.GameTick;
+import net.runelite.api.events.StatChanged;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.plugins.Plugin;
+import net.runelite.client.plugins.PluginManager;
+import net.runelite.client.plugins.xpupdater.XpUpdaterConfig;
+import net.runelite.client.plugins.xpupdater.XpUpdaterPlugin;
+import net.runelite.client.util.Text;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
@@ -27,13 +38,29 @@ import okhttp3.Response;
 
 /**
  * When the member logs out with "Update Wise Old Man on logout" on, asks Wise Old Man to update the name they were
- * logged in as, at most once per 10 minutes per name, so the challenge standings are more up to date.
+ * logged in as, so the challenge standings are more up to date. Only after progress this session (over 10,000 xp, or
+ * a kill or completion count), on a normal world, when XP Updater isn't already sending it, and at most once per 10
+ * minutes per name, even across restarts.
  */
 @Singleton
 public class LogoutUpdate
 {
 	private static final HttpUrl PLAYERS_URL = HttpUrl.get("https://api.wiseoldman.net/v2/players");
+	private static final String USER_AGENT = "PvKnee-RuneLite-Plugin/1.0";
 	private static final Duration MIN_GAP = Duration.ofMinutes(10);
+	/** The same threshold RuneLite's XP Updater uses. */
+	private static final long XP_THRESHOLD = 10_000;
+	/** Where the time of the last update for a name is kept in the plugin's config. */
+	private static final String SENT_KEY_PREFIX = "womUpdatedAt_";
+	/** Worlds whose progress Wise Old Man doesn't track. */
+	private static final Set<WorldType> SKIPPED_WORLDS = EnumSet.of(WorldType.SEASONAL, WorldType.DEADMAN,
+		WorldType.TOURNAMENT_WORLD, WorldType.BETA_WORLD, WorldType.FRESH_START_WORLD, WorldType.NOSAVE_MODE);
+	/**
+	 * Kill and completion count messages, as RuneLite's chat commands match them, e.g. "Your Vorkath kill count is:
+	 * 123." or "Your completed Chambers of Xeric count is: 45."
+	 */
+	private static final Pattern COUNT_MESSAGE = Pattern.compile(
+		"Your (?:completion count for |subdued |completed )?.+? (?:(?:kill|harvest|lap|completion) )?(?:count )?is: [0-9,]+");
 
 	private final Client client;
 	private final ClientThread clientThread;
@@ -41,15 +68,21 @@ public class LogoutUpdate
 	private final PlayerInfo playerInfo;
 	private final OkHttpClient okHttpClient;
 	private final PvKneeConfig config;
+	private final ConfigManager configManager;
+	private final PluginManager pluginManager;
+	private final XpUpdaterConfig xpUpdaterConfig;
 	private final DevLog devLog;
 
-	/** When each name (in lower case) was last sent. */
-	private final Map<String, Instant> sentAt = new ConcurrentHashMap<>();
 	private boolean loggedIn;
+	/** Total xp at the start of this session; -1 until the first tick after login. */
+	private long startXp = -1;
+	private long latestXp;
+	private boolean countSeen;
+	private boolean normalWorld;
 
 	@Inject
 	LogoutUpdate(Client client, ClientThread clientThread, EventBus eventBus, PlayerInfo playerInfo, OkHttpClient okHttpClient,
-		PvKneeConfig config, DevLog devLog)
+		PvKneeConfig config, ConfigManager configManager, PluginManager pluginManager, DevLog devLog)
 	{
 		this.client = client;
 		this.clientThread = clientThread;
@@ -57,6 +90,9 @@ public class LogoutUpdate
 		this.playerInfo = playerInfo;
 		this.okHttpClient = okHttpClient;
 		this.config = config;
+		this.configManager = configManager;
+		this.pluginManager = pluginManager;
+		this.xpUpdaterConfig = configManager.getConfig(XpUpdaterConfig.class);
 		this.devLog = devLog;
 	}
 
@@ -65,13 +101,17 @@ public class LogoutUpdate
 		eventBus.register(this);
 		clientThread.invoke(() ->
 		{
-			loggedIn = client.getGameState() == GameState.LOGGED_IN;
+			if (client.getGameState() == GameState.LOGGED_IN)
+			{
+				startSession();
+			}
 		});
 	}
 
 	public void stop()
 	{
 		eventBus.unregister(this);
+		loggedIn = false;
 	}
 
 	@Subscribe
@@ -79,7 +119,11 @@ public class LogoutUpdate
 	{
 		if (event.getGameState() == GameState.LOGGED_IN)
 		{
-			loggedIn = true;
+			if (!loggedIn)
+			{
+				startSession();
+			}
+			normalWorld = isNormalWorld();
 		}
 		else if (event.getGameState() == GameState.LOGIN_SCREEN && loggedIn)
 		{
@@ -91,6 +135,51 @@ public class LogoutUpdate
 		}
 	}
 
+	@Subscribe
+	public void onGameTick(GameTick event)
+	{
+		if (loggedIn && startXp < 0)
+		{
+			startXp = client.getOverallExperience();
+			latestXp = startXp;
+		}
+	}
+
+	@Subscribe
+	public void onStatChanged(StatChanged event)
+	{
+		if (loggedIn && startXp >= 0)
+		{
+			latestXp = client.getOverallExperience();
+		}
+	}
+
+	@Subscribe
+	public void onChatMessage(ChatMessage event)
+	{
+		if (loggedIn && !countSeen
+			&& (event.getType() == ChatMessageType.GAMEMESSAGE || event.getType() == ChatMessageType.SPAM)
+			&& COUNT_MESSAGE.matcher(Text.removeTags(event.getMessage())).find())
+		{
+			countSeen = true;
+			devLog.log("wom: count message seen");
+		}
+	}
+
+	private void startSession()
+	{
+		loggedIn = true;
+		startXp = -1;
+		latestXp = 0;
+		countSeen = false;
+		normalWorld = isNormalWorld();
+	}
+
+	private boolean isNormalWorld()
+	{
+		return client.getWorldType().stream().noneMatch(SKIPPED_WORLDS::contains);
+	}
+
 	private void update(String name)
 	{
 		if (name == null)
@@ -98,20 +187,54 @@ public class LogoutUpdate
 			return;
 		}
 
-		String player = name.replace('\u00A0', ' ').trim();
-		String key = player.toLowerCase(Locale.ENGLISH);
+		String player = Text.toJagexName(name);
+		long gained = startXp < 0 ? 0 : latestXp - startXp;
+		if (!countSeen && gained <= XP_THRESHOLD)
+		{
+			devLog.log("wom: {} made too little progress ({} xp, no counts), skipped", player, gained);
+			return;
+		}
+		if (!normalWorld)
+		{
+			devLog.log("wom: not a normal world, skipped");
+			return;
+		}
+		if (xpUpdaterSends())
+		{
+			devLog.log("wom: XP Updater already updates Wise Old Man, skipped");
+			return;
+		}
+
+		String key = SENT_KEY_PREFIX + Text.standardize(player).replace(' ', '_');
 		Instant now = Instant.now();
-		Instant last = sentAt.get(key);
-		if (last != null && now.isBefore(last.plus(MIN_GAP)))
+		Long last = configManager.getConfiguration(PvKneeConfig.GROUP, key, Long.class);
+		if (last != null && now.isBefore(Instant.ofEpochMilli(last).plus(MIN_GAP)))
 		{
 			devLog.log("wom: {} was updated less than 10 minutes ago, skipped", player);
 			return;
 		}
+		configManager.setConfiguration(PvKneeConfig.GROUP, key, now.toEpochMilli());
+		send(player);
+	}
 
-		sentAt.put(key, now);
+	/**
+	 * Whether RuneLite's XP Updater is on with its Wise Old Man option ticked, so it sends its own update on logout.
+	 */
+	private boolean xpUpdaterSends()
+	{
+		Plugin plugin = pluginManager.getPlugins().stream()
+			.filter(p -> p instanceof XpUpdaterPlugin)
+			.findFirst()
+			.orElse(null);
+		return plugin != null && pluginManager.isPluginActive(plugin) && xpUpdaterConfig.wiseoldman();
+	}
+
+	private void send(String player)
+	{
 		devLog.log("wom: updating {}", player);
 		Request request = new Request.Builder()
 			.url(PLAYERS_URL.newBuilder().addPathSegment(player).build())
+			.header("User-Agent", USER_AGENT)
 			.post(RequestBody.create(null, new byte[0]))
 			.build();
 

@@ -24,7 +24,7 @@ public interface PvKneeConfig extends Config
 	@ConfigItem(
 		keyName = "updateWomOnLogout",
 		name = "Update Wise Old Man on logout",
-		description = "Asks Wise Old Man to update your profile when you log out, for more up-to-date challenge standings",
+		description = "When you log out after gaining over 10,000 xp or a kill or completion count, asks Wise Old Man to update your profile, at most once every 10 minutes. Skipped on seasonal, Deadman and other special worlds, and when RuneLite's XP Updater already updates Wise Old Man, which you can use instead",
 		warning = "This feature submits your IP address to a 3rd-party server not controlled or verified by RuneLite developers",
 		position = 2
 	)

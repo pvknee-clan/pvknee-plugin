@@ -37,8 +37,10 @@ you log in, for the chat messages and team icons.
 
 - **Show times in UTC** (off by default): show all times in UTC, marked "UTC", instead of your local time.
 - **Update Wise Old Man on logout** (off by default): when you log out, ask Wise Old Man to update your profile, so the
-  challenge standings are more up to date. At most once every 10 minutes per name. This sends your username to Wise
-  Old Man.
+  challenge standings are more up to date. It only sends when you gained over 10,000 xp or got a kill or completion
+  count message since you logged in, at most once every 10 minutes per name, and never on seasonal, Deadman,
+  tournament, beta, fresh-start or no-save worlds. This sends your username to Wise Old Man. RuneLite's own XP
+  Updater plugin can do the same; if it is on with its Wise Old Man option ticked, this plugin leaves the update to it.
 - **Challenge messages** (all on by default):
   - **Login message**: a message about this week's challenges once each time you log in.
   - **Challenge start**, **1 hour left**, **Challenge end**: a message at each of those moments while you are logged
@@ -55,7 +57,7 @@ you log in, for the chat messages and team icons.
 | Service | Address | What for | When |
 | --- | --- | --- | --- |
 | The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions and their standings, events, links and bingo, built from the clan's Google Sheets | When the panel is opened, on Refresh, and every 10 minutes while it is open; once when you log in (unless loaded in the last 10 minutes), for the chat messages; when you use `!sotw` or `!botw` and the data is more than 10 minutes old |
-| Wise Old Man | `api.wiseoldman.net` | A profile update for your username | Only with **Update Wise Old Man on logout** on: when you log out, at most once every 10 minutes per name |
+| Wise Old Man | `api.wiseoldman.net` | A profile update for your username | Only with **Update Wise Old Man on logout** on: when you log out after progress (over 10,000 xp or a kill or completion count) on a normal world, unless XP Updater already sends it; at most once every 10 minutes per name |
 | GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon per session |
 
 Skill and item icons come from RuneLite itself; all other icons are built into the plugin.
