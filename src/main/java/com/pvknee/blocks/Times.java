@@ -73,13 +73,36 @@ public final class Times
 	 */
 	public static String date(Instant instant, boolean withTime)
 	{
-		ZoneId zone = zone();
-		LocalDate day = instant.atZone(zone).toLocalDate();
-		LocalDate today = LocalDate.now(zone);
-		String dayText = day.equals(today) ? "Today"
+		String dayText = day(instant.atZone(zone()).toLocalDate());
+		return withTime ? dayText + ", " + time(instant) : dayText;
+	}
+
+	/**
+	 * A calendar day relative to today in the member's time zone: "Today", "Tomorrow" or e.g. "Sat 7 Nov".
+	 */
+	public static String day(LocalDate day)
+	{
+		LocalDate today = LocalDate.now(zone());
+		return day.equals(today) ? "Today"
 			: day.equals(today.plusDays(1)) ? "Tomorrow"
 			: DAY.format(day);
-		return withTime ? dayText + ", " + time(instant) : dayText;
+	}
+
+	/**
+	 * The calendar day a date-only sheet time stands for. The sheet sends such days as midnight UTC, so the day is
+	 * read in UTC whatever the member's time zone.
+	 */
+	public static LocalDate sheetDay(Instant instant)
+	{
+		return instant.atZone(ZoneOffset.UTC).toLocalDate();
+	}
+
+	/**
+	 * When a calendar day starts in the member's time zone (or in UTC when times are shown in UTC).
+	 */
+	public static Instant startOfDay(LocalDate day)
+	{
+		return day.atStartOfDay(zone()).toInstant();
 	}
 
 	/**

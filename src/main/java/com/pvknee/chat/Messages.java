@@ -57,6 +57,14 @@ final class Messages
 	 */
 	static Map<String, List<String>> challengeValues(ClanData data)
 	{
+		return challengeValues(data, "skill");
+	}
+
+	/**
+	 * The same, with {timeLeft} from this type's challenge (skill or boss), or the other one if it has none.
+	 */
+	static Map<String, List<String>> challengeValues(ClanData data, String timeFrom)
+	{
 		Map<String, List<String>> values = new HashMap<>();
 		Competitions competitions = data.getCompetitions();
 		Competition skill = competitions == null ? null : competitions.current("skill");
@@ -70,7 +78,7 @@ final class Messages
 			values.put("boss", one(boss.getName()));
 		}
 
-		Competition timed = skill != null ? skill : boss;
+		Competition timed = "boss".equals(timeFrom) ? (boss != null ? boss : skill) : (skill != null ? skill : boss);
 		Instant end = timed == null ? null : Times.parse(timed.getEndsAt());
 		if (end != null)
 		{

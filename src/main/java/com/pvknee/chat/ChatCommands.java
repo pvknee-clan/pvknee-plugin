@@ -92,7 +92,7 @@ public class ChatCommands
 			return;
 		}
 
-		Map<String, List<String>> values = Messages.challengeValues(data);
+		Map<String, List<String>> values = Messages.challengeValues(data, type);
 		placeAndScore(values, Placing.find(Placing.board(competition), player::isNamed), type);
 		send(Messages.template(data, key), values);
 	}

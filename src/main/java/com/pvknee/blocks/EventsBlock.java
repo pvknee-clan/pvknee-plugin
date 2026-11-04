@@ -12,6 +12,7 @@ import com.pvknee.ui.SectionHeader;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -169,18 +170,38 @@ class EventsBlock implements BlockRenderer
 		}
 	}
 
+	/**
+	 * An event with its times worked out. A date-only event (no time of day) covers whole calendar days in the
+	 * member's own time zone, from its start day to its end day (or just its start day), so it shows under the day
+	 * the sheet has wherever the member is.
+	 */
 	private static class TimedEvent
 	{
 		final ClanEvent event;
 		final Instant start;
 		final Instant end;
+		/** The first day of a date-only event; null for an event with a time of day. */
+		final LocalDate startDay;
 		final boolean running;
 
 		TimedEvent(ClanEvent event, Instant now)
 		{
 			this.event = event;
-			this.start = Times.parse(event.getStartsAt());
-			this.end = Times.parse(event.getEndsAt());
+			Instant sheetStart = Times.parse(event.getStartsAt());
+			Instant sheetEnd = Times.parse(event.getEndsAt());
+			if (event.isHasTime() || sheetStart == null)
+			{
+				startDay = null;
+				start = sheetStart;
+				end = sheetEnd;
+			}
+			else
+			{
+				startDay = Times.sheetDay(sheetStart);
+				LocalDate lastDay = sheetEnd == null ? startDay : Times.sheetDay(sheetEnd);
+				start = Times.startOfDay(startDay);
+				end = Times.startOfDay((lastDay.isBefore(startDay) ? startDay : lastDay).plusDays(1));
+			}
 			this.running = start != null && !now.isBefore(start) && (end == null || now.isBefore(end));
 		}
 
@@ -194,7 +215,7 @@ class EventsBlock implements BlockRenderer
 			{
 				return end == null ? null : Times.left(end);
 			}
-			return Times.date(start, event.isHasTime());
+			return startDay != null ? Times.day(startDay) : Times.date(start, true);
 		}
 
 		boolean endingSoon()
