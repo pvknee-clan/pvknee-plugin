@@ -148,7 +148,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	/**
 	 * Reloads the clan data, unless it loaded less than a minute ago or, for automatic tries, a failure means waiting
 	 * longer. A quiet refresh keeps the page as it is while loading, and on failure only shows when the data on
-	 * screen is from. A skipped Refresh button press says when the data on screen was loaded.
+	 * screen is from.
 	 */
 	private void refresh(boolean quiet, boolean manual, String reason)
 	{
@@ -165,10 +165,6 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 			{
 				// Loaded for a chat feature while the panel was closed.
 				show(client.latest(), elsewhere);
-			}
-			if (manual && loadedAt != null)
-			{
-				lastUpdatedLine.setMessage("Up to date, loaded at " + Times.time(loadedAt), ThemeColours.from(data.getTheme()).getMuted());
 			}
 			return;
 		}

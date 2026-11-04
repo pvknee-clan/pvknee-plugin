@@ -230,3 +230,5 @@ New features; Plugin Hub submission itself (`docs/SUBMISSION.md`).
   "Leading".
 - Task 4: only the "too little progress, skipped" path was tested in-game. The send after progress, the 10-minute
   gap across restarts, the XP Updater check and the special-world check are untested; worst case, no update is sent.
+- Task 5: a Refresh press within a minute of a good load does nothing visible (only a dev log line), instead of saying
+  when the data was loaded; the owner found the notice cluttered the panel.
