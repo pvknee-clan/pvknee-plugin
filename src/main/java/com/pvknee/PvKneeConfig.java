@@ -33,59 +33,15 @@ public interface PvKneeConfig extends Config
 		return false;
 	}
 
-	@ConfigSection(
-		name = "Challenge messages",
-		description = "Chat messages about the Skill and Boss of the Week; only you see them",
-		position = 1
-	)
-	String challengeSection = "challengeMessages";
-
 	@ConfigItem(
 		keyName = "loginMessage",
 		name = "Login message",
-		description = "Shows the current challenges in chat once each time you log in",
-		position = 0,
-		section = challengeSection
+		description = "Shows this week's Skill and Boss of the Week in chat once each time you log in; only you see it",
+		position = 1
 	)
 	default boolean loginMessage()
 	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "challengeStartAlert",
-		name = "Challenge start",
-		description = "Shows a chat message when a Skill or Boss of the Week starts",
-		position = 1,
-		section = challengeSection
-	)
-	default boolean challengeStartAlert()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "challengeHourLeftAlert",
-		name = "1 hour left",
-		description = "Shows a chat message when a Skill or Boss of the Week has 1 hour left",
-		position = 2,
-		section = challengeSection
-	)
-	default boolean challengeHourLeftAlert()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "challengeEndAlert",
-		name = "Challenge end",
-		description = "Shows a chat message when a Skill or Boss of the Week ends",
-		position = 3,
-		section = challengeSection
-	)
-	default boolean challengeEndAlert()
-	{
-		return true;
+		return false;
 	}
 
 	@ConfigSection(

@@ -14,8 +14,7 @@ setup needed.
 - **Your place.** On the challenge pages, a card with your own place and gain, and your row highlighted in the
   standings.
 - **Admin pages.** Pages the clan limits to a rank, e.g. Administrator, only show for members of that rank or above.
-- **Chat messages.** When you log in, a short message about this week's challenges, and a message when a challenge
-  starts, has 1 hour left and ends. Only you see them.
+- **Login message** (off by default). When you log in, a short message about this week's challenges. Only you see it.
 - **Chat commands.** Type `!sotw` or `!botw` to see the challenge, its time left and your place and gain. Others see
   your command as usual; only you see the reply.
 - **Clan bingo.** When the clan runs a bingo, a page with each team's board, coloured by progress, and the details of
@@ -32,7 +31,7 @@ setup needed.
 - **More page blocks.** Tables, big numbers and countdowns the clan's admins can add to any page.
 
 The panel keeps itself up to date while it is open. While it is closed, the plugin only loads the clan data once when
-you log in, for the chat messages and team icons (not at all if those are turned off).
+you log in, for the login message and the bingo team icons and overlay (not at all if those are turned off).
 
 ## Settings
 
@@ -42,10 +41,7 @@ you log in, for the chat messages and team icons (not at all if those are turned
   count message since you logged in, at most once every 10 minutes per name, and never on seasonal, Deadman,
   tournament, beta, fresh-start or no-save worlds. This sends your username to Wise Old Man. RuneLite's own XP
   Updater plugin can do the same; if it is on with its Wise Old Man option ticked, this plugin leaves the update to it.
-- **Challenge messages** (all on by default):
-  - **Login message**: a message about this week's challenges once each time you log in.
-  - **Challenge start**, **1 hour left**, **Challenge end**: a message at each of those moments while you are logged
-    in.
+- **Login message** (off by default): a message about this week's challenges once each time you log in.
 - **Bingo** (all on by default):
   - **Team icons in chat**: team dots in clan and public chat.
   - **Team icons above heads**: team dots beside the players' names from Player Indicators. Needs RuneLite's Player
@@ -60,7 +56,7 @@ developer mode; a normal client always uses the clan's own endpoint.
 
 | Service | Address | What for | When |
 | --- | --- | --- | --- |
-| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions and their standings, events, links and bingo, built from the clan's Google Sheets | When the panel is opened, on Refresh, and every 10 minutes while it is open; once when you log in (unless loaded in the last 10 minutes, or the chat messages, team icons and team overlay are all off); when you use `!sotw` or `!botw` and the data is more than 10 minutes old. Never more than once a minute; after a failed load, automatic tries wait 1, then 5, then 15 minutes |
+| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions and their standings, events, links and bingo, built from the clan's Google Sheets | When the panel is opened, on Refresh, and every 10 minutes while it is open; once when you log in (unless loaded in the last 10 minutes, or the login message, team icons and team overlay are all off); when you use `!sotw` or `!botw` and the data is more than 10 minutes old. Never more than once a minute; after a failed load, automatic tries wait 1, then 5, then 15 minutes |
 | Wise Old Man | `api.wiseoldman.net` | A profile update for your username | Only with **Update Wise Old Man on logout** on: when you log out after progress (over 10,000 xp or a kill or completion count) on a normal world, unless XP Updater already sends it; at most once every 10 minutes per name |
 | GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon per session; a failed icon is not tried again until the client restarts |
 

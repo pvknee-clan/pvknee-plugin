@@ -22,7 +22,7 @@ import net.runelite.client.util.Text;
 /**
  * Builds chat messages from the sheet's templates, e.g. "{skill} | {timeLeft} left": the wording in RuneLite's normal
  * chat colour and each placeholder's value in the given highlight colour (see {@link ChatSender}). A
- * placeholder can hold several values, e.g. {challenges}, each highlighted and joined with ", ". A placeholder
+ * placeholder can hold several values, each highlighted and joined with ", ". A placeholder
  * without a value, or one the plugin doesn't know, stays as typed.
  */
 final class Messages
@@ -33,10 +33,7 @@ final class Messages
 	private static final Map<String, String> DEFAULTS = Map.of(
 		"login", "PvKnee | Skill: {skill} | Boss: {boss} | {timeLeft} left",
 		"cmd_sotw", "{skill} | {timeLeft} left | You: {you}",
-		"cmd_botw", "{boss} | {timeLeft} left | You: {you}",
-		"alert_start", "PvKnee | Started: {challenges}",
-		"alert_hour", "PvKnee | 1 hour left: {challenges}",
-		"alert_end", "PvKnee | Ended: {challenges}");
+		"cmd_botw", "{boss} | {timeLeft} left | You: {you}");
 
 	private Messages()
 	{

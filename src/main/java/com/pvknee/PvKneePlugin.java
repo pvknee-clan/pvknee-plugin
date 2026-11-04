@@ -9,8 +9,8 @@ import com.pvknee.bingo.TeamOverlay;
 import com.pvknee.bingo.TeamRoster;
 import com.pvknee.blocks.Icons;
 import com.pvknee.blocks.Times;
-import com.pvknee.chat.ChallengeMessages;
 import com.pvknee.chat.ChatCommands;
+import com.pvknee.chat.LoginMessage;
 import com.pvknee.data.ClanDataClient;
 import com.pvknee.data.SavedCopy;
 import com.pvknee.player.PlayerInfo;
@@ -59,7 +59,7 @@ public class PvKneePlugin extends Plugin
 	private ChatCommands chatCommands;
 
 	@Inject
-	private ChallengeMessages challengeMessages;
+	private LoginMessage loginMessage;
 
 	@Inject
 	private LogoutUpdate logoutUpdate;
@@ -117,7 +117,7 @@ public class PvKneePlugin extends Plugin
 		clientToolbar.addNavigation(navButton);
 		playerInfo.start(panel::playerChanged);
 		chatCommands.start();
-		challengeMessages.start();
+		loginMessage.start();
 		logoutUpdate.start();
 		teamRoster.start();
 		teamChatIcons.start();
@@ -131,7 +131,7 @@ public class PvKneePlugin extends Plugin
 	{
 		playerInfo.stop();
 		chatCommands.stop();
-		challengeMessages.stop();
+		loginMessage.stop();
 		logoutUpdate.stop();
 		teamOverlay.stop();
 		teamHeadOverlay.stop();
