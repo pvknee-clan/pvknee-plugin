@@ -18,6 +18,7 @@ import com.pvknee.wom.LogoutUpdate;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.inject.Inject;
+import javax.inject.Named;
 import lombok.extern.slf4j.Slf4j;
 import javax.swing.SwingUtilities;
 import net.runelite.client.callback.ClientThread;
@@ -164,9 +165,12 @@ public class PvKneePlugin extends Plugin
 		}
 	}
 
+	/**
+	 * The settings; in developer mode with the Debug section as well.
+	 */
 	@Provides
-	PvKneeConfig provideConfig(ConfigManager configManager)
+	PvKneeConfig provideConfig(ConfigManager configManager, @Named("developerMode") boolean developerMode)
 	{
-		return configManager.getConfig(PvKneeConfig.class);
+		return developerMode ? configManager.getConfig(PvKneeDevConfig.class) : configManager.getConfig(PvKneeConfig.class);
 	}
 }

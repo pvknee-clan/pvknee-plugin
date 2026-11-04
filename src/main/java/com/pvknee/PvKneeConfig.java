@@ -130,24 +130,4 @@ public interface PvKneeConfig extends Config
 	{
 		return true;
 	}
-
-	// Debug only: remove this section and hide its items before publishing
-	@ConfigSection(
-		name = "Debug",
-		description = "Settings for testing the plugin",
-		position = 99,
-		closedByDefault = true
-	)
-	String debugSection = "debug";
-
-	@ConfigItem(
-		keyName = "endpointOverride",
-		name = "Endpoint override",
-		description = "Replaces the clan endpoint URL, for testing against another sheet",
-		section = debugSection
-	)
-	default String endpointOverride()
-	{
-		return "";
-	}
 }

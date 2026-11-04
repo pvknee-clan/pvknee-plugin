@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.pvknee.DevLog;
 import com.pvknee.PvKneeConfig;
+import com.pvknee.PvKneeDevConfig;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -137,7 +138,8 @@ public class ClanDataClient
 			countFailure();
 			onFailure.accept(e);
 		};
-		String override = config.endpointOverride().trim();
+		// The override exists only in developer mode; a normal client always uses the built-in address.
+		String override = config instanceof PvKneeDevConfig ? ((PvKneeDevConfig) config).endpointOverride().trim() : "";
 		HttpUrl url = HttpUrl.parse(override.isEmpty() ? ENDPOINT : override);
 		if (url == null)
 		{

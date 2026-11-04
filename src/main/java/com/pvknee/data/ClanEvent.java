@@ -6,7 +6,6 @@ import lombok.Data;
 public class ClanEvent
 {
 	private String name;
-	private String fullName;
 	private String kind;
 	private String metric;
 	private String colour;

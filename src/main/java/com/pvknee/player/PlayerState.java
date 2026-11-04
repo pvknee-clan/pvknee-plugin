@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.Map;
 import lombok.Value;
 import net.runelite.api.clan.ClanRank;
+import net.runelite.client.util.Text;
 
 /**
  * What the plugin knows about the member in game, at one moment.
@@ -62,10 +63,11 @@ public class PlayerState
 	}
 
 	/**
-	 * The name as {@link #isNamed} compares it, for looking names up in a map.
+	 * The name as {@link #isNamed} compares it, for looking names up in a map: RuneLite's own Jagex name form, in
+	 * lower case without tags.
 	 */
 	public static String nameKey(String name)
 	{
-		return name.replace('\u00A0', ' ').replace('_', ' ').replace('-', ' ').trim().toLowerCase(Locale.ENGLISH);
+		return Text.toJagexName(Text.standardize(name));
 	}
 }

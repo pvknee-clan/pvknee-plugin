@@ -246,3 +246,7 @@ New features; Plugin Hub submission itself (`docs/SUBMISSION.md`).
   ClanChannelChanged). Checked in the dev client: dots show in clan chat, public chat and overhead, and go when
   turned off or when Player Indicators is off. Owner's verdict: rank icon plus dot in chat is fine, keep it; no dots
   in the Clan tab member list, since that would need custom widget code.
+- Tasks 10 and 11: checked with the owner's own character (own lines in public and clan chat and the overhead dot
+  toggle with the settings), another clan member's dot in chat, and a team change in the sheet recolouring the dot
+  after Refresh. Untested so far: no dot for a player on a team who is not in the clan; the owner checks it at the
+  end.
