@@ -9,7 +9,8 @@ setup needed.
 - **Standings.** One standings table for each challenge, from Wise Old Man via the clan sheet, which copies them
   every 5 minutes. Players level on the same gain share a place.
 - **Events.** What is happening now and what is coming up, in your local time (or UTC if you prefer).
-- **Links.** One-click buttons to the clan's Discord and other pages.
+- **Links.** One-click buttons to the clan's Discord and other pages. Only pages on Discord, Wise Old Man, the Old
+  School wiki and runescape.com are opened, so a changed link in the clan sheet cannot send you anywhere else.
 - **Your place.** On the challenge pages, a card with your own place and gain, and your row highlighted in the
   standings.
 - **Admin pages.** Pages the clan limits to a rank, e.g. Administrator, only show for members of that rank or above.

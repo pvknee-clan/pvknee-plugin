@@ -4,10 +4,10 @@ import java.awt.FlowLayout;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import net.runelite.client.ui.FontManager;
-import net.runelite.client.util.LinkBrowser;
 
 /**
- * A card-style button with centred text and a small muted "external" icon after it, that opens a web page.
+ * A card-style button with centred text and a small muted "external" icon after it, that opens a web page on one of
+ * the known sites ({@link WebLinks}).
  */
 public class LinkButton extends Card
 {
@@ -18,7 +18,7 @@ public class LinkButton extends Card
 	{
 		super(new FlowLayout(FlowLayout.CENTER, 0, 0));
 		Labels.tooltip(this, url);
-		onClick(() -> LinkBrowser.browse(url));
+		onClick(() -> WebLinks.open(url));
 
 		JLabel label = Labels.plain(text, colours.getValue(), FontManager.getRunescapeFont());
 		label.setIcon(new GlyphIcon(Glyphs.EXTERNAL, colours.getMuted(), ICON_SIZE));

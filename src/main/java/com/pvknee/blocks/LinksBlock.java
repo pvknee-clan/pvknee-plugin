@@ -10,6 +10,7 @@ import com.pvknee.ui.Labels;
 import com.pvknee.ui.Section;
 import com.pvknee.ui.Spacing;
 import com.pvknee.ui.ThemeColours;
+import com.pvknee.ui.WebLinks;
 import java.awt.BorderLayout;
 import java.awt.Shape;
 import java.awt.GridLayout;
@@ -19,8 +20,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.FontManager;
-import net.runelite.client.util.LinkBrowser;
-import okhttp3.HttpUrl;
 
 /**
  * Links as a two-column grid of compact buttons, each with its icon above the label. The icon is a {@link Glyphs}
@@ -46,14 +45,14 @@ class LinksBlock implements BlockRenderer
 		grid.setOpaque(false);
 		for (Link link : links)
 		{
-			// Only web addresses: LinkBrowser cannot open anything else.
-			if (link.getUrl() != null && HttpUrl.parse(link.getUrl().trim()) != null)
+			// Only pages on the known sites, so a changed sheet cannot point members anywhere else.
+			if (WebLinks.isAllowed(link.getUrl()))
 			{
 				grid.add(linkButton(link, context));
 			}
 			else
 			{
-				log.debug("Skipping link {} with no web address", link.getLabel());
+				log.debug("Skipping link {}, not on a known site: {}", link.getLabel(), link.getUrl());
 			}
 		}
 		if (grid.getComponentCount() == 0)
@@ -69,7 +68,7 @@ class LinksBlock implements BlockRenderer
 		ThemeColours colours = context.getColours();
 		Card card = new Card(new BorderLayout());
 		Labels.tooltip(card, link.getUrl());
-		card.onClick(() -> LinkBrowser.browse(link.getUrl().trim()));
+		card.onClick(() -> WebLinks.open(link.getUrl()));
 
 		String label = link.getLabel() == null ? link.getUrl() : link.getLabel();
 		card.add(new IconCaption(null, icon(link.getIcon(), colours), label, colours.getValue(), FontManager.getRunescapeFont(), LABEL_WIDTH, colours), BorderLayout.CENTER);
