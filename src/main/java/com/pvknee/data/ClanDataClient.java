@@ -1,6 +1,8 @@
 package com.pvknee.data;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.pvknee.DevLog;
 import com.pvknee.PvKneeConfig;
@@ -8,7 +10,9 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -284,17 +288,81 @@ public class ClanDataClient
 		latest = data;
 	}
 
+	/**
+	 * Reads the response. A section that cannot be read (e.g. a malformed bingo) is left out and the rest still loads.
+	 */
 	private ClanData parse(String json) throws IOException
 	{
-		ClanData data = gson.fromJson(json, ClanData.class);
-		if (data == null)
+		JsonObject root = gson.fromJson(json, JsonObject.class);
+		if (root == null)
 		{
 			throw new IOException("Empty response");
+		}
+
+		ClanData data;
+		try
+		{
+			data = gson.fromJson(root, ClanData.class);
+		}
+		catch (JsonParseException e)
+		{
+			data = gson.fromJson(readableSections(root), ClanData.class);
 		}
 		if (data.getError() != null)
 		{
 			throw new IOException("Endpoint error: " + data.getError());
 		}
+		fillMissing(data);
 		return data;
+	}
+
+	/**
+	 * The response without the top-level sections that cannot be read on their own.
+	 */
+	private JsonObject readableSections(JsonObject root)
+	{
+		JsonObject readable = new JsonObject();
+		for (Map.Entry<String, JsonElement> section : root.entrySet())
+		{
+			JsonObject alone = new JsonObject();
+			alone.add(section.getKey(), section.getValue());
+			try
+			{
+				gson.fromJson(alone, ClanData.class);
+				readable.add(section.getKey(), section.getValue());
+			}
+			catch (JsonParseException e)
+			{
+				devLog.log("load: {} could not be read and was left out, {}", section.getKey(), e.getMessage(), e);
+			}
+		}
+		return readable;
+	}
+
+	/**
+	 * Empty lists and sections in place of ones the response set to null, so readers need not check.
+	 */
+	private static void fillMissing(ClanData data)
+	{
+		if (data.getPages() == null)
+		{
+			data.setPages(new ArrayList<>());
+		}
+		if (data.getCompetitions() == null)
+		{
+			data.setCompetitions(new Competitions());
+		}
+		if (data.getEvents() == null)
+		{
+			data.setEvents(new ArrayList<>());
+		}
+		if (data.getLinks() == null)
+		{
+			data.setLinks(new ArrayList<>());
+		}
+		if (data.getMessages() == null)
+		{
+			data.setMessages(new HashMap<>());
+		}
 	}
 }

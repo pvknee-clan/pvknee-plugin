@@ -196,11 +196,12 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 
 	private void show(ClanData data, Instant at)
 	{
+		// Cleared first, so a response that fails to display cannot stop all later refreshes.
+		loading = false;
+		topBar.setLoading(false);
 		devLog.log("load: {} pages", data.getPages().size());
 		loadedAt = at;
 		updatedAt = loadedAt;
-		loading = false;
-		topBar.setLoading(false);
 		errorLine.clear();
 		lastUpdatedLine.clear();
 		display(data);

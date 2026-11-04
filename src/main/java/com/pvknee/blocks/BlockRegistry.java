@@ -47,6 +47,15 @@ public class BlockRegistry
 			log.debug("Skipping unknown block type {}", block.getType());
 			return null;
 		}
-		return renderer.render(block, context);
+		try
+		{
+			return renderer.render(block, context);
+		}
+		catch (RuntimeException e)
+		{
+			// One bad block must not break the page: skip it and draw the rest.
+			log.debug("Skipping {} block that failed to draw {}", block.getType(), block.getSettings(), e);
+			return null;
+		}
 	}
 }

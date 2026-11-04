@@ -24,6 +24,8 @@ public final class Labels
 	public static final int CONTENT_WIDTH = PluginPanel.PANEL_WIDTH - 20;
 	/** Names wrap to at most this many lines. */
 	public static final int NAME_LINES = 2;
+	/** Clamped text is measured up to this many characters. */
+	private static final int MAX_MEASURED = 2000;
 
 	private Labels()
 	{
@@ -85,8 +87,10 @@ public final class Labels
 	/**
 	 * A wrapped label of at most this many lines; longer text is cut short and ends with "...".
 	 */
-	public static JLabel clamped(String text, Color colour, Font font, int width, boolean centred, int maxLines)
+	public static JLabel clamped(String fullText, Color colour, Font font, int width, boolean centred, int maxLines)
 	{
+		// Only the start is measured, so a huge cell cannot stall the panel; it is cut short anyway.
+		String text = fullText.length() > MAX_MEASURED ? fullText.substring(0, MAX_MEASURED) : fullText;
 		JLabel label = label(String.join("\n", Collections.nCopies(maxLines, "X")), colour, font, width, centred);
 		int maxHeight = label.getPreferredSize().height;
 		setText(label, text, width, centred);

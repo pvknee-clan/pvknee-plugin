@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.util.LinkBrowser;
+import okhttp3.HttpUrl;
 
 /**
  * Links as a two-column grid of compact buttons, each with its icon above the label. The icon is a {@link Glyphs}
@@ -45,9 +46,14 @@ class LinksBlock implements BlockRenderer
 		grid.setOpaque(false);
 		for (Link link : links)
 		{
-			if (link.getUrl() != null && !link.getUrl().isEmpty())
+			// Only web addresses: LinkBrowser cannot open anything else.
+			if (link.getUrl() != null && HttpUrl.parse(link.getUrl().trim()) != null)
 			{
 				grid.add(linkButton(link, context));
+			}
+			else
+			{
+				log.debug("Skipping link {} with no web address", link.getLabel());
 			}
 		}
 		if (grid.getComponentCount() == 0)
@@ -63,7 +69,7 @@ class LinksBlock implements BlockRenderer
 		ThemeColours colours = context.getColours();
 		Card card = new Card(new BorderLayout());
 		Labels.tooltip(card, link.getUrl());
-		card.onClick(() -> LinkBrowser.browse(link.getUrl()));
+		card.onClick(() -> LinkBrowser.browse(link.getUrl().trim()));
 
 		String label = link.getLabel() == null ? link.getUrl() : link.getLabel();
 		card.add(new IconCaption(null, icon(link.getIcon(), colours), label, colours.getValue(), FontManager.getRunescapeFont(), LABEL_WIDTH, colours), BorderLayout.CENTER);

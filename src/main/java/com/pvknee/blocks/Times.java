@@ -22,6 +22,8 @@ public final class Times
 	private static final Duration ENDING_SOON = Duration.ofHours(24);
 	/** Spans longer than this get one bar segment per week instead of per day. */
 	private static final Duration DAILY_SEGMENTS = Duration.ofDays(14);
+	/** Longer spans get one plain bar: day or week segments would be too thin to read. */
+	private static final Duration MAX_SEGMENTED = Duration.ofDays(60);
 
 	private static volatile boolean utc;
 
@@ -107,11 +109,16 @@ public final class Times
 	}
 
 	/**
-	 * The number of bar segments for a span: one per day, or one per week when it is over 14 days.
+	 * The number of bar segments for a span: one per day, one per week when it is over 14 days, and a single plain bar
+	 * when it is over 60 days.
 	 */
 	public static int segments(Instant start, Instant end)
 	{
 		Duration span = Duration.between(start, end);
+		if (span.compareTo(MAX_SEGMENTED) > 0)
+		{
+			return 1;
+		}
 		Duration unit = span.compareTo(DAILY_SEGMENTS) > 0 ? Duration.ofDays(7) : Duration.ofDays(1);
 		return (int) Math.max(1, (span.toMillis() + unit.toMillis() - 1) / unit.toMillis());
 	}
