@@ -2,13 +2,20 @@ package com.pvknee.blocks;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.MemoryCacheImageInputStream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.ImageIcon;
@@ -23,15 +30,24 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okio.BufferedSource;
 
 /**
  * Loads images from URLs once and keeps them in memory. Labels fill in on the Swing thread when the image arrives.
+ * Only https addresses on raw.githubusercontent.com are loaded, at most 256 KB and 512 px a side; anything else is
+ * skipped and its space stays empty. Addresses that failed are not tried again this session.
  */
 @Slf4j
 @Singleton
 public class ImageLoader
 {
+	private static final String ALLOWED_HOST = "raw.githubusercontent.com";
+	private static final int MAX_BYTES = 256 * 1024;
+	private static final int MAX_SIDE = 512;
+
 	private final OkHttpClient okHttpClient;
+	/** Addresses that were refused or failed this session, so a page rebuild does not fetch them again. */
+	private final Set<String> failed = new HashSet<>();
 	private final Map<String, BufferedImage> images = new HashMap<>();
 	private final Map<String, ImageIcon> icons = new HashMap<>();
 	private final Map<String, List<Consumer<BufferedImage>>> pending = new HashMap<>();
@@ -51,6 +67,15 @@ public class ImageLoader
 		JLabel label = emptyLabel(size);
 		load(url, image -> label.setIcon(icon(url, image, size)));
 		return label;
+	}
+
+	/**
+	 * Whether an image may be loaded from this address: https on raw.githubusercontent.com, matching the host exactly.
+	 */
+	static boolean isAllowed(String url)
+	{
+		HttpUrl httpUrl = url == null ? null : HttpUrl.parse(url);
+		return httpUrl != null && httpUrl.isHttps() && ALLOWED_HOST.equals(httpUrl.host());
 	}
 
 	/**
@@ -121,12 +146,17 @@ public class ImageLoader
 			return;
 		}
 
-		HttpUrl httpUrl = url == null ? null : HttpUrl.parse(url);
-		if (httpUrl == null)
+		if (url == null || failed.contains(url))
 		{
-			log.debug("Invalid image URL {}", url);
 			return;
 		}
+		if (!isAllowed(url))
+		{
+			log.debug("Image skipped, not an allowed address: {}", url);
+			failed.add(url);
+			return;
+		}
+		HttpUrl httpUrl = HttpUrl.get(url);
 
 		waiting = new ArrayList<>();
 		waiting.add(onLoad);
@@ -138,7 +168,11 @@ public class ImageLoader
 			public void onFailure(Call call, IOException e)
 			{
 				log.debug("Failed to load image {}", url, e);
-				SwingUtilities.invokeLater(() -> pending.remove(url));
+				SwingUtilities.invokeLater(() ->
+				{
+					pending.remove(url);
+					failed.add(url);
+				});
 			}
 
 			@Override
@@ -149,10 +183,7 @@ public class ImageLoader
 				{
 					if (response.isSuccessful() && body != null)
 					{
-						synchronized (ImageIO.class)
-						{
-							image = ImageIO.read(body.byteStream());
-						}
+						image = read(body, url);
 					}
 				}
 				catch (IOException e)
@@ -174,8 +205,58 @@ public class ImageLoader
 						images.put(url, loaded);
 						callbacks.forEach(callback -> callback.accept(loaded));
 					}
+					else
+					{
+						failed.add(url);
+					}
 				});
 			}
 		});
+	}
+
+	/**
+	 * Decodes the image if it is at most {@link #MAX_BYTES} and {@link #MAX_SIDE} px a side, reading its size before
+	 * decoding it; null otherwise.
+	 */
+	private static BufferedImage read(ResponseBody body, String url) throws IOException
+	{
+		BufferedSource source = body.source();
+		if (body.contentLength() > MAX_BYTES || source.request(MAX_BYTES + 1L))
+		{
+			log.debug("Image skipped, over {} bytes: {}", MAX_BYTES, url);
+			return null;
+		}
+		byte[] bytes = source.buffer().readByteArray();
+
+		synchronized (ImageIO.class)
+		{
+			// Kept in memory: ImageIO's own streams may cache to a file on disk.
+			try (ImageInputStream input = new MemoryCacheImageInputStream(new ByteArrayInputStream(bytes)))
+			{
+				Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
+				if (!readers.hasNext())
+				{
+					return null;
+				}
+
+				ImageReader reader = readers.next();
+				try
+				{
+					reader.setInput(input, true, true);
+					int width = reader.getWidth(0);
+					int height = reader.getHeight(0);
+					if (width > MAX_SIDE || height > MAX_SIDE)
+					{
+						log.debug("Image skipped, {}x{} is over {} px a side: {}", width, height, MAX_SIDE, url);
+						return null;
+					}
+					return reader.read(0);
+				}
+				finally
+				{
+					reader.dispose();
+				}
+			}
+		}
 	}
 }

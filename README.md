@@ -58,9 +58,11 @@ you log in, for the chat messages and team icons (not at all if those are turned
 | --- | --- | --- | --- |
 | The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions and their standings, events, links and bingo, built from the clan's Google Sheets | When the panel is opened, on Refresh, and every 10 minutes while it is open; once when you log in (unless loaded in the last 10 minutes, or the chat messages, team icons and team overlay are all off); when you use `!sotw` or `!botw` and the data is more than 10 minutes old. Never more than once a minute; after a failed load, automatic tries wait 1, then 5, then 15 minutes |
 | Wise Old Man | `api.wiseoldman.net` | A profile update for your username | Only with **Update Wise Old Man on logout** on: when you log out after progress (over 10,000 xp or a kill or completion count) on a normal world, unless XP Updater already sends it; at most once every 10 minutes per name |
-| GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon per session |
+| GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon per session; a failed icon is not tried again until the client restarts |
 
 Skill and item icons come from RuneLite itself; all other icons are built into the plugin.
+Images are only ever loaded from `https://raw.githubusercontent.com`, at most 256 KB and 512 pixels a side; the
+clan sheet cannot point the plugin at any other site.
 
 The plugin does not send your username or any other player data to these services, except your username to Wise Old
 Man when you turn on **Update Wise Old Man on logout**. Your clan rank, world and name are read from the game client

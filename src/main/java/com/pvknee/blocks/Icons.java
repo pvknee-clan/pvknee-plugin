@@ -19,6 +19,9 @@ import net.runelite.client.util.AsyncBufferedImage;
 @Singleton
 public class Icons
 {
+	/** Wise Old Man's own metric icons, used when the endpoint's iconBase is missing or not an allowed address. */
+	private static final String DEFAULT_ICON_BASE = "https://raw.githubusercontent.com/wise-old-man/wise-old-man/master/app/public/img/metrics/";
+
 	private final SkillIconManager skillIcons;
 	private final ItemManager itemManager;
 	private final ImageLoader images;
@@ -34,7 +37,8 @@ public class Icons
 	}
 
 	/**
-	 * The icon for a Wise Old Man metric, e.g. woodcutting or cerberus. Bosses load from iconBase.
+	 * The icon for a Wise Old Man metric, e.g. woodcutting or cerberus. Bosses load from iconBase if it is an allowed
+	 * address, otherwise from Wise Old Man's own icons.
 	 * Call on the Swing thread.
 	 */
 	public JLabel metric(String metric, String iconBase, int size)
@@ -46,7 +50,8 @@ public class Icons
 				k -> ImageLoader.scaled(skillIcons.getSkillImage(skill), size));
 			return new JLabel(icon);
 		}
-		return images.icon(iconBase == null || metric == null ? null : iconBase + metric + ".png", size);
+		String base = ImageLoader.isAllowed(iconBase) ? iconBase : DEFAULT_ICON_BASE;
+		return images.icon(metric == null ? null : base + metric + ".png", size);
 	}
 
 	/**
