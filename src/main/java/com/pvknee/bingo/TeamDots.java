@@ -7,11 +7,12 @@ import java.awt.RenderingHints;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import net.runelite.api.Client;
+import net.runelite.api.WorldType;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.game.ChatIconManager;
 
 /**
@@ -36,6 +37,18 @@ public class TeamDots
 		this.chatIconManager = chatIconManager;
 	}
 
+	/**
+	 * Why no team dots may show here, or null where they may: dots are never shown where they could mark PvP
+	 * opponents. Call on the client thread.
+	 */
+	public static String hiddenForPvp(Client client)
+	{
+		return client.getVarbitValue(VarbitID.INSIDE_WILDERNESS) == 1 ? "in the Wilderness"
+			: WorldType.isPvpWorld(client.getWorldType()) ? "on a PvP world"
+			: client.getVarbitValue(VarbitID.PVP_AREA_CLIENT) == 1 ? "in a PvP area"
+			: null;
+	}
+
 	public BufferedImage image(Color colour)
 	{
 		return images.computeIfAbsent(colour.getRGB(), rgb -> draw(colour));
@@ -47,14 +60,6 @@ public class TeamDots
 	public String chatTag(Color colour)
 	{
 		return tag(chatIcons.computeIfAbsent(colour.getRGB(), rgb -> chatIconManager.registerChatIcon(image(colour))));
-	}
-
-	/**
-	 * Every chat tag registered so far, for removing them again.
-	 */
-	public List<String> chatTags()
-	{
-		return chatIcons.values().stream().map(this::tag).filter(tag -> !tag.isEmpty()).collect(Collectors.toList());
 	}
 
 	private String tag(int id)

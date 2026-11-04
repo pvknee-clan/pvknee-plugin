@@ -98,7 +98,7 @@ public interface PvKneeConfig extends Config
 	@ConfigItem(
 		keyName = "teamIconsInChat",
 		name = "Team icons in chat",
-		description = "Shows a dot in the team colour before the names of bingo players in clan and public chat and in the Clan tab's member list",
+		description = "Shows a dot in the team colour before the names of clan members on a bingo team in clan and public chat, except in the Wilderness, on PvP worlds and in PvP areas",
 		position = 0,
 		section = bingoSection
 	)
@@ -110,7 +110,7 @@ public interface PvKneeConfig extends Config
 	@ConfigItem(
 		keyName = "teamIconsAboveHeads",
 		name = "Team icons above heads",
-		description = "Shows a dot in the team colour beside the names Player Indicators draws for bingo players, except in the Wilderness and on PvP worlds. Needs Player Indicators on and showing names",
+		description = "Shows a dot in the team colour beside the names Player Indicators draws for bingo players, except in the Wilderness, on PvP worlds and in PvP areas. Needs Player Indicators on and showing names",
 		position = 1,
 		section = bingoSection
 	)

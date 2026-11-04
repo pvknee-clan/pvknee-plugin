@@ -3,46 +3,36 @@ package com.pvknee.bingo;
 import com.pvknee.DevLog;
 import com.pvknee.PvKneeConfig;
 import java.util.EnumSet;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import net.runelite.api.ChatLineBuffer;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.MessageNode;
-import net.runelite.api.events.ChatMessage;
-import net.runelite.api.events.ScriptPostFired;
-import net.runelite.api.gameval.InterfaceID;
-import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetType;
+import net.runelite.api.events.ClanChannelChanged;
+import net.runelite.api.events.GameTick;
+import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
-import net.runelite.client.util.Text;
 
 /**
- * Team dots in the chatbox and the clan member list while a bingo runs, for players on a team. In public chat the dot
- * goes in front of the sender's name. In clan chat and the member list the game draws the clan rank icon as its own
- * graphic beside the name, so after each build that icon is hidden and the name, with the dot in front, takes its
- * place. Only changes what the member sees; messages they send are untouched. Used on the client thread.
+ * Team dots in front of the names of clan members on a bingo team in public and clan chat, while a bingo runs. Added
+ * the way RuneLite adds its own chat icons: as each chat line is built, the dot's image tag goes in front of the
+ * sender's name on the string stack. The clan rank icon stays, the game's widgets are untouched and messages the
+ * member sends are unchanged, so turning it off only needs a chat refresh. Hidden where overhead dots are: in the
+ * Wilderness, on PvP worlds and in PvP areas. Used on the client thread.
  */
 @Singleton
 public class TeamChatIcons
 {
-	private static final Set<ChatMessageType> PUBLIC = EnumSet.of(ChatMessageType.PUBLICCHAT, ChatMessageType.MODCHAT);
-	/**
-	 * The game's chatbox build procedure (RuneLite's ChatBuilder). Every chatbox rebuild runs it, whichever script
-	 * starts the rebuild; {@code ScriptID.BUILD_CHATBOX} is only one of the scripts that call it.
-	 */
-	private static final int CHATBOX_BUILD_PROC = 84;
-	/** Each chat line uses four children of the chatbox: the name, the message, the "[clan]" prefix and the rank icon. */
-	private static final int LINE_CHILDREN = 4;
-	private static final int NAME_SLOT = 0;
-	private static final int RANK_ICON_SLOT = 3;
-	/** The game's procedure that fills the clan member list, whichever script redraws the Clan tab. */
-	private static final int CLAN_LIST_DRAW_PROC = 4399;
+	private static final Set<ChatMessageType> TYPES = EnumSet.of(ChatMessageType.PUBLICCHAT, ChatMessageType.MODCHAT,
+		ChatMessageType.CLAN_CHAT);
+	private static final String CHAT_MESSAGE_BUILDING = "chatMessageBuilding";
+	/** Where the sender's name sits on the string stack while a chat line is built, counted from the top. */
+	private static final int NAME_FROM_TOP = 3;
 
 	private final Client client;
 	private final ClientThread clientThread;
@@ -52,10 +42,8 @@ public class TeamChatIcons
 	private final PvKneeConfig config;
 	private final DevLog devLog;
 
-	/** Clan rank icons replaced in the last chatbox build, logged when it changes. */
-	private int replaced;
-	/** The same for the clan member list. */
-	private int listReplaced;
+	/** Why the dots are hidden for PvP, as of the last tick, so the chat is rebuilt when it changes. */
+	private String pvpHidden;
 
 	@Inject
 	TeamChatIcons(Client client, ClientThread clientThread, EventBus eventBus, TeamRoster roster, TeamDots dots,
@@ -84,9 +72,8 @@ public class TeamChatIcons
 		eventBus.unregister(this);
 		clientThread.invoke(() ->
 		{
-			retagHistory(false);
+			pvpHidden = null;
 			client.refreshChat();
-			updateClanList(false);
 		});
 	}
 
@@ -101,207 +88,54 @@ public class TeamChatIcons
 	}
 
 	@Subscribe
-	public void onChatMessage(ChatMessage event)
+	public void onClanChannelChanged(ClanChannelChanged event)
 	{
-		if (!config.teamIconsInChat())
-		{
-			return;
-		}
-
-		boolean publicChat = PUBLIC.contains(event.getType());
-		if (!publicChat && event.getType() != ChatMessageType.CLAN_CHAT)
-		{
-			return;
-		}
-		TeamRoster.Team team = roster.teamOf(event.getName());
-		if (team == null)
-		{
-			return;
-		}
-
-		if (publicChat)
-		{
-			tag(event.getMessageNode());
-		}
-		devLog.log("chat icons: {} dot for {} in {} chat", team.getName(), Text.removeTags(event.getName()), publicChat ? "public" : "clan");
+		// The clan's member list arrives after login, so lines built before it get their dots now.
+		client.refreshChat();
 	}
 
 	@Subscribe
-	public void onScriptPostFired(ScriptPostFired event)
+	public void onGameTick(GameTick event)
 	{
-		if (event.getScriptId() == CLAN_LIST_DRAW_PROC)
+		String hidden = TeamDots.hiddenForPvp(client);
+		if (!Objects.equals(hidden, pvpHidden))
 		{
-			updateClanList(config.teamIconsInChat());
-			return;
+			pvpHidden = hidden;
+			devLog.log("chat icons: {}", hidden == null ? "shown again" : "hidden, " + hidden);
+			client.refreshChat();
 		}
-		if (event.getScriptId() != CHATBOX_BUILD_PROC)
+	}
+
+	@Subscribe
+	public void onScriptCallbackEvent(ScriptCallbackEvent event)
+	{
+		if (!CHAT_MESSAGE_BUILDING.equals(event.getEventName()) || !config.teamIconsInChat() || roster.isEmpty()
+			|| pvpHidden != null)
 		{
 			return;
 		}
 
-		int count = config.teamIconsInChat() && !roster.isEmpty() ? replaceRankIcons() : 0;
-		if (count != replaced)
+		int uid = client.getIntStack()[client.getIntStackSize() - 1];
+		MessageNode node = client.getMessages().get(uid);
+		if (node == null || !TYPES.contains(node.getType()))
 		{
-			// Logged only on a change: the log line itself rebuilds the chatbox.
-			replaced = count;
-			devLog.log("chat icons: {} clan rank icons replaced with team dots", count);
+			return;
+		}
+
+		TeamRoster.Team team = roster.clanTeamOf(node.getName());
+		String tag = team == null ? "" : dots.chatTag(team.getColour());
+		if (!tag.isEmpty())
+		{
+			String[] strings = client.getStringStack();
+			int name = client.getStringStackSize() - NAME_FROM_TOP;
+			strings[name] = tag + strings[name];
 		}
 	}
 
 	private void redraw()
 	{
-		// Registered now, so the client has loaded them by the first message.
+		// Registered now, so the client has loaded them by the time the chat is built.
 		roster.teams().forEach(team -> dots.chatTag(team.getColour()));
-		retagHistory(config.teamIconsInChat());
 		client.refreshChat();
-		updateClanList(config.teamIconsInChat());
-	}
-
-	/**
-	 * Takes the dots off every public chat line in the chatbox, then puts them back for players on a team when on.
-	 */
-	private void retagHistory(boolean on)
-	{
-		for (ChatLineBuffer buffer : client.getChatLineMap().values())
-		{
-			if (buffer == null)
-			{
-				continue;
-			}
-			for (MessageNode node : buffer.getLines())
-			{
-				if (node == null || !PUBLIC.contains(node.getType()) || node.getName() == null)
-				{
-					continue;
-				}
-				String plain = untagged(node.getName());
-				if (!plain.equals(node.getName()))
-				{
-					node.setName(plain);
-				}
-				if (on)
-				{
-					tag(node);
-				}
-			}
-		}
-	}
-
-	private void tag(MessageNode node)
-	{
-		TeamRoster.Team team = roster.teamOf(node.getName());
-		if (team != null)
-		{
-			node.setName(dots.chatTag(team.getColour()) + untagged(node.getName()));
-		}
-	}
-
-	private String untagged(String name)
-	{
-		for (String tag : dots.chatTags())
-		{
-			name = name.replace(tag, "");
-		}
-		return name;
-	}
-
-	/**
-	 * In each clan chat line from a player on a team, hides the rank icon and moves the name, with the dot in front,
-	 * into its place. Returns how many it replaced.
-	 */
-	private int replaceRankIcons()
-	{
-		Widget area = client.getWidget(InterfaceID.Chatbox.SCROLLAREA);
-		Widget[] children = area == null ? null : area.getDynamicChildren();
-		if (children == null)
-		{
-			return 0;
-		}
-
-		int count = 0;
-		for (int line = 0; line + RANK_ICON_SLOT < children.length; line += LINE_CHILDREN)
-		{
-			Widget name = children[line + NAME_SLOT];
-			Widget icon = children[line + RANK_ICON_SLOT];
-			if (name == null || icon == null || icon.isHidden() || name.isHidden()
-				|| icon.getType() != WidgetType.GRAPHIC || name.getType() != WidgetType.TEXT || name.getText() == null)
-			{
-				continue;
-			}
-
-			String sender = Text.removeTags(name.getText());
-			if (sender.endsWith(":"))
-			{
-				sender = sender.substring(0, sender.length() - 1);
-			}
-			TeamRoster.Team team = roster.teamOf(sender);
-			String tag = team == null ? "" : dots.chatTag(team.getColour());
-			if (tag.isEmpty())
-			{
-				continue;
-			}
-
-			int shift = name.getOriginalX() - icon.getOriginalX();
-			icon.setHidden(true);
-			name.setOriginalX(icon.getOriginalX());
-			name.setOriginalWidth(name.getOriginalWidth() + shift);
-			name.setText(tag + name.getText());
-			name.revalidate();
-			count++;
-		}
-		return count;
-	}
-
-	/**
-	 * In the clan member list, swaps the rank icon for the team dot on players on a team, and back on the others (or
-	 * on everyone when off). Each online member is a name, a world and a rank icon; the name starts just right of the
-	 * icon, so it grows left by the dot's width with the dot in front.
-	 */
-	private void updateClanList(boolean on)
-	{
-		Widget list = client.getWidget(InterfaceID.ClansSidepanel.PLAYERLIST);
-		Widget[] children = list == null ? null : list.getDynamicChildren();
-		if (children == null)
-		{
-			return;
-		}
-
-		int count = 0;
-		for (int i = 0; i + 2 < children.length; i++)
-		{
-			Widget name = children[i];
-			Widget icon = children[i + 2];
-			if (name == null || icon == null || name.getType() != WidgetType.TEXT || name.getText() == null
-				|| children[i + 1] == null || children[i + 1].getType() != WidgetType.TEXT || icon.getType() != WidgetType.GRAPHIC)
-			{
-				continue;
-			}
-
-			String plain = untagged(name.getText());
-			if (!plain.equals(name.getText()))
-			{
-				name.setText(plain);
-				name.setOriginalWidth(name.getOriginalWidth() + TeamDots.SIZE);
-				icon.setHidden(false);
-			}
-
-			TeamRoster.Team team = on ? roster.teamOf(plain) : null;
-			String tag = team == null ? "" : dots.chatTag(team.getColour());
-			if (!tag.isEmpty())
-			{
-				name.setText(tag + plain);
-				name.setOriginalWidth(name.getOriginalWidth() - TeamDots.SIZE);
-				icon.setHidden(true);
-				count++;
-			}
-			name.revalidate();
-			i += 2;
-		}
-
-		if (count != listReplaced)
-		{
-			listReplaced = count;
-			devLog.log("clan list: {} rank icons replaced with team dots", count);
-		}
 	}
 }

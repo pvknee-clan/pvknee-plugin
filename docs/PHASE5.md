@@ -237,3 +237,10 @@ New features; Plugin Hub submission itself (`docs/SUBMISSION.md`).
   the next load, served from the script's cache, took about a second.
 - Task 6: the safe label factory (`Labels.plain`) replaced the private label helpers in `StandingCard`, `RankTable`,
   `RankBadge`, `TimeBar`, `BingoTileDetail` and `BingoTeamBlock`, so that part of task 12's duplication item is done.
+- Task 9: not tested in the dev client yet (no date-only event to hand); the owner checks it with the other unknowns
+  at the end. Code.gs confirmed a date-only end is sent as midnight UTC after the last day, so the plugin treats that
+  day as the first one not covered.
+- Task 10: the Clan tab member list no longer gets dots. The list is filled by the game's own procedure (4399), which
+  the old code had to hard-code to catch every redraw, and adding the dot there would mean resizing the name widget;
+  both are ruled out. Chat dots and overhead dots also wait for the clan's member list after login (refreshed on
+  ClanChannelChanged). Rank icon plus dot: outcome to be recorded after the owner's check in the dev client.

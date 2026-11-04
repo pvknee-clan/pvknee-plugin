@@ -13,12 +13,11 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Player;
 import net.runelite.api.Point;
-import net.runelite.api.WorldType;
+import net.runelite.api.events.ClanChannelChanged;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.PlayerDespawned;
 import net.runelite.api.events.PlayerSpawned;
-import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
@@ -31,7 +30,7 @@ import net.runelite.client.util.Text;
 /**
  * A team dot for each player on a bingo team, just left of the name RuneLite's Player Indicators plugin draws for
  * them; no name, no dot. The players on a team are kept as they spawn and despawn, so drawing never searches the
- * scene. Hidden in the Wilderness and on PvP worlds.
+ * scene. Only clan members are marked. Hidden in the Wilderness, on PvP worlds and in PvP areas.
  */
 @Singleton
 public class TeamHeadOverlay extends Overlay
@@ -104,7 +103,7 @@ public class TeamHeadOverlay extends Overlay
 	public void onPlayerSpawned(PlayerSpawned event)
 	{
 		Player player = event.getPlayer();
-		TeamRoster.Team team = roster.teamOf(player.getName());
+		TeamRoster.Team team = roster.clanTeamOf(player.getName());
 		if (team != null)
 		{
 			shown.put(player, team);
@@ -129,12 +128,18 @@ public class TeamHeadOverlay extends Overlay
 	}
 
 	@Subscribe
+	public void onClanChannelChanged(ClanChannelChanged event)
+	{
+		// The clan's member list arrives after login, so players seen before it are checked again.
+		findPlayers();
+	}
+
+	@Subscribe
 	public void onGameTick(GameTick event)
 	{
 		hiddenBecause = !config.teamIconsAboveHeads() ? "turned off"
 			: roster.isEmpty() ? "no bingo running"
-			: client.getVarbitValue(VarbitID.INSIDE_WILDERNESS) == 1 ? "in the Wilderness"
-			: WorldType.isPvpWorld(client.getWorldType()) ? "on a PvP world"
+			: TeamDots.hiddenForPvp(client) != null ? TeamDots.hiddenForPvp(client)
 			: names.off();
 
 		named.clear();
@@ -188,7 +193,7 @@ public class TeamHeadOverlay extends Overlay
 		}
 		for (Player player : client.getTopLevelWorldView().players())
 		{
-			TeamRoster.Team team = player == null ? null : roster.teamOf(player.getName());
+			TeamRoster.Team team = player == null ? null : roster.clanTeamOf(player.getName());
 			if (team != null)
 			{
 				shown.put(player, team);

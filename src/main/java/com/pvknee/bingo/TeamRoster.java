@@ -14,10 +14,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.Value;
+import net.runelite.api.Client;
+import net.runelite.api.clan.ClanMember;
+import net.runelite.api.clan.ClanSettings;
 import net.runelite.api.events.GameTick;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
@@ -38,6 +44,7 @@ public class TeamRoster
 	}
 
 	private final ClanDataClient clanData;
+	private final Client client;
 	private final EventBus eventBus;
 	private final DevLog devLog;
 	private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
@@ -49,11 +56,15 @@ public class TeamRoster
 	private Instant endsAt;
 	/** The last roster logged, so a reload that changes nothing logs nothing. */
 	private String logged;
+	/** The clan's members by {@link PlayerState#nameKey}, and the clan settings they were read from. */
+	private Set<String> clanMembers = Collections.emptySet();
+	private ClanSettings clanMembersFrom;
 
 	@Inject
-	TeamRoster(ClanDataClient clanData, EventBus eventBus, DevLog devLog)
+	TeamRoster(ClanDataClient clanData, Client client, EventBus eventBus, DevLog devLog)
 	{
 		this.clanData = clanData;
+		this.client = client;
 		this.eventBus = eventBus;
 		this.devLog = devLog;
 	}
@@ -71,6 +82,8 @@ public class TeamRoster
 		builtFrom = null;
 		endsAt = null;
 		logged = null;
+		clanMembers = Collections.emptySet();
+		clanMembersFrom = null;
 	}
 
 	/**
@@ -87,6 +100,35 @@ public class TeamRoster
 	public Team teamOf(String name)
 	{
 		return name == null || teams.isEmpty() ? null : teams.get(PlayerState.nameKey(Text.removeTags(name)));
+	}
+
+	/**
+	 * The team of this player if they are also in the clan's member list, so a bingo sheet cannot be used to mark
+	 * players outside the clan; null otherwise. Call on the client thread.
+	 */
+	public Team clanTeamOf(String name)
+	{
+		Team team = teamOf(name);
+		return team != null && isClanMember(name) ? team : null;
+	}
+
+	private boolean isClanMember(String name)
+	{
+		ClanSettings settings = client.getClanSettings();
+		if (settings == null)
+		{
+			return false;
+		}
+		if (settings != clanMembersFrom)
+		{
+			clanMembersFrom = settings;
+			clanMembers = settings.getMembers().stream()
+				.map(ClanMember::getName)
+				.filter(Objects::nonNull)
+				.map(PlayerState::nameKey)
+				.collect(Collectors.toSet());
+		}
+		return clanMembers.contains(PlayerState.nameKey(Text.removeTags(name)));
 	}
 
 	/**
