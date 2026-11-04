@@ -33,7 +33,7 @@ import net.runelite.client.util.ImageUtil;
 
 @Slf4j
 @PluginDescriptor(
-	name = "PvKnee",
+	name = "PvKnee Clan",
 	internalName = "pvknee",
 	description = "Clan panel for PvKnee",
 	tags = {"clan", "sotw", "botw", "events", "wom"}
