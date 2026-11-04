@@ -11,10 +11,16 @@ the bingo team icons only mean something if you are in the clan.
 ## Features
 
 ### Overview
+
+![The Home page](screenshots/home.png)
+
 View a summary of the clan, home world, current and upcoming events.
 Participate in boss/skill of the week, or view current events such as bingo boards directly within RuneLite.
 
 ### Skill and Boss of the Week
+
+![A Skill of the Week page with standings](screenshots/sotw.png)
+
 - **Challenges.** Participate in this week's skill/boss challenge to climb the ranks for this week.
 - **Standings.** View clan members' gains for each challenge, updated regularly.
 - **Your place.** Your own place and gain, with your row highlighted in the standings.
@@ -28,6 +34,9 @@ Participate in boss/skill of the week, or view current events such as bingo boar
 - **Chat commands.** Type `!sotw` or `!botw` for the challenge, its time left and your place. Only you see the reply.
 
 ### Bingo
+
+![The bingo page with a tile selected](screenshots/bingo.png)
+
 - **Bingo page.** Each team's board coloured by progress, tile details (what's needed, who got what and when), team
   standings and the winner.
 - **Interactive tiles.** Click tiles to view the tile requirements, see completion points and partial progress of
