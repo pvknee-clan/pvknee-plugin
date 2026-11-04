@@ -37,10 +37,6 @@ rank-limited pages and bingo team icons only mean something if you are in the cl
 - **Team overlay.** While you're on a team, a small box with your team and the UTC date and time, for screenshot
   proof.
 
-The panel keeps itself up to date while it is open. While it is closed, the plugin only loads the clan data once when
-you log in, for the login message and the bingo team icons and overlay (not at all if those are turned off), and when
-you use `!sotw` or `!botw` with data more than 10 minutes old.
-
 ## Settings
 
 - **Display:** **Show times in UTC** (off): all times in UTC instead of your local time.
