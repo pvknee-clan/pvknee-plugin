@@ -232,3 +232,6 @@ New features; Plugin Hub submission itself (`docs/SUBMISSION.md`).
   gap across restarts, the XP Updater check and the special-world check are untested; worst case, no update is sent.
 - Task 5: a Refresh press within a minute of a good load does nothing visible (only a dev log line), instead of saying
   when the data was loaded; the owner found the notice cluttered the panel.
+- Task 5: the endpoint request waits up to 30 seconds for a response instead of OkHttp's default 10. In the dev client
+  the first (uncached) load timed out after exactly 10 seconds while the script was still building the response;
+  the next load, served from the script's cache, took about a second.

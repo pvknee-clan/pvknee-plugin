@@ -37,6 +37,8 @@ public class ClanDataClient
 	/** The endpoint keeps its response this long, so loading again sooner gets the same data. */
 	private static final Duration MIN_GAP = Duration.ofSeconds(60);
 	/** How long automatic tries wait after the first, second and any later failure in a row. */
+	/** Building the response from the sheet can take longer than OkHttp's default 10 seconds when it isn't cached. */
+	private static final Duration READ_TIMEOUT = Duration.ofSeconds(30);
 	private static final Duration[] BACK_OFF = {Duration.ofMinutes(1), Duration.ofMinutes(5), Duration.ofMinutes(15)};
 	private static final String ENDPOINT = "https://script.google.com/macros/s/AKfycbyuOXHeAB-dlWG4kSg1G2T4mXPPy13vyphLPGRH3iZRUiEKKmvToJmHm6M33vb_OSUe3Q/exec";
 
@@ -61,7 +63,9 @@ public class ClanDataClient
 	@Inject
 	ClanDataClient(OkHttpClient okHttpClient, Gson gson, PvKneeConfig config, SavedCopy savedCopy, ScheduledExecutorService executor, DevLog devLog)
 	{
-		this.okHttpClient = okHttpClient;
+		this.okHttpClient = okHttpClient.newBuilder()
+			.readTimeout(READ_TIMEOUT)
+			.build();
 		this.gson = gson;
 		this.config = config;
 		this.savedCopy = savedCopy;
