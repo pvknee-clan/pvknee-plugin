@@ -2,7 +2,8 @@
 
 Read `docs/SESSION.md`, then `docs/DESIGN.md`. This file is the task list for Phase 5 only.
 
-**Status:** not started. The owner's Apps Script changes (task 0) are written and tested; deploy them first.
+**Status:** tasks 0 to 13 done. A few items could not be checked in the dev client yet; they are listed under
+"Changes made beyond the task list" and the owner checks them before submitting.
 
 ## Goal (the Phase 5 gate)
 

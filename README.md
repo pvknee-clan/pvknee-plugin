@@ -52,6 +52,9 @@ you log in, for the chat messages and team icons (not at all if those are turned
     on); where it shows no name, there is no dot.
   - **Bingo team overlay**: the on-screen box with your team and the time in UTC.
 
+A Debug section (an endpoint override for testing against another sheet) only appears when RuneLite runs in
+developer mode; a normal client always uses the clan's own endpoint.
+
 ## Services the plugin contacts
 
 | Service | Address | What for | When |
@@ -64,11 +67,23 @@ Skill and item icons come from RuneLite itself; all other icons are built into t
 Images are only ever loaded from `https://raw.githubusercontent.com`, at most 256 KB and 512 pixels a side; the
 clan sheet cannot point the plugin at any other site.
 
-The plugin does not send your username or any other player data to these services, except your username to Wise Old
-Man when you turn on **Update Wise Old Man on logout**. Your clan rank, world and name are read from the game client
-and stay on your computer. As with any web request, each service can see your IP address.
+## What leaves your computer
+
+- **The request for the clan data**, to Google. It carries no player data: every member gets the same response.
+- **Your username**, to Wise Old Man, only if you turn on **Update Wise Old Man on logout**, and only when it sends.
+- **Requests for boss icons**, to GitHub. They carry no player data.
+
+Nothing else is sent anywhere. Your clan rank, world and name are read from the game client and stay on your
+computer, and the standings come with the clan data, so the plugin never looks anyone up. As with any web request,
+each service can see your IP address.
 
 ## Stored on your computer
 
-The last clan data that loaded successfully is saved in RuneLite's plugin data folder, so the panel can still show
-something, with a "Last updated" time, when the clan's endpoint cannot be reached.
+- The last clan data that loaded successfully, in RuneLite's plugin data folder, so the panel can still show
+  something, with a "Last updated" time, when the clan's endpoint cannot be reached.
+- With **Update Wise Old Man on logout** on, when each name was last sent, in RuneLite's settings, so it is sent at
+  most once every 10 minutes even across restarts.
+
+## Licence
+
+BSD 2-Clause; see `LICENSE`.

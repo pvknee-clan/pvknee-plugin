@@ -3,11 +3,13 @@
 Read `docs/SESSION.md` first. These are not part of any phase: do them only when the owner decides to submit.
 Phase 1 is done and checked in the dev client.
 
-- Phase 5 (review fixes, `docs/PHASE5.md`) done and checked in the dev client. It adds the `LICENSE`, limits images
-  to allowed hosts and sizes, and makes the endpoint override developer-mode only (these replace the earlier
-  licence, image and Debug-section items here).
-- Check that `DevLog` chat messages only appear in developer mode (start the normal RuneLite client with the built
-  plugin, or confirm the `developerMode` guard), so members never see them.
+- [x] Phase 5 (review fixes, `docs/PHASE5.md`) done. Its untested items are listed in that file's "Changes made
+  beyond the task list"; the owner checks them before submitting.
+- [x] Licence: `LICENSE` (BSD 2-Clause) added in Phase 5 task 1.
+- [x] Images: only `https://raw.githubusercontent.com`, at most 256 KB and 512 px a side (Phase 5 task 7).
+- [x] Debug section: the endpoint override is only shown and used in developer mode (Phase 5 task 12); checked in a
+  normal client built with `gradlew shadowJar` and started with `java -ea -jar build\libs\pvknee-unspecified-all.jar`.
+- [x] `DevLog` chat messages only appear in developer mode: none showed in that normal client.
 - Decide whether `README.md` should name the clan's sheet ID and endpoint (`DESIGN.md` calls them clan assets to
   document; the README currently leaves them out because it is public).
 - Owner: the clan Settings keys (Wise Old Man verification code, Discord webhook, API key) are in the Apps Script's
