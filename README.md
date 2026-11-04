@@ -44,10 +44,8 @@ you use `!sotw` or `!botw` with data more than 10 minutes old.
 
 - **Display:** **Show times in UTC** (off): all times in UTC instead of your local time.
 - **Chat:** **Login message** (off): this week's challenges in chat once each time you log in.
-- **Wise Old Man:** **Update Wise Old Man on logout** (off): asks Wise Old Man to update your profile when you log
-  out, so the standings are more up to date. It sends your username, and only after you gained over 10,000 xp or got
-  a kill or completion count message, at most once every 10 minutes per name, never on seasonal, Deadman,
-  tournament, beta, fresh-start or no-save worlds, and not if RuneLite's XP Updater already updates Wise Old Man.
+- **Wise Old Man:** **Update Wise Old Man on logout** (off): updates your Wise Old Man profile when you log out after
+  making progress, so your place in the challenges stays up to date.
 - **Bingo** (all on): **Team icons in chat**, **Team icons above heads** (needs Player Indicators showing names) and
   **Bingo team overlay**.
 
