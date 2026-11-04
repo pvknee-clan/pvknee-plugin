@@ -33,6 +33,8 @@ Participate in boss/skill of the week, or view current events such as bingo boar
 - **Login message** (off by default). This week's challenges in chat when you log in.
 - **Chat commands.** Type `!sotw` or `!botw` for the challenge, its time left and your place. Only you see the reply.
 
+  ![The reply to !sotw in chat](screenshots/sotw-command.png)
+
 ### Bingo
 
 ![The bingo page with a tile selected](screenshots/bingo.png)
