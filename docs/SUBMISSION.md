@@ -27,6 +27,16 @@ Phase 1 is done and checked in the dev client.
   until a plugin update is approved.
 - In the pull request description, mention that the bingo page shows sample data from a test sheet so reviewers can
   see it working.
+- [x] Project files match RuneLite's example-plugin template (`build.gradle`, `runelite-plugin.properties`,
+  `settings.gradle`, `.gitignore`): checked against the template; the only differences are the renames and `bin/`.
+- Before the pull request, once no more cloud sessions need the notes: take `docs/` (and `.claude/` if present) out
+  of Git again, so reviewers only see the plugin. Add these two lines back to the end of `.gitignore`:
+  ```
+  docs/
+  .claude/
+  ```
+  then run `git rm -r --cached docs`, commit (`chore: stop tracking project notes`) and push. The files stay on
+  your computer; only Git stops tracking them. Use that commit's hash in `plugins/pvknee`.
 - Last: open the pull request to `runelite/plugin-hub` with the `Generated-by: Claude Code` footer from `AGENTS.md`
   (keep it: the template asks for it, and reviewers read the code either way).
 
