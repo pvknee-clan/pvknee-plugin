@@ -16,7 +16,7 @@ Participate in boss/skill of the week, or view current events such as bingo boar
 
 ### Skill and Boss of the Week
 - **Challenges.** Participate in this week's skill/boss challenge to climb the ranks for this week.
-- **Standings.** View clan members gains for each challenge, updated regularly.
+- **Standings.** View clan members' gains for each challenge, updated regularly.
 - **Your place.** Your own place and gain, with your row highlighted in the standings.
 
 ### Events and links
