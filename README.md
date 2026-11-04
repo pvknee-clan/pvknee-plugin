@@ -42,19 +42,14 @@ you use `!sotw` or `!botw` with data more than 10 minutes old.
 
 ## Settings
 
-- **Show times in UTC** (off by default): show all times in UTC, marked "UTC", instead of your local time.
-- **Update Wise Old Man on logout** (off by default): when you log out, ask Wise Old Man to update your profile, so the
-  challenge standings are more up to date. It only sends when you gained over 10,000 xp or got a kill or completion
-  count message since you logged in, at most once every 10 minutes per name, and never on seasonal, Deadman,
-  tournament, beta, fresh-start or no-save worlds. This sends your username to Wise Old Man. RuneLite's own XP
-  Updater plugin can do the same; if it is on with its Wise Old Man option ticked, this plugin leaves the update to it.
-- **Login message** (off by default): a message about this week's challenges once each time you log in.
-- **Bingo** (all on by default):
-  - **Team icons in chat**: team dots in clan and public chat.
-  - **Team icons above heads**: team dots beside the players' names from Player Indicators. Needs RuneLite's Player
-    Indicators plugin turned on and showing names for that player's group (yourself, clan members, others and so
-    on); where it shows no name, there is no dot.
-  - **Bingo team overlay**: the on-screen box with your team and the time in UTC.
+- **Display:** **Show times in UTC** (off): all times in UTC instead of your local time.
+- **Chat:** **Login message** (off): this week's challenges in chat once each time you log in.
+- **Wise Old Man:** **Update Wise Old Man on logout** (off): asks Wise Old Man to update your profile when you log
+  out, so the standings are more up to date. It sends your username, and only after you gained over 10,000 xp or got
+  a kill or completion count message, at most once every 10 minutes per name, never on seasonal, Deadman,
+  tournament, beta, fresh-start or no-save worlds, and not if RuneLite's XP Updater already updates Wise Old Man.
+- **Bingo** (all on): **Team icons in chat**, **Team icons above heads** (needs Player Indicators showing names) and
+  **Bingo team overlay**.
 
 ## Services the plugin contacts
 
