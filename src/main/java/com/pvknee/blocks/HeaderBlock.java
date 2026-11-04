@@ -3,7 +3,6 @@ package com.pvknee.blocks;
 import com.pvknee.data.Bingo;
 import com.pvknee.data.Block;
 import com.pvknee.data.Competition;
-import com.pvknee.player.PlayerState;
 import com.pvknee.ui.PageHeader;
 import com.pvknee.ui.Pill;
 import com.pvknee.ui.ThemeColours;
@@ -29,33 +28,7 @@ class HeaderBlock implements BlockRenderer
 		String pillText = block.setting("pill", null);
 		Pill pill = pillText == null ? null
 			: new Pill(pillText, colours.getValue(), context.mutedGlyph(block.setting("icon", null), Pill.ICON_SIZE));
-		if (pill != null)
-		{
-			linkHop(pill, block, context);
-		}
 		return new PageHeader(title, HeadingBlock.size(block), subtitle(block, context), pill, colours);
-	}
-
-	/**
-	 * Makes the pill hop to the world its "hop" setting names, unless the member is already on it.
-	 */
-	private static void linkHop(Pill pill, Block block, BlockContext context)
-	{
-		int world = block.intSetting("hop", 0);
-		if (world <= 0)
-		{
-			return;
-		}
-
-		PlayerState player = context.getPlayer();
-		if (player.isLoggedIn() && player.getWorld() == world)
-		{
-			pill.setToolTipText("You're on world " + world);
-			return;
-		}
-
-		pill.setToolTipText("Hop to world " + world);
-		pill.onClick(() -> context.getHopper().hop(world));
 	}
 
 	/**

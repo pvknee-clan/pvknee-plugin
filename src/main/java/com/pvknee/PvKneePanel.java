@@ -12,7 +12,6 @@ import com.pvknee.data.ClanDataClient;
 import com.pvknee.data.Page;
 import com.pvknee.player.PlayerInfo;
 import com.pvknee.player.PlayerState;
-import com.pvknee.player.WorldHopper;
 import com.pvknee.ui.Labels;
 import com.pvknee.ui.Notice;
 import com.pvknee.ui.Spacing;
@@ -56,7 +55,6 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private final DevLog devLog;
 	private final BingoView bingoView;
 	private final PlayerInfo playerInfo;
-	private final WorldHopper hopper;
 	private final TopBar topBar = new TopBar(this::showPage, () -> refresh(false, "button"));
 	private final Notice notice = new Notice();
 	private final Notice.Line errorLine = notice.addLine();
@@ -79,7 +77,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 	private List<Runnable> liveUpdates = new ArrayList<>();
 
 	@Inject
-	PvKneePanel(ClanDataClient client, BlockRegistry blocks, Icons icons, WomClient wom, DevLog devLog, PlayerInfo playerInfo, WorldHopper hopper)
+	PvKneePanel(ClanDataClient client, BlockRegistry blocks, Icons icons, WomClient wom, DevLog devLog, PlayerInfo playerInfo)
 	{
 		super(false);
 		this.client = client;
@@ -89,7 +87,6 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 		this.devLog = devLog;
 		this.bingoView = new BingoView(devLog);
 		this.playerInfo = playerInfo;
-		this.hopper = hopper;
 
 		setLayout(new BorderLayout(0, 10));
 		setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -318,7 +315,7 @@ class PvKneePanel extends PluginPanel implements PageNavigator
 
 		liveUpdates = new ArrayList<>();
 		bingoView.clearListeners();
-		BlockContext context = new BlockContext(data, colours, icons, this, wom, playerInfo.get(), hopper, devLog, bingoView, liveUpdates);
+		BlockContext context = new BlockContext(data, colours, icons, this, wom, playerInfo.get(), devLog, bingoView, liveUpdates);
 
 		content.removeAll();
 		for (Block block : page.getBlocks())

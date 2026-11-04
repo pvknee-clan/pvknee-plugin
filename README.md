@@ -11,8 +11,6 @@ setup needed.
 - **Links.** One-click buttons to the clan's Discord and other pages.
 - **Your place.** On the challenge pages, a card with your own place and gain, and your row highlighted in the
   standings.
-- **Hop to the clan world.** Click the world on Home to hop there (or, on the login screen, to pick it as your login
-  world). The game's usual hop rules apply.
 - **Admin pages.** Pages the clan limits to a rank, e.g. Administrator, only show for members of that rank or above.
 - **Chat messages.** When you log in, a short message about this week's challenges, and a message when a challenge
   starts, has 1 hour left and ends. Only you see them.

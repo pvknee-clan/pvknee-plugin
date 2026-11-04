@@ -6,7 +6,6 @@ import com.pvknee.data.ClanData;
 import com.pvknee.data.Competition;
 import com.pvknee.data.Competitions;
 import com.pvknee.player.PlayerState;
-import com.pvknee.player.WorldHopper;
 import com.pvknee.ui.Card;
 import com.pvknee.ui.DayBar;
 import com.pvknee.ui.GlyphIcon;
@@ -42,7 +41,6 @@ public class BlockContext
 	WomClient wom;
 	/** The member in game when the page was built; the page is built again when it changes. */
 	PlayerState player;
-	WorldHopper hopper;
 	DevLog devLog;
 	/** The bingo page's selected team and tile. */
 	BingoView bingoView;

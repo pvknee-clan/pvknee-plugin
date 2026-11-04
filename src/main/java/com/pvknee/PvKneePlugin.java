@@ -11,7 +11,6 @@ import com.pvknee.chat.ChallengeMessages;
 import com.pvknee.chat.ChatCommands;
 import com.pvknee.data.SavedCopy;
 import com.pvknee.player.PlayerInfo;
-import com.pvknee.player.WorldHopper;
 import com.pvknee.wom.LogoutUpdate;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -50,9 +49,6 @@ public class PvKneePlugin extends Plugin
 
 	@Inject
 	private PlayerInfo playerInfo;
-
-	@Inject
-	private WorldHopper worldHopper;
 
 	@Inject
 	private ChatCommands chatCommands;
@@ -103,7 +99,6 @@ public class PvKneePlugin extends Plugin
 
 		clientToolbar.addNavigation(navButton);
 		playerInfo.start(panel::playerChanged);
-		worldHopper.start();
 		chatCommands.start();
 		challengeMessages.start();
 		logoutUpdate.start();
@@ -118,7 +113,6 @@ public class PvKneePlugin extends Plugin
 	protected void shutDown() throws Exception
 	{
 		playerInfo.stop();
-		worldHopper.stop();
 		chatCommands.stop();
 		challengeMessages.stop();
 		logoutUpdate.stop();
