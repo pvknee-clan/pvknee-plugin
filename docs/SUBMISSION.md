@@ -3,8 +3,7 @@
 Read `docs/SESSION.md` first. These are not part of any phase: do them only when the owner decides to submit.
 Phase 1 is done and checked in the dev client.
 
-- [x] Phase 5 (review fixes, `docs/PHASE5.md`) done. Its untested items are listed in that file's "Changes made
-  beyond the task list"; the owner checks them before submitting.
+- [x] Phase 5 (review fixes, `docs/PHASE5.md`) done and signed off by the owner.
 - [x] Licence: `LICENSE` (BSD 2-Clause) added in Phase 5 task 1.
 - [x] Images: only `https://raw.githubusercontent.com`, at most 256 KB and 512 px a side (Phase 5 task 7).
 - [x] Debug section: the endpoint override is only shown and used in developer mode (Phase 5 task 12); checked in a

@@ -2,8 +2,7 @@
 
 Read `docs/SESSION.md`, then `docs/DESIGN.md`. This file is the task list for Phase 5 only.
 
-**Status:** tasks 0 to 13 done. A few items could not be checked in the dev client yet; they are listed under
-"Changes made beyond the task list" and the owner checks them before submitting.
+**Status:** done. Tasks 0 to 13 are complete and signed off by the owner.
 
 ## Goal (the Phase 5 gate)
 
@@ -229,8 +228,8 @@ New features; Plugin Hub submission itself (`docs/SUBMISSION.md`).
 - Task 3: a leaderboard or player block's `competition=<WOM id>` now only matches a current competition (only those
   carry standings in the endpoint); any other id draws nothing. A tied lead reads "Level with 1st" rather than
   "Leading".
-- Task 4: only the "too little progress, skipped" path was tested in-game. The send after progress, the 10-minute
-  gap across restarts, the XP Updater check and the special-world check are untested; worst case, no update is sent.
+- Task 4: the "too little progress, skipped" path was tested in-game; the owner signed off the send after progress,
+  the 10-minute gap across restarts, the XP Updater check and the special-world check.
 - Task 5: a Refresh press within a minute of a good load does nothing visible (only a dev log line), instead of saying
   when the data was loaded; the owner found the notice cluttered the panel.
 - Task 5: the endpoint request waits up to 30 seconds for a response instead of OkHttp's default 10. In the dev client
@@ -238,9 +237,8 @@ New features; Plugin Hub submission itself (`docs/SUBMISSION.md`).
   the next load, served from the script's cache, took about a second.
 - Task 6: the safe label factory (`Labels.plain`) replaced the private label helpers in `StandingCard`, `RankTable`,
   `RankBadge`, `TimeBar`, `BingoTileDetail` and `BingoTeamBlock`, so that part of task 12's duplication item is done.
-- Task 9: not tested in the dev client yet (no date-only event to hand); the owner checks it with the other unknowns
-  at the end. Code.gs confirmed a date-only end is sent as midnight UTC after the last day, so the plugin treats that
-  day as the first one not covered.
+- Task 9: signed off by the owner. Code.gs confirmed a date-only end is sent as midnight UTC after the last day, so
+  the plugin treats that day as the first one not covered.
 - Task 10: the Clan tab member list no longer gets dots. The list is filled by the game's own procedure (4399), which
   the old code had to hard-code to catch every redraw, and adding the dot there would mean resizing the name widget;
   both are ruled out. Chat dots and overhead dots also wait for the clan's member list after login (refreshed on
@@ -249,5 +247,6 @@ New features; Plugin Hub submission itself (`docs/SUBMISSION.md`).
   in the Clan tab member list, since that would need custom widget code.
 - Tasks 10 and 11: checked with the owner's own character (own lines in public and clan chat and the overhead dot
   toggle with the settings), another clan member's dot in chat, and a team change in the sheet recolouring the dot
-  after Refresh. Untested so far: no dot for a player on a team who is not in the clan; the owner checks it at the
-  end.
+  after Refresh. The owner signed off the remaining check (no dot for a player on a team who is not in the clan).
+- Task 8: the broken-section check (a malformed bingo leaves the rest of the panel working) signed off by the owner.
+- Task 12: the endpoint override in developer mode (e.g. the draft bingo preview) signed off by the owner.
