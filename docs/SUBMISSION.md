@@ -16,7 +16,8 @@ Phase 1 is done and checked in the dev client.
 - Optional checks not yet seen in the client: a long event or competition name wrapping inside its card, and
   `competition` with `which=upcoming` (no page uses it yet). The 10-minute background refresh is confirmed from the
   client log (loads 10 minutes apart with no clicks).
-- In the pull request's plugin file, add a third-party warning line alongside `repository=` and `commit=`:
+- [x] In the pull request's plugin file, add a third-party warning line alongside `repository=` and `commit=` (the
+  full file is under "The plugin-hub pull request" below):
   `warning=This plugin submits your IP address to a 3rd-party server not controlled or verified by RuneLite developers`
   (the wording `AGENTS.md` uses; reviewers may adjust it).
   The plugin contacts Google (the clan sheet's endpoint) as its core feature, not an opt-in setting, and reviewers
@@ -28,6 +29,35 @@ Phase 1 is done and checked in the dev client.
   see it working.
 - Last: open the pull request to `runelite/plugin-hub` with the `Generated-by: Claude Code` footer from `AGENTS.md`
   (keep it: the template asks for it, and reviewers read the code either way).
+
+## The plugin-hub pull request
+
+In a fork of `runelite/plugin-hub`, add one file, `plugins/pvknee`, with exactly these lines. Replace the commit with
+the full hash of the commit you tested last (`git rev-parse HEAD`); it was
+`0b3fe93363b31590e0b6965f737359e562334fec` when this was written.
+
+```
+repository=https://github.com/pvknee-clan/pvknee-plugin.git
+commit=0b3fe93363b31590e0b6965f737359e562334fec
+warning=This plugin submits your IP address to a 3rd-party server not controlled or verified by RuneLite developers
+```
+
+Pull request title: `Add PvKnee`. Description (the `Generated-by` line goes last, on its own line, at the very end
+of the description):
+
+```
+PvKnee is a sidebar panel for the PvKnee clan. Pages, events, challenges and standings come from the clan's Google
+Sheet through one Apps Script endpoint, so members need no API key or setup.
+
+- Network: the clan's Apps Script endpoint (Google) as the core feature, boss icons from raw.githubusercontent.com,
+  and Wise Old Man only for the opt-in "Update Wise Old Man on logout" (off by default, with the 3rd-party warning).
+  No player data is sent except the username in that opt-in update.
+- The bingo page currently shows sample data from a test sheet, so it can be seen working.
+- Team dots in chat and above heads mark clan members only, and are hidden in the Wilderness, on PvP worlds and in
+  PvP areas.
+
+Generated-by: Claude Code
+```
 
 ## After approval on the Plugin Hub
 
