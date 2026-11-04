@@ -21,7 +21,7 @@ import net.runelite.client.events.ConfigChanged;
 /**
  * Team dots in front of the names of clan members on a bingo team in public and clan chat, while a bingo runs. Added
  * the way RuneLite adds its own chat icons: as each chat line is built, the dot's image tag goes in front of the
- * sender's name on the string stack. The clan rank icon stays, the game's widgets are untouched and messages the
+ * sender's name on the script's stack. The clan rank icon stays, the game's widgets are untouched and messages the
  * member sends are unchanged, so turning it off only needs a chat refresh. Hidden where overhead dots are: in the
  * Wilderness, on PvP worlds and in PvP areas. Used on the client thread.
  */
@@ -31,7 +31,7 @@ public class TeamChatIcons
 	private static final Set<ChatMessageType> TYPES = EnumSet.of(ChatMessageType.PUBLICCHAT, ChatMessageType.MODCHAT,
 		ChatMessageType.CLAN_CHAT);
 	private static final String CHAT_MESSAGE_BUILDING = "chatMessageBuilding";
-	/** Where the sender's name sits on the string stack while a chat line is built, counted from the top. */
+	/** Where the sender's name sits on the object stack while a chat line is built, counted from the top. */
 	private static final int NAME_FROM_TOP = 3;
 
 	private final Client client;
@@ -126,9 +126,10 @@ public class TeamChatIcons
 		String tag = team == null ? "" : dots.chatTag(team.getColour());
 		if (!tag.isEmpty())
 		{
-			String[] strings = client.getStringStack();
-			int name = client.getStringStackSize() - NAME_FROM_TOP;
-			strings[name] = tag + strings[name];
+			// Strings share the object stack.
+			Object[] stack = client.getObjectStack();
+			int name = client.getObjectStackSize() - NAME_FROM_TOP;
+			stack[name] = tag + stack[name];
 		}
 	}
 
