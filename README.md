@@ -37,7 +37,8 @@ rank-limited pages and bingo team icons only mean something if you are in the cl
 - **More page blocks.** Tables, big numbers and countdowns the clan's admins can add to any page.
 
 The panel keeps itself up to date while it is open. While it is closed, the plugin only loads the clan data once when
-you log in, for the login message and the bingo team icons and overlay (not at all if those are turned off).
+you log in, for the login message and the bingo team icons and overlay (not at all if those are turned off), and when
+you use `!sotw` or `!botw` with data more than 10 minutes old.
 
 ## Settings
 
@@ -59,9 +60,9 @@ you log in, for the login message and the bingo team icons and overlay (not at a
 
 | Service | Address | What for | When |
 | --- | --- | --- | --- |
-| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions and their standings, events, links and bingo, built from the clan's Google Sheets | When the panel opens, on Refresh, every 10 minutes while it is open, once at login and for `!sotw` / `!botw`; never more than once a minute |
+| The clan's Google Apps Script | `script.google.com` (redirects to `script.googleusercontent.com`) | The panel's pages, theme, competitions and their standings, events, links and bingo, built from the clan's Google Sheets | When the panel opens, on Refresh, every 10 minutes while it is open, once at login and for `!sotw` / `!botw`; at most once a minute after a good load, and less often after a failed one |
 | Wise Old Man | `api.wiseoldman.net` | A profile update for your username | Only with **Update Wise Old Man on logout** on, when you log out after progress (see Settings) |
-| GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon while the client runs |
+| GitHub | `raw.githubusercontent.com` | Boss icons from Wise Old Man's public repository | Once per icon while the plugin is on |
 
 Skill and item icons come from RuneLite itself; all other icons are built into the plugin.
 Images are only ever loaded from `https://raw.githubusercontent.com`, at most 256 KB and 512 pixels a side; the
