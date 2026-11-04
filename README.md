@@ -5,34 +5,35 @@ A sidebar panel for the PvKnee clan: install it, click the icon, and see what th
 **Install:** in RuneLite, open the Configuration panel (the wrench icon), click **Plugin Hub**, search for **PvKnee**
 and click Install. The PvKnee icon then appears in the sidebar.
 
-Anyone can install it and view the clan's pages, but it is made for PvKnee members: your place in the challenges,
-rank-limited pages and bingo team icons only mean something if you are in the clan.
+Anyone can install it and view the clan's pages, but it is made for PvKnee members: your place in the challenges and
+the bingo team icons only mean something if you are in the clan.
 
-# Features
+## Features
 
 ### Overview
 View a summary of the clan, home world, current and upcoming events.
-Participate in boss/skill of the week, or view current events such as bingo boards directly within Runelite.
+Participate in boss/skill of the week, or view current events such as bingo boards directly within RuneLite.
 
 ### Skill and Boss of the Week
-- **Challenges.** Participate in this weeks skill/boss challenge to climb the ranks for this week.
+- **Challenges.** Participate in this week's skill/boss challenge to climb the ranks for this week.
 - **Standings.** View clan members gains for each challenge, updated regularly.
 - **Your place.** Your own place and gain, with your row highlighted in the standings.
 
 ### Events and links
 - **Events.** What's happening now and what's coming up, in your local time or UTC.
-- **Links.** One-click buttons to the clan's Discord and WiseOldMan pages.
+- **Links.** One-click buttons to the clan's Discord and Wise Old Man pages.
 
 ### Chat
 - **Login message** (off by default). This week's challenges in chat when you log in.
 - **Chat commands.** Type `!sotw` or `!botw` for the challenge, its time left and your place. Only you see the reply.
 
-
 ### Bingo
 - **Bingo page.** Each team's board coloured by progress, tile details (what's needed, who got what and when), team
   standings and the winner.
-- **Interactive tiles** Click tiles to view the tile requirements, see completion points and partial progress of players through a tile.
-- **Chat Team Icons.** Toggleable coloured dots beside your clanmates' names in chat and above their heads if you have Player Indicators installed.
+- **Interactive tiles.** Click tiles to view the tile requirements, see completion points and partial progress of
+  players through a tile.
+- **Team icons.** Toggleable coloured dots beside your clanmates' names in chat, and above their heads if RuneLite's
+  Player Indicators plugin is turned on.
 - **Team overlay.** While you're on a team, a small box with your team and the UTC date and time, useful for screenshot
   proof for manual bingo submissions.
 
