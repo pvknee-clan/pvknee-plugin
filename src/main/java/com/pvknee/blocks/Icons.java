@@ -1,6 +1,5 @@
 package com.pvknee.blocks;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import javax.inject.Inject;
@@ -25,8 +24,8 @@ public class Icons
 	private final SkillIconManager skillIcons;
 	private final ItemManager itemManager;
 	private final ImageLoader images;
-	private final Map<String, ImageIcon> scaledSkills = new HashMap<>();
-	private final Map<String, ImageIcon> scaledItems = new HashMap<>();
+	private final Map<String, ImageIcon> scaledSkills = ImageLoader.bounded();
+	private final Map<String, ImageIcon> scaledItems = ImageLoader.bounded();
 
 	@Inject
 	Icons(SkillIconManager skillIcons, ItemManager itemManager, ImageLoader images)
@@ -34,6 +33,16 @@ public class Icons
 		this.skillIcons = skillIcons;
 		this.itemManager = itemManager;
 		this.images = images;
+	}
+
+	/**
+	 * Forgets every icon, including downloaded ones, e.g. when the plugin is turned off. Call on the Swing thread.
+	 */
+	public void clear()
+	{
+		scaledSkills.clear();
+		scaledItems.clear();
+		images.clear();
 	}
 
 	/**

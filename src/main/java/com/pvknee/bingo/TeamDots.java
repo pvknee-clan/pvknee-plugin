@@ -49,6 +49,15 @@ public class TeamDots
 			: null;
 	}
 
+	/**
+	 * Forgets the drawn dots. The chat icons stay registered, since the client cannot remove them; they are reused
+	 * if the plugin is turned on again.
+	 */
+	public void clear()
+	{
+		images.clear();
+	}
+
 	public BufferedImage image(Color colour)
 	{
 		return images.computeIfAbsent(colour.getRGB(), rgb -> draw(colour));

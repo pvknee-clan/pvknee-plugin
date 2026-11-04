@@ -3,12 +3,15 @@ package com.pvknee;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.pvknee.bingo.TeamChatIcons;
+import com.pvknee.bingo.TeamDots;
 import com.pvknee.bingo.TeamHeadOverlay;
 import com.pvknee.bingo.TeamOverlay;
 import com.pvknee.bingo.TeamRoster;
+import com.pvknee.blocks.Icons;
 import com.pvknee.blocks.Times;
 import com.pvknee.chat.ChallengeMessages;
 import com.pvknee.chat.ChatCommands;
+import com.pvknee.data.ClanDataClient;
 import com.pvknee.data.SavedCopy;
 import com.pvknee.player.PlayerInfo;
 import com.pvknee.wom.LogoutUpdate;
@@ -17,6 +20,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import javax.swing.SwingUtilities;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -71,6 +75,18 @@ public class PvKneePlugin extends Plugin
 	@Inject
 	private TeamOverlay teamOverlay;
 
+	@Inject
+	private ClanDataClient clanData;
+
+	@Inject
+	private Icons icons;
+
+	@Inject
+	private TeamDots teamDots;
+
+	@Inject
+	private ClientThread clientThread;
+
 	private PvKneePanel panel;
 	private NavigationButton navButton;
 
@@ -124,6 +140,11 @@ public class PvKneePlugin extends Plugin
 		panel.stopUpdates();
 		navButton = null;
 		panel = null;
+
+		// Nothing is kept in memory while the plugin is off.
+		clanData.clear();
+		SwingUtilities.invokeLater(icons::clear);
+		clientThread.invoke(teamDots::clear);
 		log.debug("PvKnee stopped");
 	}
 

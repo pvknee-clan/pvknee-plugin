@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,12 +45,14 @@ public class ImageLoader
 	private static final String ALLOWED_HOST = "raw.githubusercontent.com";
 	private static final int MAX_BYTES = 256 * 1024;
 	private static final int MAX_SIDE = 512;
+	/** At most this many images and scaled icons are kept; the least recently used go first. */
+	private static final int MAX_CACHED = 200;
 
 	private final OkHttpClient okHttpClient;
 	/** Addresses that were refused or failed this session, so a page rebuild does not fetch them again. */
 	private final Set<String> failed = new HashSet<>();
-	private final Map<String, BufferedImage> images = new HashMap<>();
-	private final Map<String, ImageIcon> icons = new HashMap<>();
+	private final Map<String, BufferedImage> images = bounded();
+	private final Map<String, ImageIcon> icons = bounded();
 	private final Map<String, List<Consumer<BufferedImage>>> pending = new HashMap<>();
 
 	@Inject
@@ -67,6 +70,32 @@ public class ImageLoader
 		JLabel label = emptyLabel(size);
 		load(url, image -> label.setIcon(icon(url, image, size)));
 		return label;
+	}
+
+	/**
+	 * Forgets every image, e.g. when the plugin is turned off. Call on the Swing thread.
+	 */
+	public void clear()
+	{
+		images.clear();
+		icons.clear();
+		failed.clear();
+		pending.clear();
+	}
+
+	/**
+	 * A map that drops its least recently used entry once it holds more than {@link #MAX_CACHED}.
+	 */
+	static <V> Map<String, V> bounded()
+	{
+		return new LinkedHashMap<>(16, 0.75f, true)
+		{
+			@Override
+			protected boolean removeEldestEntry(Map.Entry<String, V> eldest)
+			{
+				return size() > MAX_CACHED;
+			}
+		};
 	}
 
 	/**
@@ -200,6 +229,11 @@ public class ImageLoader
 				SwingUtilities.invokeLater(() ->
 				{
 					List<Consumer<BufferedImage>> callbacks = pending.remove(url);
+					if (callbacks == null)
+					{
+						// Cleared while loading.
+						return;
+					}
 					if (loaded != null)
 					{
 						images.put(url, loaded);

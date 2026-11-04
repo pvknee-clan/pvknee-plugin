@@ -25,13 +25,14 @@ import net.runelite.api.Client;
 import net.runelite.api.clan.ClanMember;
 import net.runelite.api.clan.ClanSettings;
 import net.runelite.api.events.GameTick;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.util.Text;
 
 /**
- * Who is on which bingo team, while a bingo runs: empty before the start, after the end and with no bingo. Built
- * from the last loaded data, checked each tick on the client thread.
+ * Who is on which bingo team, while a bingo runs: empty before the start, after the end and with no bingo. Built on
+ * the client thread whenever new data loads; each tick only checks whether the bingo has just ended.
  */
 @Singleton
 public class TeamRoster
@@ -45,6 +46,8 @@ public class TeamRoster
 
 	private final ClanDataClient clanData;
 	private final Client client;
+	private final ClientThread clientThread;
+	private final Runnable onData = this::dataLoaded;
 	private final EventBus eventBus;
 	private final DevLog devLog;
 	private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
@@ -61,10 +64,11 @@ public class TeamRoster
 	private ClanSettings clanMembersFrom;
 
 	@Inject
-	TeamRoster(ClanDataClient clanData, Client client, EventBus eventBus, DevLog devLog)
+	TeamRoster(ClanDataClient clanData, Client client, ClientThread clientThread, EventBus eventBus, DevLog devLog)
 	{
 		this.clanData = clanData;
 		this.client = client;
+		this.clientThread = clientThread;
 		this.eventBus = eventBus;
 		this.devLog = devLog;
 	}
@@ -72,10 +76,13 @@ public class TeamRoster
 	public void start()
 	{
 		eventBus.register(this);
+		clanData.onData(onData);
+		dataLoaded();
 	}
 
 	public void stop()
 	{
+		clanData.removeOnData(onData);
 		eventBus.unregister(this);
 		listeners.clear();
 		teams = Collections.emptyMap();
@@ -147,17 +154,27 @@ public class TeamRoster
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
-		ClanData data = clanData.latest();
-		if (data != builtFrom)
-		{
-			builtFrom = data;
-			build(data == null ? null : data.getBingo());
-		}
-		else if (endsAt != null && !Instant.now().isBefore(endsAt))
+		if (endsAt != null && !Instant.now().isBefore(endsAt))
 		{
 			log("none, the bingo has ended");
 			set(Collections.emptyMap(), null);
 		}
+	}
+
+	/**
+	 * Builds the roster again from the newest data, on the client thread.
+	 */
+	private void dataLoaded()
+	{
+		clientThread.invoke(() ->
+		{
+			ClanData data = clanData.latest();
+			if (data != builtFrom)
+			{
+				builtFrom = data;
+				build(data == null ? null : data.getBingo());
+			}
+		});
 	}
 
 	private void build(Bingo bingo)

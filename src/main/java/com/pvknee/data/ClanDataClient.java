@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -61,6 +62,8 @@ public class ClanDataClient
 	/** Failed endpoint loads in a row, and when automatic tries may load again after them. */
 	private int failures;
 	private Instant retryAt;
+	/** Told whenever new data is remembered, on whichever thread loaded it. */
+	private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
 	/** Callers of {@link #recent} waiting for the load it started; null while none is running. */
 	private List<Consumer<ClanData>> waiting;
 
@@ -75,6 +78,31 @@ public class ClanDataClient
 		this.savedCopy = savedCopy;
 		this.executor = executor;
 		this.devLog = devLog;
+	}
+
+	/**
+	 * Runs whenever new data arrives (from the endpoint or the saved copy), on the thread that loaded it.
+	 */
+	public void onData(Runnable listener)
+	{
+		listeners.add(listener);
+	}
+
+	public void removeOnData(Runnable listener)
+	{
+		listeners.remove(listener);
+	}
+
+	/**
+	 * Forgets the loaded data and the load timings, e.g. when the plugin is turned off.
+	 */
+	public synchronized void clear()
+	{
+		latest = null;
+		latestAt = null;
+		loadedAt = null;
+		failures = 0;
+		retryAt = null;
 	}
 
 	/**
@@ -286,6 +314,7 @@ public class ClanDataClient
 	{
 		latestAt = fetchedAt;
 		latest = data;
+		listeners.forEach(Runnable::run);
 	}
 
 	/**

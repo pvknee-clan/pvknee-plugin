@@ -18,9 +18,13 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.PlayerDespawned;
 import net.runelite.api.events.PlayerSpawned;
+import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.events.PluginChanged;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -53,8 +57,11 @@ public class TeamHeadOverlay extends Overlay
 	private final Map<Player, TeamRoster.Team> shown = new HashMap<>();
 	/** Those of them whose name Player Indicators draws, with the width of its rank icon; found each tick. */
 	private final Map<Player, Integer> named = new HashMap<>();
-	/** Why the dots are hidden, or null while they show; checked each tick. */
-	private String hiddenBecause;
+	/**
+	 * Why the dots are hidden, or null while they show. Worked out only when it can change: plugins or settings
+	 * change, the bingo roster changes, the member logs in, or enters or leaves a PvP area.
+	 */
+	private String hiddenBecause = "starting";
 	/** The last state logged, so it is logged once per change. */
 	private String logged;
 
@@ -81,9 +88,9 @@ public class TeamHeadOverlay extends Overlay
 	public void start()
 	{
 		eventBus.register(this);
-		roster.onChange(this::findPlayers);
+		roster.onChange(this::rosterChanged);
 		overlayManager.add(this);
-		clientThread.invoke(this::findPlayers);
+		clientThread.invoke(this::rosterChanged);
 	}
 
 	public void stop()
@@ -94,7 +101,7 @@ public class TeamHeadOverlay extends Overlay
 		{
 			shown.clear();
 			named.clear();
-			hiddenBecause = null;
+			hiddenBecause = "starting";
 			logged = null;
 		});
 	}
@@ -125,6 +132,33 @@ public class TeamHeadOverlay extends Overlay
 			shown.clear();
 			named.clear();
 		}
+		else if (event.getGameState() == GameState.LOGGED_IN)
+		{
+			// The world type decides whether this is a PvP world.
+			updateHidden();
+		}
+	}
+
+	@Subscribe
+	public void onVarbitChanged(VarbitChanged event)
+	{
+		if (event.getVarbitId() == VarbitID.INSIDE_WILDERNESS || event.getVarbitId() == VarbitID.PVP_AREA_CLIENT)
+		{
+			updateHidden();
+		}
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		// Our own switch, or Player Indicators' name settings.
+		clientThread.invoke(this::updateHidden);
+	}
+
+	@Subscribe
+	public void onPluginChanged(PluginChanged event)
+	{
+		clientThread.invoke(this::updateHidden);
 	}
 
 	@Subscribe
@@ -137,27 +171,44 @@ public class TeamHeadOverlay extends Overlay
 	@Subscribe
 	public void onGameTick(GameTick event)
 	{
-		hiddenBecause = !config.teamIconsAboveHeads() ? "turned off"
-			: roster.isEmpty() ? "no bingo running"
-			: TeamDots.hiddenForPvp(client) != null ? TeamDots.hiddenForPvp(client)
-			: names.off();
-
 		named.clear();
 		if (hiddenBecause == null)
 		{
+			// Only the team players in view, whose names Player Indicators may draw this tick.
 			shown.keySet().stream()
 				.filter(names::named)
 				.forEach(player -> named.put(player, names.rankWidth(player)));
 		}
 
-		String state = hiddenBecause != null ? "hidden, " + hiddenBecause
-			: "drawn for " + named.size() + " of " + shown.size() + " team players in view" + (named.isEmpty() ? ""
-				: " (" + named.keySet().stream().map(p -> Text.removeTags(p.getName())).sorted().collect(Collectors.joining(", ")) + ")");
-		if (!state.equals(logged))
+		if (devLog.isEnabled())
 		{
-			logged = state;
-			devLog.log("overhead icons: {}", state);
+			String state = hiddenBecause != null ? "hidden, " + hiddenBecause
+				: "drawn for " + named.size() + " of " + shown.size() + " team players in view" + (named.isEmpty() ? ""
+					: " (" + named.keySet().stream().map(p -> Text.removeTags(p.getName())).sorted().collect(Collectors.joining(", ")) + ")");
+			if (!state.equals(logged))
+			{
+				logged = state;
+				devLog.log("overhead icons: {}", state);
+			}
 		}
+	}
+
+	/**
+	 * Works out again why the dots are hidden, if they are. Call on the client thread.
+	 */
+	private void updateHidden()
+	{
+		String pvp = TeamDots.hiddenForPvp(client);
+		hiddenBecause = !config.teamIconsAboveHeads() ? "turned off"
+			: roster.isEmpty() ? "no bingo running"
+			: pvp != null ? pvp
+			: names.off();
+	}
+
+	private void rosterChanged()
+	{
+		findPlayers();
+		updateHidden();
 	}
 
 	@Override

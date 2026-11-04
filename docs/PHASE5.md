@@ -243,4 +243,6 @@ New features; Plugin Hub submission itself (`docs/SUBMISSION.md`).
 - Task 10: the Clan tab member list no longer gets dots. The list is filled by the game's own procedure (4399), which
   the old code had to hard-code to catch every redraw, and adding the dot there would mean resizing the name widget;
   both are ruled out. Chat dots and overhead dots also wait for the clan's member list after login (refreshed on
-  ClanChannelChanged). Rank icon plus dot: outcome to be recorded after the owner's check in the dev client.
+  ClanChannelChanged). Checked in the dev client: dots show in clan chat, public chat and overhead, and go when
+  turned off or when Player Indicators is off. Owner's verdict: rank icon plus dot in chat is fine, keep it; no dots
+  in the Clan tab member list, since that would need custom widget code.

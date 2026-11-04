@@ -32,6 +32,14 @@ public class DevLog
 	}
 
 	/**
+	 * Whether the client runs in developer mode, so callers can skip building log lines nobody sees in chat.
+	 */
+	public boolean isEnabled()
+	{
+		return developerMode;
+	}
+
+	/**
 	 * Logs a step such as "load: 5 pages". Takes {} placeholders like SLF4J; a trailing exception is logged with its
 	 * stack trace but left out of the chat message.
 	 */
