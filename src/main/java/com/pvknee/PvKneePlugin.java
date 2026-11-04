@@ -35,7 +35,7 @@ import net.runelite.client.util.ImageUtil;
 @PluginDescriptor(
 	name = "PvKnee Clan",
 	internalName = "pvknee",
-	description = "Clan panel for PvKnee",
+	description = "Skill and Boss of the Week, events, links and bingo for the PvKnee clan",
 	tags = {"clan", "sotw", "botw", "events", "wom"}
 )
 public class PvKneePlugin extends Plugin
