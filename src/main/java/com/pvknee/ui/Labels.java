@@ -6,6 +6,8 @@ import java.awt.Font;
 import java.awt.Insets;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
@@ -81,6 +83,34 @@ public final class Labels
 		label.setFont(font);
 		label.setHorizontalAlignment(centred ? SwingConstants.CENTER : SwingConstants.LEFT);
 		setText(label, text, width, centred);
+		return label;
+	}
+
+	/**
+	 * A wrapped label like {@link #label}, with every match of the pattern drawn in the highlight colour, e.g. rules
+	 * in brackets. Every piece of the text is escaped; only the colour is markup.
+	 */
+	public static JLabel highlighted(String text, Pattern pattern, Color highlight, Color colour, Font font, int width, boolean centred)
+	{
+		String hex = String.format("#%06X", highlight.getRGB() & 0xFFFFFF);
+		StringBuilder body = new StringBuilder();
+		Matcher matcher = pattern.matcher(text);
+		int last = 0;
+		while (matcher.find())
+		{
+			body.append(escape(text.substring(last, matcher.start())))
+				.append("<font color='").append(hex).append("'>")
+				.append(escape(matcher.group()))
+				.append("</font>");
+			last = matcher.end();
+		}
+		body.append(escape(text.substring(last)));
+
+		JLabel label = new JLabel();
+		label.setForeground(colour);
+		label.setFont(font);
+		label.setHorizontalAlignment(centred ? SwingConstants.CENTER : SwingConstants.LEFT);
+		setHtml(label, body.toString(), width, centred);
 		return label;
 	}
 
@@ -223,7 +253,15 @@ public final class Labels
 	 */
 	public static void setText(JLabel label, String text, int width, boolean centred)
 	{
-		label.setText(html(text, centred));
+		setHtml(label, escape(text), width, centred);
+	}
+
+	/**
+	 * Sets an HTML body that is already escaped, and sizes the label to fit it at the given pixel width.
+	 */
+	private static void setHtml(JLabel label, String body, int width, boolean centred)
+	{
+		label.setText(html(body, centred));
 		View view = (View) label.getClientProperty(BasicHTML.propertyKey);
 		view.setSize(width, 0);
 		Insets insets = label.getInsets();
@@ -245,9 +283,8 @@ public final class Labels
 			.replace("\n", "<br>");
 	}
 
-	private static String html(String text, boolean centred)
+	private static String html(String body, boolean centred)
 	{
-		String body = escape(text);
 		if (centred)
 		{
 			body = "<div style='text-align:center'>" + body + "</div>";

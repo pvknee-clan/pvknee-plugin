@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -32,8 +33,8 @@ import net.runelite.client.ui.FontManager;
 /**
  * The card under the bingo board for the selected tile: its status, then what it needs, shown before anything is
  * logged: a checklist of parts (one route, or several with "or" between), the items that count, or for a plain
- * count, who got what. Progress is the viewed team's (none before teams are set). A dashed hint when no tile is
- * selected.
+ * count, who got what. Rules in brackets in the description are in red. Progress is the viewed team's (none before
+ * teams are set). A dashed hint when no tile is selected.
  */
 final class BingoTileDetail
 {
@@ -44,6 +45,8 @@ final class BingoTileDetail
 	private static final int ROW_GAP = 8;
 	private static final int HEAD_GAP = 10;
 	private static final int ITEM_COLUMNS = 6;
+	/** A rule in a description: text in round brackets, brackets included. A bracket without its pair is not one. */
+	private static final Pattern RULE = Pattern.compile("\\([^()]*\\)");
 
 	private BingoTileDetail()
 	{
@@ -76,7 +79,7 @@ final class BingoTileDetail
 		card.add(head(tile, done, context));
 		if (tile.getDescription() != null && !tile.getDescription().trim().isEmpty())
 		{
-			card.add(Labels.label(tile.getDescription(), ThemeColours.TEXT, Fonts.body(), INNER_WIDTH, false));
+			card.add(Labels.highlighted(tile.getDescription(), RULE, ThemeColours.RULE, ThemeColours.TEXT, Fonts.body(), INNER_WIDTH, false));
 		}
 		card.add(new Divider(colours.getMuted()));
 

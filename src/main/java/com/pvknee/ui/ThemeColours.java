@@ -20,6 +20,8 @@ public class ThemeColours
 	public static final Color DONE = new Color(0x4CAF50);
 	/** Bingo tiles in progress: the same orange as {@link #ENDING_SOON}. */
 	public static final Color IN_PROGRESS = ENDING_SOON;
+	/** Rules in a bingo tile's description, the text in round brackets. Fixed, like {@link #DONE}. */
+	public static final Color RULE = new Color(0xFF6F6F);
 
 	Color header;
 	Color accent;
