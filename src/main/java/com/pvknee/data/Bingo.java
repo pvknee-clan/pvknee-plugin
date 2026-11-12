@@ -2,6 +2,7 @@ package com.pvknee.data;
 
 import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.Data;
 
@@ -31,6 +32,19 @@ public class Bingo
 		/** Ended, but the results aren't final yet. */
 		@SerializedName("tallying") TALLYING,
 		@SerializedName("final") FINAL
+	}
+
+	/**
+	 * How a tile is completed.
+	 */
+	public enum Mode
+	{
+		/** Every part of one route; a tile with several routes can be done by any of them. */
+		@SerializedName("each") EACH,
+		/** The listed items all qualify and add up to the tile's needed. */
+		@SerializedName("any") ANY,
+		/** A plain count, without parts. */
+		@SerializedName("count") COUNT
 	}
 
 	public enum Status
@@ -74,7 +88,50 @@ public class Bingo
 		private long needed = 1;
 		/** E.g. "pieces", "kills", "xp"; "parts" for a tile with parts. */
 		private String unit;
+		/** As one route; the first route of a tile with several. */
 		private List<Part> parts = new ArrayList<>();
+		/** Null from an older script, or one this version doesn't know; see {@link #mode()}. */
+		private Mode mode;
+		/** For an each tile: the alternative sets of parts, any one of which completes the tile. */
+		private List<List<Part>> routes = new ArrayList<>();
+		/** For an any tile: the items that count towards it. */
+		private List<Item> items = new ArrayList<>();
+
+		/**
+		 * The tile's mode; when the endpoint doesn't send one, each for a tile with parts, else count.
+		 */
+		public Mode mode()
+		{
+			if (mode != null)
+			{
+				return mode;
+			}
+			return parts.isEmpty() ? Mode.COUNT : Mode.EACH;
+		}
+
+		/**
+		 * The routes of an each tile, falling back to its parts as one route; empty for any other tile.
+		 */
+		public List<List<Part>> eachRoutes()
+		{
+			if (mode() != Mode.EACH)
+			{
+				return Collections.emptyList();
+			}
+			if (!routes.isEmpty())
+			{
+				return routes;
+			}
+			return parts.isEmpty() ? Collections.emptyList() : Collections.singletonList(parts);
+		}
+	}
+
+	@Data
+	public static class Item
+	{
+		private String name;
+		/** 0 when the item has no icon. */
+		private int itemId;
 	}
 
 	@Data
@@ -123,6 +180,27 @@ public class Bingo
 		private List<Contributor> contributors = new ArrayList<>();
 		/** In the tile's part order; empty for a tile without parts. */
 		private List<PartProgress> parts = new ArrayList<>();
+		/** For an each tile, in the tile's route order. */
+		private List<RouteProgress> routes = new ArrayList<>();
+		/** For an any tile, in the tile's item order: how much was logged against each. */
+		private List<ItemProgress> items = new ArrayList<>();
+		/** For a tile with several routes: the logged amount that matched no part, counted towards needed. */
+		private long extra;
+	}
+
+	@Data
+	public static class RouteProgress
+	{
+		/** True for the route that completed the tile. */
+		private boolean done;
+		private List<PartProgress> parts = new ArrayList<>();
+	}
+
+	@Data
+	public static class ItemProgress
+	{
+		private String name;
+		private long amount;
 	}
 
 	@Data
