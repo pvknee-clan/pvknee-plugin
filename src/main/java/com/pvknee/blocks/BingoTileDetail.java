@@ -25,8 +25,8 @@ import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
 
 /**
- * The card under the bingo board for the selected tile: what it needs and the viewed team's progress on it. A dashed
- * hint when no tile is selected.
+ * The card under the bingo board for the selected tile: what it needs and the viewed team's progress on it (none
+ * before teams are set). A dashed hint when no tile is selected.
  */
 final class BingoTileDetail
 {
@@ -52,7 +52,7 @@ final class BingoTileDetail
 			return hint;
 		}
 
-		Bingo.Progress progress = team.getProgress().stream()
+		Bingo.Progress progress = team == null ? null : team.getProgress().stream()
 			.filter(p -> p.getNum() == tile.getNum())
 			.findFirst()
 			.orElse(null);

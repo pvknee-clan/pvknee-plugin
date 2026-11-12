@@ -21,8 +21,8 @@ import javax.swing.JPanel;
 import net.runelite.client.ui.FontManager;
 
 /**
- * The viewed team's bingo board: a tile per place, coloured by the team's progress, with a legend under it, and the
- * selected tile's details under that. Clicking a tile selects it for every bingo block on the page; clicking it
+ * The viewed team's bingo board: a tile per place, coloured by the team's progress (all not started before teams are
+ * set), with a legend under it, and the selected tile's details under that. Clicking a tile selects it for every bingo block on the page; clicking it
  * again clears the selection.
  */
 class BingoBoardBlock implements BlockRenderer
@@ -36,7 +36,7 @@ class BingoBoardBlock implements BlockRenderer
 	{
 		BingoView view = context.getBingoView();
 		Bingo bingo = view.getBingo();
-		if (bingo == null || view.getTeam() == null)
+		if (bingo == null)
 		{
 			return null;
 		}
@@ -105,11 +105,13 @@ class BingoBoardBlock implements BlockRenderer
 	}
 
 	/**
-	 * Each place's look from the viewed team's progress; null for a place without a tile.
+	 * Each place's look from the viewed team's progress, all not started before teams are set; null for a place
+	 * without a tile.
 	 */
 	private static List<TileGrid.Tile> gridTiles(BingoView view, List<Bingo.Tile> places)
 	{
-		Map<Integer, Bingo.Progress> progress = view.getTeam().getProgress().stream()
+		Bingo.Team team = view.getTeam();
+		Map<Integer, Bingo.Progress> progress = (team == null ? Collections.<Bingo.Progress>emptyList() : team.getProgress()).stream()
 			.collect(Collectors.toMap(Bingo.Progress::getNum, Function.identity(), (a, b) -> a));
 		List<TileGrid.Tile> tiles = new ArrayList<>();
 		for (Bingo.Tile tile : places)

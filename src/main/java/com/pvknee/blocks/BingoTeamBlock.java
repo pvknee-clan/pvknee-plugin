@@ -41,7 +41,8 @@ import net.runelite.client.ui.FontManager;
  * The bingo team being viewed: a switcher through every team's board, its rank, tiles done and points, a bar of tiles
  * done (left out before the start), and its members' names in two columns. The title's aside is the time until the start, the
  * time left, or "Ended". Above it, while the bingo runs, a note for members who are logged out or not on a team, and
- * once it has ended, the result: "Tallying results" until the admins finish, then the winner.
+ * once it has ended, the result: "Tallying results" until the admins finish, then the winner. Before teams are set,
+ * just the title and its aside over "Teams are announced soon".
  */
 class BingoTeamBlock implements BlockRenderer
 {
@@ -63,7 +64,7 @@ class BingoTeamBlock implements BlockRenderer
 	{
 		BingoView view = context.getBingoView();
 		Bingo bingo = view.getBingo();
-		if (bingo == null || view.getTeam() == null)
+		if (bingo == null)
 		{
 			return null;
 		}
@@ -75,6 +76,10 @@ class BingoTeamBlock implements BlockRenderer
 			.withTimeAside(() -> time(start, end), () -> started(start) && end != null && Times.endingSoon(end), colours);
 		context.onUpdate(header::update);
 		view.onChange(() -> header.setTitle(title(view)));
+		if (view.getTeam() == null)
+		{
+			return new Section(header, new EmptyState(Glyphs.GROUP, "Teams are announced soon", "Check back before the bingo starts.", colours));
+		}
 		Section team = new Section(header, context.followBingo(() -> card(view, bingo, context.getPlayer(), colours)));
 
 		JComponent above = above(view, bingo, end, context);
@@ -157,7 +162,8 @@ class BingoTeamBlock implements BlockRenderer
 
 	private static String title(BingoView view)
 	{
-		return view.isOwnTeam(view.getTeam()) ? "Your Team" : "Team";
+		Bingo.Team team = view.getTeam();
+		return team == null || view.isOwnTeam(team) ? "Your Team" : "Team";
 	}
 
 	/**
