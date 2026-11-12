@@ -38,9 +38,9 @@ import okhttp3.Response;
 
 /**
  * When the member logs out with "Update Wise Old Man on logout" on, asks Wise Old Man to update the name they were
- * logged in as, so the challenge standings are more up to date. Only after progress this session (over 10,000 xp, or
- * a kill or completion count), on a normal world, when XP Updater isn't already sending it, and at most once per 10
- * minutes per name, even across restarts.
+ * logged in as, so the challenge standings are more up to date. Only after progress this session (over 100 xp, or a
+ * kill or completion count), on a normal world, when XP Updater won't send it for this logout itself, and at most
+ * once per 10 minutes per name, even across restarts.
  */
 @Singleton
 public class LogoutUpdate
@@ -48,8 +48,10 @@ public class LogoutUpdate
 	private static final HttpUrl PLAYERS_URL = HttpUrl.get("https://api.wiseoldman.net/v2/players");
 	private static final String USER_AGENT = "PvKnee-RuneLite-Plugin/1.0";
 	private static final Duration MIN_GAP = Duration.ofMinutes(10);
-	/** The same threshold RuneLite's XP Updater uses. */
-	private static final long XP_THRESHOLD = 10_000;
+	/** Sessions that gain more xp than this are sent; less counts as no real progress. */
+	private static final long MIN_XP_GAINED = 100;
+	/** RuneLite's {@code XpUpdaterPlugin} only sends a logout update after gaining more xp than this. */
+	private static final long XP_UPDATER_THRESHOLD = 10_000;
 	/** Where the time of the last update for a name is kept in the plugin's config. */
 	private static final String SENT_KEY_PREFIX = "womUpdatedAt_";
 	/** Worlds whose progress Wise Old Man doesn't track. */
@@ -189,7 +191,7 @@ public class LogoutUpdate
 
 		String player = Text.toJagexName(name);
 		long gained = startXp < 0 ? 0 : latestXp - startXp;
-		if (!countSeen && gained <= XP_THRESHOLD)
+		if (!countSeen && gained <= MIN_XP_GAINED)
 		{
 			devLog.log("wom: {} made too little progress ({} xp, no counts), skipped", player, gained);
 			return;
@@ -199,9 +201,9 @@ public class LogoutUpdate
 			devLog.log("wom: not a normal world, skipped");
 			return;
 		}
-		if (xpUpdaterSends())
+		if (xpUpdaterSends(gained))
 		{
-			devLog.log("wom: XP Updater already updates Wise Old Man, skipped");
+			devLog.log("wom: XP Updater sends this update, skipped");
 			return;
 		}
 
@@ -218,10 +220,15 @@ public class LogoutUpdate
 	}
 
 	/**
-	 * Whether RuneLite's XP Updater is on with its Wise Old Man option ticked, so it sends its own update on logout.
+	 * Whether RuneLite's XP Updater will send its own update for this logout: it is on, its Wise Old Man option is
+	 * ticked and the session gained more than its threshold.
 	 */
-	private boolean xpUpdaterSends()
+	private boolean xpUpdaterSends(long gained)
 	{
+		if (gained <= XP_UPDATER_THRESHOLD)
+		{
+			return false;
+		}
 		Plugin plugin = pluginManager.getPlugins().stream()
 			.filter(p -> p instanceof XpUpdaterPlugin)
 			.findFirst()
