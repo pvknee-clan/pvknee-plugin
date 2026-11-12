@@ -8,7 +8,8 @@ import java.awt.RenderingHints;
 import javax.swing.Icon;
 
 /**
- * A round mark for something done or not: a green disc with a dark tick, or an empty outlined circle.
+ * A round mark for something done or not: a green disc (or another colour, e.g. muted) with a dark tick, or an empty
+ * outlined circle.
  */
 public class CheckMark implements Icon
 {
@@ -17,11 +18,18 @@ public class CheckMark implements Icon
 
 	private final boolean done;
 	private final int size;
+	private final Color fill;
 
 	public CheckMark(boolean done, int size)
 	{
+		this(done, size, ThemeColours.DONE);
+	}
+
+	public CheckMark(boolean done, int size, Color fill)
+	{
 		this.done = done;
 		this.size = size;
+		this.fill = fill;
 	}
 
 	@Override
@@ -31,7 +39,7 @@ public class CheckMark implements Icon
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		if (done)
 		{
-			g2.setColor(ThemeColours.DONE);
+			g2.setColor(fill);
 			g2.fillOval(x, y, size, size);
 			Glyphs.draw(g2, Glyphs.TICK, TICK, size - 3, x + size / 2.0, y + size / 2.0, 0, 4f);
 		}
