@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import net.runelite.client.ui.DynamicGridLayout;
 import net.runelite.client.ui.FontManager;
 
@@ -277,7 +278,8 @@ final class BingoTileDetail
 	}
 
 	/**
-	 * A tick, the part's icon and name, the filler's note under the name, and who filled it on the right.
+	 * A tick, the part's icon and name, the filler's note under the name, and who filled it on the right. The
+	 * filler's name is shown in full; the part name and note are cut short to the space left.
 	 */
 	private static JComponent slotRow(Bingo.Part part, boolean filled, Bingo.Contributor filler, boolean muted, BlockContext context)
 	{
@@ -289,11 +291,12 @@ final class BingoTileDetail
 
 		JPanel name = new JPanel(new BorderLayout(0, 1));
 		name.setOpaque(false);
-		name.add(Labels.plain(Objects.toString(part.getName(), ""), muted ? colours.getMuted() : ThemeColours.TEXT, Fonts.name()), BorderLayout.CENTER);
+		name.add(Labels.fitted(Objects.toString(part.getName(), ""), muted ? colours.getMuted() : ThemeColours.TEXT, Fonts.name(),
+			SwingConstants.LEADING), BorderLayout.CENTER);
 		String note = filler == null ? null : filler.getNote();
 		if (note != null && !note.trim().isEmpty())
 		{
-			name.add(Labels.plain(note.trim(), colours.getMuted(), FontManager.getRunescapeSmallFont()), BorderLayout.SOUTH);
+			name.add(Labels.fitted(note.trim(), colours.getMuted(), FontManager.getRunescapeSmallFont(), SwingConstants.LEADING), BorderLayout.SOUTH);
 		}
 
 		JPanel row = new JPanel(new BorderLayout(ROW_GAP, 0));
@@ -349,14 +352,14 @@ final class BingoTileDetail
 	}
 
 	/**
-	 * A name on the left with a muted note on the right.
+	 * A player's name on the left, in full, with a muted note on the right, cut short to the space left.
 	 */
 	private static JComponent row(String name, String note, ThemeColours colours)
 	{
 		JPanel row = new JPanel(new BorderLayout(ROW_GAP, 0));
 		row.setOpaque(false);
-		row.add(Labels.plain(Objects.toString(name, ""), ThemeColours.TEXT, Fonts.name()), BorderLayout.CENTER);
-		row.add(Labels.plain(note, colours.getMuted(), FontManager.getRunescapeSmallFont()), BorderLayout.EAST);
+		row.add(Labels.plain(Objects.toString(name, ""), ThemeColours.TEXT, Fonts.name()), BorderLayout.WEST);
+		row.add(Labels.fitted(note, colours.getMuted(), FontManager.getRunescapeSmallFont(), SwingConstants.TRAILING), BorderLayout.CENTER);
 		return row;
 	}
 

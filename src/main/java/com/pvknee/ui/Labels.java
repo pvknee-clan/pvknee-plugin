@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Insets;
+import java.awt.event.MouseEvent;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -11,6 +12,7 @@ import java.util.regex.Pattern;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
+import javax.swing.ToolTipManager;
 import javax.swing.plaf.basic.BasicHTML;
 import javax.swing.text.View;
 import net.runelite.client.ui.FontManager;
@@ -49,6 +51,30 @@ public final class Labels
 		label.setFont(font);
 		label.setHorizontalAlignment(alignment);
 		label.setText(text == null ? "" : text);
+		return label;
+	}
+
+	/**
+	 * A one-line label like {@link #plain} for text that gives way to its neighbours in a row: it takes the space
+	 * that is left, is cut short with "..." exactly where it would run out, and while cut shows its full text on hover.
+	 */
+	public static JLabel fitted(String text, Color colour, Font font, int alignment)
+	{
+		String full = text == null ? "" : text;
+		JLabel label = new JLabel()
+		{
+			@Override
+			public String getToolTipText(MouseEvent event)
+			{
+				return getWidth() < getPreferredSize().width ? tooltipText(full) : null;
+			}
+		};
+		noHtml(label);
+		label.setForeground(colour);
+		label.setFont(font);
+		label.setHorizontalAlignment(alignment);
+		label.setText(full);
+		ToolTipManager.sharedInstance().registerComponent(label);
 		return label;
 	}
 
